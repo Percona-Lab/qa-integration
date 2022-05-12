@@ -9,10 +9,11 @@
     pgsql_version: "{{ lookup('vars', 'extra_pgsql_version', default=lookup('env','PGSQL_VERSION') | default('14', true) ) }}"
     pgsql_pgsm_container: "{{ lookup('vars', 'extra_pgsql_pgsm_container', default=lookup('env','PGSQL_PGSM_CONTAINER') | default('pgsql_pgsm', true) ) }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('dev-latest', true) ) }}"
-    pmm_container_name: "{{ lookup('vars', 'extra_pmm_container_name', default=lookup('env','PMM_CONTAINER') | default('pmm-server', true) ) }}"
+    pmm_container_name: "{{ lookup('vars', 'extra_pmm_container_name', default=lookup('env','PMM_CONTAINER_NAME') | default('pmm-server', true) ) }}"
+    pmm_container_port: "{{ lookup('vars', 'extra_pmm_container_port', default=lookup('env','PMM_CONTAINER_PORT') | default('80', true) ) }}"
     pmm_container_image: "{{ lookup('vars', 'extra_pmm_container_image', default=lookup('env','PMM_CONTAINER_IMAGE') | default('perconalab/pmm-server:dev-latest', true) ) }}"
-    pmm_ui_branch: "{{ lookup('vars', 'extra_pmm_ui_branch', default=lookup('env','PMM_UI_GIT_BRANCH') | default('main', true) ) }}"
-    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
+    pmm_ui_branch: "{{ lookup('vars', 'extra_pmm_ui_branch', default=lookup('env','PMM_UI_BRANCH') | default('main', true) ) }}"
+    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_BRANCH') | default('main', true) ) }}"
     pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('REL1_0_STABLE', true) ) }}"
 
   tasks:
