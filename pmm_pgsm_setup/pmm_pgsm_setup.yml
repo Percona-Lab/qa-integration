@@ -40,7 +40,7 @@
     shell: "{{ item }}"
     with_items:
       - git clone -b {{ pmm_qa_branch }} https://github.com/percona/pmm-qa/
-      - pushd pmm-qa/pmm-tests
+      - pushd ./pmm-qa/pmm-tests
       - sudo bash -x ./pmm-framework.sh --setup-pmm-pgsm-integration --pdpgsql-version={{ pgsql_version }}
       - popd
 
@@ -48,7 +48,7 @@
     shell: "{{ item }}"
     with_items:
       - git clone -b {{ pmm_ui_branch }} https://github.com/percona/pmm-ui-tests
-      - pushd pmm-ui-tests
+      - pushd ./pmm-ui-tests
       - npm install
       - ./node_modules/.bin/codeceptjs run --debug --steps --reporter mocha-multi -c pr.codecept.js --grep '@pgsm-pmm-integration'
       - popd
