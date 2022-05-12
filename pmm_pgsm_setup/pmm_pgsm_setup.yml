@@ -34,7 +34,7 @@
     shell: "{{ item }}"
     with_items:
       - docker create -v /srv --name pmm-server-data {{ pmm_container_image }}
-      - docker run -d -p 80:80 -p 443:443 -e PMM_DEBUG=1 --volumes-from {{ pmm_container_name }}-data --name {{ pmm_container_name }} {{ pmm_container_image }}
+      - docker run -d -p {{ pmm_container_port }}:80 -p 443:443 -e PMM_DEBUG=1 --volumes-from {{ pmm_container_name }}-data --name {{ pmm_container_name }} {{ pmm_container_image }}
 
   - name: Setup PGSM on request PGSQL Version and Connect it for Monitoring to PMM
     shell: "{{ item }}"
