@@ -1,0 +1,53 @@
+---
+# This playbook does following:
+#   setups a pmm-server, prepares PGSM and PGSQL and runs e2e integration tests
+
+- hosts: all
+  become: true
+  become_method: sudo
+  vars:
+    pgsql_version: "{{ lookup('vars', 'extra_pgsql_version', default=lookup('env','PGSQL_VERSION') | default('14', true) ) }}"
+    pgsql_pgsm_container: "{{ lookup('vars', 'extra_pgsql_pgsm_container', default=lookup('env','PGSQL_PGSM_CONTAINER') | default('pgsql_pgsm', true) ) }}"
+    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('dev-latest', true) ) }}"
+    pmm_container_name: "{{ lookup('vars', 'extra_pmm_container_name', default=lookup('env','PMM_CONTAINER') | default('pmm-server', true) ) }}"
+    pmm_container_image: "{{ lookup('vars', 'extra_pmm_container_image', default=lookup('env','PMM_CONTAINER_IMAGE') | default('perconalab/pmm-server:dev-latest', true) ) }}"
+    pmm_ui_branch: "{{ lookup('vars', 'extra_pmm_ui_branch', default=lookup('env','PMM_UI_GIT_BRANCH') | default('main', true) ) }}"
+    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
+    pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('REL1_0_STABLE', true) ) }}"
+
+  tasks:
+  - name: cleanup container for PMM-Server and data Volume if already running/exist
+    shell: "{{ item }}"
+    ignore_errors: true
+    with_items:
+      - docker ps -a --filter "name={{ pmm_container_name }}" | grep -q . && docker stop {{ pmm_container_name }} && docker rm -fv {{ pmm_container_name }}
+      - docker ps -a --filter "name={{ pmm_container_name }}-data" | grep -q . && docker stop {{ pmm_container_name }}-data && docker rm -fv {{ pmm_container_name }}-data
+    tags:
+      - cleanup
+
+  - name: Create pmm-qa network if not exist
+    shell: docker network create pmm-qa
+    ignore_errors: true
+
+  - name: Start Container for PMM-Server with Data volume
+    shell: "{{ item }}"
+    with_items:
+      - docker create -v /srv --name pmm-server-data {{ pmm_container_image }}
+      - docker run -d -p 80:80 -p 443:443 -e PMM_DEBUG=1 --volumes-from {{ pmm_container_name }}-data --name {{ pmm_container_name }} {{ pmm_container_image }}
+
+  - name: Setup PGSM on request PGSQL Version and Connect it for Monitoring to PMM
+    shell: "{{ item }}"
+    with_items:
+      - git clone -b {{ pmm_qa_branch }} https://github.com/percona/pmm-qa/
+      - pushd pmm-qa/pmm-tests
+      - sudo bash -x ./pmm-framework.sh --setup-pmm-pgsm-integration --pdpgsql-version={{ pgsql_version }}
+      - popd
+
+  - name: Setup PMM e2e Tests Run them on the requested pmm-server and PGSM+PGSQL DB version
+    shell: "{{ item }}"
+    with_items:
+      - git clone -b {{ pmm_ui_branch }} https://github.com/percona/pmm-ui-tests
+      - pushd pmm-ui-tests
+      - npm install
+      - ./node_modules/.bin/codeceptjs run --debug --steps --reporter mocha-multi -c pr.codecept.js --grep '@pgsm-pmm-integration'
+      - popd
