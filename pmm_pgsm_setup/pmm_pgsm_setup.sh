@@ -83,5 +83,5 @@ git clone -b ${PMM_UI_BRANCH} https://github.com/percona/pmm-ui-tests
 pushd pmm-ui-tests
 npm install
 export PMM_UI_URL="http://127.0.0.1:8081/"
-./node_modules/.bin/codeceptjs run --debug --steps --reporter mocha-multi -c pr.codecept.js --grep '@pgsm-pmm-integration'
+./node_modules/.bin/codeceptjs run --debug --steps -c pr.codecept.js --grep '@pgsm-pmm-integration'
 popd
