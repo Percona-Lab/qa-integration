@@ -11,7 +11,7 @@ export PMM_UI_BRANCH=main
 export PMM_QA_GIT_BRANCH=main
 export PGSTAT_MONITOR_BRANCH=REL_1_STABLE
 export PGSQL_VERSION=14
-export PGSTAT_MONITOR_REPO=https://github.com/percona/pg_stat_monitor
+export PGSTAT_MONITOR_REPO=percona/pg_stat_monitor
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -55,7 +55,7 @@ while [ $# -gt 0 ]; do
       echo "--pmm-container-port=443                                          Pass the pmm-server port, default port number is 443"
       echo "--pmm-container-image=perconalab/pmm-server:dev-latest            Pass the pmm-server image tag, default image is dev-latest"
       echo "--pgstat-monitor-branch=REL_1_STABLE                              Pass the pg_stat_monitor branch for building pgsm, default using the release branch"
-      echo "--pgstat-monitor-repo=https://github.com/percona/pg_stat_monitor  Pass the pg_stat_monitor branch for building pgsm, default using the release branch"
+      echo "--pgstat-monitor-repo=percona/pg_stat_monitor                     Pass the pg_stat_monitor Repo for building pgsm, default using the release branch"
       echo "--pmm-qa-branch=main                                              Pass the pmm-ui-tests repo branch, default using the main branch"
       echo "--pmm-ui-branch=main                                              Pass the pmm-qa repo branch, default using the main branch"
       printf "***************************\n"
