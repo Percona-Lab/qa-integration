@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Internal variables
-declare PGSQL_VERSION CLIENT_VERSION PGSQL_PGSM_CONTAINER PMM_CONTAINER_NAME PMM_CONTAINER_PORT PMM_CONTAINER_IMAGE PMM_UI_BRANCH PMM_QA_GIT_BRANCH PGSTAT_MONITOR_BRANCH
+declare PGSQL_VERSION CLIENT_VERSION PGSQL_PGSM_CONTAINER PMM_CONTAINER_NAME PMM_CONTAINER_PORT PMM_CONTAINER_IMAGE PMM_UI_BRANCH PMM_QA_GIT_BRANCH PGSTAT_MONITOR_BRANCH PGSTAT_MONITOR_REPO
 export CLIENT_VERSION=dev-latest
 export PGSQL_PGSM_CONTAINER=pgsql_pgsm
 export PMM_CONTAINER_NAME=pmm-server
@@ -9,8 +9,9 @@ export PMM_CONTAINER_PORT=443
 export PMM_CONTAINER_IMAGE=perconalab/pmm-server:dev-latest
 export PMM_UI_BRANCH=main
 export PMM_QA_GIT_BRANCH=main
-export PGSTAT_MONITOR_BRANCH=REL1_0_STABLE
+export PGSTAT_MONITOR_BRANCH=REL_1_STABLE
 export PGSQL_VERSION=14
+export PGSTAT_MONITOR_REPO=percona/pg_stat_monitor
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -41,18 +42,22 @@ while [ $# -gt 0 ]; do
     --pgstat-monitor-branch=*)
       export PGSTAT_MONITOR_BRANCH="${1#*=}"
       ;;
+    --pgstat-monitor-repo=*)
+      export PGSTAT_MONITOR_REPO="${1#*=}"
+      ;;
     *)
       printf "***************************\n"
       printf "Invalid Argument Passed, usage of this script:\n"
-      echo "--pgsql-version=14                                          Pass PGSQL Version that needs to be setup for monitoring, default is 14"
-      echo "--client-version=dev-latest                                 Pass the pmm2-client version, acceptable values are dev-latest (Default, if no value passed), pmm2-latest, 2.x.x, or a binary tarball http url"
-      echo "--pgsql-pgsm-container=pgsql_pgsm                           PGSQL & PMM-CLient Docker container name prefix, default value is pgsql_pgsm"
-      echo "--pmm-container-name=pmm-server                             Pass the pmm-server name, default container name is pmm-server"
-      echo "--pmm-container-port=443                                    Pass the pmm-server port, default port number is 443"
-      echo "--pmm-container-image=perconalab/pmm-server:dev-latest      Pass the pmm-server image tag, default image is dev-latest"
-      echo "--pgstat-monitor-branch=REL1_0_STABLE                       Pass the pg_stat_monitor branch for building pgsm, default using the release branch"
-      echo "--pmm-qa-branch=main                                        Pass the pmm-ui-tests repo branch, default using the main branch"
-      echo "--pmm-ui-branch=main                                        Pass the pmm-qa repo branch, default using the main branch"
+      echo "--pgsql-version=14                                                Pass PGSQL Version that needs to be setup for monitoring, default is 14"
+      echo "--client-version=dev-latest                                       Pass the pmm2-client version, acceptable values are dev-latest (Default, if no value passed), pmm2-latest, 2.x.x, or a binary tarball http url"
+      echo "--pgsql-pgsm-container=pgsql_pgsm                                 PGSQL & PMM-CLient Docker container name prefix, default value is pgsql_pgsm"
+      echo "--pmm-container-name=pmm-server                                   Pass the pmm-server name, default container name is pmm-server"
+      echo "--pmm-container-port=443                                          Pass the pmm-server port, default port number is 443"
+      echo "--pmm-container-image=perconalab/pmm-server:dev-latest            Pass the pmm-server image tag, default image is dev-latest"
+      echo "--pgstat-monitor-branch=REL_1_STABLE                              Pass the pg_stat_monitor branch for building pgsm, default using the release branch"
+      echo "--pgstat-monitor-repo=percona/pg_stat_monitor                     Pass the pg_stat_monitor Repo for building pgsm, default using the release branch"
+      echo "--pmm-qa-branch=main                                              Pass the pmm-ui-tests repo branch, default using the main branch"
+      echo "--pmm-ui-branch=main                                              Pass the pmm-qa repo branch, default using the main branch"
       printf "***************************\n"
       exit 1
   esac
