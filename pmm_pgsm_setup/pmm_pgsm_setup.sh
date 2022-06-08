@@ -86,7 +86,7 @@ popd
 sudo rm -r pmm-ui-tests || true ## Delete if the Repo already checkedout
 git clone -b ${PMM_UI_BRANCH} https://github.com/percona/pmm-ui-tests
 pushd pmm-ui-tests
-npm install
+npm install --force
 export PMM_UI_URL="http://127.0.0.1:8081/"
 ./node_modules/.bin/codeceptjs run --debug --steps --reporter mocha-multi -c pr.codecept.js --grep '@pgsm-pmm-integration'
 popd
