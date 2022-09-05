@@ -9,7 +9,7 @@ export PMM_CONTAINER_PORT=443
 export PMM_CONTAINER_IMAGE=perconalab/pmm-server:dev-latest
 export PMM_UI_BRANCH=main
 export PMM_QA_GIT_BRANCH=main
-export PGSTAT_MONITOR_BRANCH=main
+export PGSTAT_MONITOR_BRANCH=REL_1_1_0
 export PGSQL_VERSION=14
 export PGSTAT_MONITOR_REPO=percona/pg_stat_monitor
 
