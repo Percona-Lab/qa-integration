@@ -11,7 +11,7 @@ export PMM_UI_BRANCH=main
 export PMM_QA_GIT_BRANCH=main
 export PGSTAT_MONITOR_BRANCH=REL_1_1_0
 export PGSQL_VERSION=14
-export PGSTAT_MONITOR_REPO=percona/pg_stat_monitor
+export PGSTAT_MONITOR_REPO=JiriCtvrtka/pg_stat_monitor
 
 while [ $# -gt 0 ]; do
   case "$1" in
