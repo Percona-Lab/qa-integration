@@ -1,0 +1,189 @@
+version: "3"
+services:
+  rs101:
+    image: ${PSMDB_IMAGE:-perconalab/percona-server-mongodb:6.0.2}
+    container_name: rs101
+    networks:
+      - rs1-network
+    command: mongod --replSet rs1 --port 27017 --storageEngine wiredTiger  --wiredTigerCacheSizeGB 1 
+    volumes:
+      - data-rs101:/data/db
+
+  rs102:
+    image: ${PSMDB_IMAGE:-perconalab/percona-server-mongodb:6.0.2}
+    container_name: rs102
+    networks:
+      - rs1-network
+    command: mongod --replSet rs1 --port 27017 --storageEngine wiredTiger  --wiredTigerCacheSizeGB 1 
+    volumes:
+      - data-rs102:/data/db
+
+  rs103:
+    image: ${PSMDB_IMAGE:-perconalab/percona-server-mongodb:6.0.2}
+    container_name: rs103
+    networks:
+      - rs1-network
+    command: mongod --replSet rs1 --port 27017 --storageEngine wiredTiger  --wiredTigerCacheSizeGB 1 
+    volumes:
+      - data-rs103:/data/db
+
+  rs1-init:
+    image: perconalab/percona-server-mongodb:6.0.2
+    container_name: rs1-init
+    restart: "no"
+    container_name: rs1-init
+    networks:
+      - rs1-network
+    depends_on:
+      - rs101
+      - rs102
+      - rs103
+    command: >
+      mongosh --host rs101:27017 --eval 
+      '
+      config = {
+      "_id" : "rs1",
+      "members" : [
+        {
+          "_id" : 0,
+          "host" : "rs101:27017"
+        },
+        {
+          "_id" : 1,
+          "host" : "rs102:27017"
+        },
+        {
+          "_id" : 2,
+          "host" : "rs103:27017"
+        }
+      ]
+      };
+      rs.initiate(config);
+      ' 
+
+  pbm101:
+    image: ${PBM_IMAGE:-perconalab/percona-backup-mongodb:2.0.2}
+    container_name: pbm101
+    networks:
+      - rs1-network
+    user: "1001"
+    environment:
+      - "PBM_MONGODB_URI=mongodb://rs101:27017"
+    volumes:
+      - data-rs101:/data/db
+    command: pbm-agent
+    depends_on:
+      - createbucket
+      - rs1-init
+
+  pbm102:
+    image: ${PBM_IMAGE:-perconalab/percona-backup-mongodb:2.0.2}
+    container_name: pbm102
+    networks:
+      - rs1-network
+    user: "1001"
+    environment:
+      - "PBM_MONGODB_URI=mongodb://rs102:27017"
+    command: pbm-agent
+    volumes:
+      - data-rs102:/data/db
+    depends_on:
+      - createbucket
+      - rs1-init
+
+  pbm103:
+    image: ${PBM_IMAGE:-perconalab/percona-backup-mongodb:2.0.2}
+    container_name: pbm103
+    networks:
+      - rs1-network
+    user: "1001"
+    environment:
+      - "PBM_MONGODB_URI=mongodb://rs103:27017"
+    command: pbm-agent 
+    volumes:
+      - data-rs103:/data/db
+    depends_on:
+      - createbucket
+      - rs1-init
+
+  pbmsetup-rs1:
+    image: ${PBM_IMAGE:-perconalab/percona-backup-mongodb:2.0.2}
+    container_name: pbmsetup-rs1
+    networks:
+      - rs1-network
+    environment:
+      - "PBM_MONGODB_URI=mongodb://rs103:27017"
+    command: bash -c 'pbm config --file /etc/pbm/minio.yaml'
+    volumes:
+      - ./conf:/etc/pbm
+    depends_on:
+      - pbm101
+      - pbm102
+      - pbm103
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+    networks:
+      - rs1-network
+    volumes:
+      - backups:/backups
+    environment:
+      - "MINIO_ACCESS_KEY=minio1234"
+      - "MINIO_SECRET_KEY=minio1234"
+    command: server /backups
+
+  createbucket:
+    container_name: createbucket 
+    image: minio/mc
+    networks:
+      - rs1-network
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
+
+  pmm-server:
+    image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
+    container_name: pmm-server
+    environment:
+      - "PMM_DEBUG=1"
+    ports:
+      - "443:443"
+      - "8081:80"
+    networks:
+      - rs1-network
+    volumes:
+      - pmm-server:/srv
+
+  pmm-client:
+    container_name: pmm-client
+    image: ${PBM_AGENT_IMAGE:-perconalab/pmm-client:dev-latest}
+    restart: always
+    environment:
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_USERNAME=admin"
+      - "PMM_AGENT_SERVER_PASSWORD=admin"
+      - "PMM_AGENT_SERVER_INSECURE_TLS=1"
+      - "PMM_AGENT_CONFIG_FILE=config/pmm-agent.yaml"
+    networks:
+      - rs1-network
+    depends_on:
+      - createbucket
+      - rs1-init
+      - pmm-server
+      - pbmsetup-rs1
+
+networks:
+  rs1-network:
+    driver: bridge
+
+volumes:
+  pmm-agent: null
+  pmm-server: null
+  backups: null
+  data-rs101: null
+  data-rs102: null
+  data-rs103: null
