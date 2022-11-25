@@ -1,9 +1,15 @@
 #!/bin/bash
 docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
+docker-compose -f docker-compose-rs.yaml build
 docker-compose -f docker-compose-rs.yaml up -d
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
-docker-compose -f docker-compose-rs.yaml exec pmm-client pmm-agent setup
-docker-compose -f docker-compose-rs.yaml exec pmm-client pmm-admin add mongodb --replication-set=rs1 rs101 rs101:27017
-docker-compose -f docker-compose-rs.yaml exec pmm-client pmm-admin add mongodb --replication-set=rs1 rs102 rs102:27017
-docker-compose -f docker-compose-rs.yaml exec pmm-client pmm-admin add mongodb --replication-set=rs1 rs103 rs103:27017
+echo "configuring pbm"
+docker-compose -f docker-compose-rs.yaml exec rs101 pbm config --file=/etc/pbm/minio.yaml
+echo "configuring pmm agents"
+docker-compose -f docker-compose-rs.yaml exec rs101 pmm-agent setup
+docker-compose -f docker-compose-rs.yaml exec rs101 pmm-admin add mongodb --replication-set=rs rs101 127.0.0.1:27017
+docker-compose -f docker-compose-rs.yaml exec rs102 pmm-agent setup
+docker-compose -f docker-compose-rs.yaml exec rs102 pmm-admin add mongodb --replication-set=rs rs102 127.0.0.1:27017
+docker-compose -f docker-compose-rs.yaml exec rs103 pmm-agent setup
+docker-compose -f docker-compose-rs.yaml exec rs103 pmm-admin add mongodb --replication-set=rs rs103 127.0.0.1:27017
