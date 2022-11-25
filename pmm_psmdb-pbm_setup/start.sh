@@ -4,6 +4,8 @@ docker-compose -f docker-compose-rs.yaml build
 docker-compose -f docker-compose-rs.yaml up -d
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
+echo "configuring pmm-server"
+docker-compose -f docker-compose-rs.yaml exec pmm-server change-admin-password password
 echo "configuring pbm"
 docker-compose -f docker-compose-rs.yaml exec rs101 pbm config --file=/etc/pbm/minio.yaml
 echo "configuring pmm agents"
