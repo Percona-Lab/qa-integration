@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: "Text to print"
+        required: false
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+
+    runs-on: ubuntu-18.04
+    timeout-minutes: 20
+
+    env:
+      TEXT_TO_PRINT: ${{ github.event.inputs.text || 'default text' }}
+
+    steps:
+    - uses: percona-platform/checkout@v2
+
+    - name: Echo ${{ env.TEXT_TO_PRINT }}
+      run: |
+        echo $TEXT_TO_PRINT
