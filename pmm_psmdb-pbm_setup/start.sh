@@ -15,3 +15,5 @@ docker-compose -f docker-compose-rs.yaml exec rs102 pmm-agent setup
 docker-compose -f docker-compose-rs.yaml exec rs102 pmm-admin add mongodb --replication-set=rs rs102 127.0.0.1:27017
 docker-compose -f docker-compose-rs.yaml exec rs103 pmm-agent setup
 docker-compose -f docker-compose-rs.yaml exec rs103 pmm-admin add mongodb --replication-set=rs rs103 127.0.0.1:27017
+echo "running tests"
+docker-compose -f docker-compose-rs.yaml run test pytest -s --verbose test.py

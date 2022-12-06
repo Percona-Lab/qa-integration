@@ -147,6 +147,18 @@ services:
     volumes:
       - pmm-server:/srv
 
+  test:
+    build:
+      dockerfile: ./Dockerfile-testinfra
+      context: .
+    volumes:
+      - ./test:/test
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    container_name: test
+    hostname: test
+    networks:
+      - rs1-network
+
 networks:
   rs1-network:
     driver: bridge
