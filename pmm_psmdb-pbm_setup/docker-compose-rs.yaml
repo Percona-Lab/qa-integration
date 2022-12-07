@@ -6,9 +6,9 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-2.0.2-1}
-        - PSMDB_VERSION=${PSMDB_VERSION:-6.0.2-1}
-        - PMM_VERSION=${PMM_VERSION:-2.21.0-6}
+        - PBM_VERSION=${PBM_VERSION:-latest}
+        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
+        - PMM_VERSION=${PMM_VERSION:-latest}
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -31,9 +31,9 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-2.0.2-1}
-        - PSMDB_VERSION=${PSMDB_VERSION:-6.0.2-1}
-        - PMM_VERSION=${PMM_VERSION:-2.21.0-6}
+        - PBM_VERSION=${PBM_VERSION:-latest}
+        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
+        - PMM_VERSION=${PMM_VERSION:-latest}
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -56,9 +56,9 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-2.0.2-1}
-        - PSMDB_VERSION=${PSMDB_VERSION:-6.0.2-1}
-        - PMM_VERSION=${PMM_VERSION:-2.21.0-6}
+        - PBM_VERSION=${PBM_VERSION:-latest}
+        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
+        - PMM_VERSION=${PMM_VERSION:-latest}
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
