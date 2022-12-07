@@ -37,6 +37,7 @@ jobs:
       PMM_IMAGE: ${{ github.event.inputs.pmm_version || 'perconalab/pmm-server:dev-latest' }}
 
     steps:
+    - uses: actions/checkout@v2
     - name: test
       run: |
         ./start.sh
