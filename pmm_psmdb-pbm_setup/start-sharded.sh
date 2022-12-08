@@ -17,6 +17,6 @@ do
     rs=$(echo $node | awk -F "0" '{print $1}')
     docker-compose -f docker-compose-sharded.yaml exec -T $node pmm-admin add mongodb --replication-set=$rs --cluster=sharded $node 127.0.0.1:27017
 done
-#echo "running tests"
-#docker-compose -f docker-compose-sharded.yaml run test pytest -s -x --verbose test.py
-#docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
+echo "running tests"
+docker-compose -f docker-compose-sharded.yaml run test pytest -s -x --verbose test.py
+docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
