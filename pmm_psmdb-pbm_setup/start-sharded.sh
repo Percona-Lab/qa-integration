@@ -19,4 +19,6 @@ do
 done
 echo "running tests"
 docker-compose -f docker-compose-sharded.yaml run test pytest -s -x --verbose test.py
+echo "cleanup"
+docker-compose -f docker-compose-sharded.yaml run test chmod -R 777 .
 docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
