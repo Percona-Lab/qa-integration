@@ -38,7 +38,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: test
+    - name: test-rs 
       run: |
-        ./start.sh
+        ./start-rs.sh
+      working-directory: ./pmm_psmdb-pbm_setup
+
+    - uses: actions/checkout@v2
+    - name: test-sharded
+      run: |
+        ./start-sharded.sh
       working-directory: ./pmm_psmdb-pbm_setup

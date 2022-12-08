@@ -75,11 +75,10 @@ services:
     networks:
       - rs1-network
 
-  rs1-init:
-    image: perconalab/percona-server-mongodb:6.0.2
-    container_name: rs1-init
+  rs-init:
+    image: percona/percona-server-mongodb
+    container_name: rs-init
     restart: "no"
-    container_name: rs1-init
     networks:
       - rs1-network
     depends_on:
