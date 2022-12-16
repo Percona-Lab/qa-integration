@@ -1,0 +1,50 @@
+name: PMM_PSMDB_PBM
+
+on:
+  workflow_dispatch:
+    inputs:
+      psmdb_version:
+        description: "psmdb version"
+        required: false
+      pbm_version:
+        description: "pbm version"
+        required: false
+      pmm_version:
+        description: "pmm2-client version"
+        required: false
+      pmm_image:
+        description: "pmm server docker image"
+        required: false
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+
+    runs-on: ubuntu-20.04
+    timeout-minutes: 20
+
+    env:
+      PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
+      PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
+      PMM_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: test-rs 
+      run: |
+        ./start-rs.sh
+      working-directory: ./pmm_psmdb-pbm_setup
+
+    - uses: actions/checkout@v2
+    - name: test-sharded
+      run: |
+        ./start-sharded.sh
+      working-directory: ./pmm_psmdb-pbm_setup
