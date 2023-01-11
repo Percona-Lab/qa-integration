@@ -15,8 +15,20 @@ docker-compose -f docker-compose-rs.yaml exec -T rs102 pmm-agent setup
 docker-compose -f docker-compose-rs.yaml exec -T rs102 pmm-admin add mongodb --replication-set=rs rs102 127.0.0.1:27017
 docker-compose -f docker-compose-rs.yaml exec -T rs103 pmm-agent setup
 docker-compose -f docker-compose-rs.yaml exec -T rs103 pmm-admin add mongodb --replication-set=rs rs103 127.0.0.1:27017
-echo "running tests"
-docker-compose -f docker-compose-rs.yaml run test pytest -s -x --verbose test.py
-echo "cleanup" 
-docker-compose -f docker-compose-rs.yaml run test chmod -R 777 .
-docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
+echo "adding some data"
+docker-compose -f docker-compose-rs.yaml exec -T rs101 mgodatagen -f /etc/datagen/replicaset.json --uri=mongodb://127.0.0.1:27017/?replicaSet=rs
+tests=${TESTS:-yes}
+if [ $tests != "no" ]; then
+    echo "running tests"
+    docker-compose -f docker-compose-rs.yaml run test pytest -s -x --verbose test.py
+    docker-compose -f docker-compose-rs.yaml run test chmod -R 777 .
+    else
+    echo "skipping tests"
+fi
+cleanup=${CLEANUP:-yes}
+if [ $cleanup != "no" ]; then
+    echo "cleanup"
+    docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
+    else
+    echo "skipping cleanup"
+fi

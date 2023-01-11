@@ -17,8 +17,20 @@ do
     rs=$(echo $node | awk -F "0" '{print $1}')
     docker-compose -f docker-compose-sharded.yaml exec -T $node pmm-admin add mongodb --replication-set=$rs --cluster=sharded $node 127.0.0.1:27017
 done
-echo "running tests"
-docker-compose -f docker-compose-sharded.yaml run test pytest -s -x --verbose test.py
-echo "cleanup"
-docker-compose -f docker-compose-sharded.yaml run test chmod -R 777 .
-docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
+echo "adding some data"
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mgodatagen -f /etc/datagen/sharded.json
+tests=${TESTS:-yes}
+if [ $tests != "no" ]; then
+    echo "running tests"
+    docker-compose -f docker-compose-sharded.yaml run test pytest -s -x --verbose test.py
+    docker-compose -f docker-compose-sharded.yaml run test chmod -R 777 .
+    else
+    echo "skipping tests"
+fi
+cleanup=${CLEANUP:-yes}
+if [ $cleanup != "no" ]; then
+    echo "cleanup"
+    docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
+    else
+    echo "skipping cleanup"
+fi

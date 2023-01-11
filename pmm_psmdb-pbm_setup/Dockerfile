@@ -59,6 +59,8 @@ RUN set -ex; \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
     systemctl enable pmm-agent && \
+    curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
+    tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
     yum clean all; \
     rm -rf /var/cache/dnf /var/cache/yum /data/db && mkdir -p /data/db;
 
