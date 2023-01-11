@@ -6,7 +6,7 @@
         "shardConfig": {
             "shardCollection": "test.test",
             "key": {
-                "n": 1
+                "_id": "hashed"
             }
         },
         "content": {
