@@ -238,6 +238,7 @@ services:
     hostname: mongos
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ./conf/datagen:/etc/datagen:ro
     privileged: true
     command: "mongos --configdb rscfg/rscfg01:27017,rscfg02:27017,rscfg03:27017 --port 27017 --bind_ip 0.0.0.0"
     networks:
