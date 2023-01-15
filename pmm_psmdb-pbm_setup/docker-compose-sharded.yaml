@@ -15,7 +15,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -40,7 +40,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -65,7 +65,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -90,7 +90,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -115,7 +115,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -140,7 +140,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -165,7 +165,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -190,7 +190,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -215,7 +215,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -240,31 +240,13 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./conf/datagen:/etc/datagen:ro
     privileged: true
-    command: "mongos --configdb rscfg/rscfg01:27017,rscfg02:27017,rscfg03:27017 --port 27017 --bind_ip 0.0.0.0"
+    command: "mongos --keyFile=/etc/keyfile --configdb rscfg/rscfg01:27017,rscfg02:27017,rscfg03:27017 --port 27017 --bind_ip 0.0.0.0"
     networks:
       - test-network
     depends_on:
       - rscfg01
       - rscfg02
       - rscfg03
-
-  cluster-init:
-    image: percona/percona-server-mongodb
-    restart: "no"
-    container_name: cluster-init
-    networks:
-      - test-network
-    depends_on:
-      - mongos
-    entrypoint: >
-      bash -c "
-      mongosh --host rs101:27017 --eval 'config = { \"_id\" : \"rs1\", \"members\" : [{ \"_id\" : 0, \"host\" : \"rs101:27017\" }, { \"_id\" : 1, \"host\" : \"rs102:27017\" }, { \"_id\" : 2, \"host\" : \"rs103:27017\" }]}; rs.initiate(config);' &&
-      mongosh --host rs201:27017 --eval 'config = { \"_id\" : \"rs2\", \"members\" : [{ \"_id\" : 0, \"host\" : \"rs201:27017\" }, { \"_id\" : 1, \"host\" : \"rs202:27017\" }, { \"_id\" : 2, \"host\" : \"rs203:27017\" }]}; rs.initiate(config);' &&
-      mongosh --host rscfg01:27017 --eval 'config = { \"_id\" : \"rscfg\", \"members\" : [{ \"_id\" : 0, \"host\" : \"rscfg01:27017\" }, { \"_id\" : 1, \"host\" : \"rscfg02:27017\" }, { \"_id\" : 2, \"host\" : \"rscfg03:27017\" }]}; rs.initiate(config);' &&      
-      sleep 30 &&  
-      mongosh --host mongos:27017 --eval 'sh.addShard( \"rs1/rs101:27017,rs102:27017,rs103:27017\" );' &&
-      mongosh --host mongos:27017 --eval 'sh.addShard( \"rs2/rs201:27017,rs202:27017,rs203:27017\" );'
-      "
 
   minio:
     image: minio/minio

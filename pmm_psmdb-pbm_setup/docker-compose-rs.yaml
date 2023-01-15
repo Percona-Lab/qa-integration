@@ -16,7 +16,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -41,7 +41,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -66,7 +66,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://127.0.0.1:27017"
+      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
       - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
@@ -75,39 +75,6 @@ services:
     hostname: rs103
     networks:
       - rs1-network
-
-  rs-init:
-    image: percona/percona-server-mongodb
-    container_name: rs-init
-    restart: "no"
-    networks:
-      - rs1-network
-    depends_on:
-      - rs101
-      - rs102
-      - rs103
-    command: >
-      mongosh --host rs101:27017 --eval 
-      '
-      config = {
-      "_id" : "rs",
-      "members" : [
-        {
-          "_id" : 0,
-          "host" : "rs101:27017"
-        },
-        {
-          "_id" : 1,
-          "host" : "rs102:27017"
-        },
-        {
-          "_id" : 2,
-          "host" : "rs103:27017"
-        }
-      ]
-      };
-      rs.initiate(config);
-      ' 
 
   minio:
     image: minio/minio
