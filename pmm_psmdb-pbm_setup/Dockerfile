@@ -32,7 +32,7 @@ RUN set -ex; \
     rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
-    percona-release enable pmm2-client ${REPO} && \
+    percona-release enable original release && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \   
     yum -y update && \
     if [ $PSMDB_VERSION == "latest" ]; then \
