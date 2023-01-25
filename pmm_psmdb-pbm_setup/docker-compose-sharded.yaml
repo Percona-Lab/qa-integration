@@ -1,6 +1,7 @@
 version: "3"
 services:
-  rs101:
+  build_member:
+    image: replica_member/local
     build:
       dockerfile: ./Dockerfile
       context: .
@@ -9,6 +10,12 @@ services:
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_VERSION=${PMM_VERSION:-latest}
+    command: /bin/bash
+
+  rs101:
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs1:/etc/mongod
@@ -26,14 +33,9 @@ services:
       - test-network
 
   rs102:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs1:/etc/mongod
@@ -51,14 +53,9 @@ services:
       - test-network
 
   rs103:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs1:/etc/mongod
@@ -76,14 +73,9 @@ services:
       - test-network
 
   rs201:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs2:/etc/mongod
@@ -101,14 +93,9 @@ services:
       - test-network
 
   rs202:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs2:/etc/mongod
@@ -126,6 +113,9 @@ services:
       - test-network
 
   rs203:
+    depends_on:
+      - build_member
+    image: replica_member/local
     build:
       dockerfile: ./Dockerfile
       context: .
@@ -151,14 +141,9 @@ services:
       - test-network
 
   rscfg01:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-cfg:/etc/mongod
@@ -176,14 +161,9 @@ services:
       - test-network
 
   rscfg02:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-cfg:/etc/mongod
@@ -201,14 +181,9 @@ services:
       - test-network
 
   rscfg03:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-cfg:/etc/mongod
