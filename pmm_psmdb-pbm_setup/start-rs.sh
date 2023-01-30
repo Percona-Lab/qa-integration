@@ -123,7 +123,7 @@ for node in $nodes
 do
     echo "congiguring pmm agent on $node"
     docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup
-    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --replication-set=rs --username=${pmm_user} --password=${pmm_pass} $node 127.0.0.1:27017
+    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --cluster=replicaset --replication-set=rs --username=${pmm_user} --password=${pmm_pass} $node 127.0.0.1:27017
 done
 echo
 echo "adding some data"
