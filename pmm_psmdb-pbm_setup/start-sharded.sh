@@ -10,7 +10,8 @@ docker-compose -f docker-compose-sharded.yaml up -d
 
 echo "configuring pmm-server"
 docker-compose -f docker-compose-sharded.yaml exec -T pmm-server change-admin-password password
-sleep 10
+echo "waiting 30 seconds for pmm-server to start"
+sleep 30
 
 nodes="rs101 rs201"
 for node in $nodes
@@ -40,7 +41,7 @@ do
           };
           rs.initiate(config);
 EOF
-    sleep 20
+    sleep 60
     echo
     echo "configuring root user on primary $node replicaset $rs"
     docker-compose -f docker-compose-sharded.yaml exec -T $node mongo << EOF
@@ -135,7 +136,7 @@ docker-compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo << EOF
       };
       rs.initiate(config);
 EOF
-sleep 20
+sleep 60
 echo
 echo "adding shards and creating global mongo user"
 docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo << EOF

@@ -51,7 +51,12 @@ RUN set -ex; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el8 ; \
     fi && \
-    if [ $PMM_VERSION == "latest" ]; then \
+    if [[ $PMM_VERSION == http* ]]; then \
+        yum -y install pmm2-client && \
+        curl -Lf -o /tmp/pmm2-client.tar.gz $PMM_VERSION && \
+        cd /tmp && tar -xvf pmm2-client.tar.gz --transform 's,^/*[^/]*,/pmm2-client,S' && \
+        cd /tmp/pmm2-client && ./install_tarball && cd ../ && rm -rf pmm2* ;\
+    elif [ $PMM_VERSION == "latest" ]; then \ 
         yum -y install pmm2-client ; \
     else \
         yum -y install pmm2-client-${PMM_VERSION}.el8 ; \

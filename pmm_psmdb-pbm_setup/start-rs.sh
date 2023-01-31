@@ -8,7 +8,7 @@ docker-compose -f docker-compose-rs.yaml build
 docker-compose -f docker-compose-rs.yaml up -d
 echo
 echo "waiting 30 seconds for pmm-server to start"
-sleep 10
+sleep 30
 echo
 echo "configuring pmm-server"
 docker-compose -f docker-compose-rs.yaml exec -T pmm-server change-admin-password password
@@ -37,7 +37,7 @@ docker-compose -f docker-compose-rs.yaml exec -T rs101 mongo << EOF
       };
       rs.initiate(config);
 EOF
-sleep 10
+sleep 60
 echo
 echo "configuring root user on primary"
 docker-compose -f docker-compose-rs.yaml exec -T rs101 mongo << EOF
@@ -123,7 +123,7 @@ for node in $nodes
 do
     echo "congiguring pmm agent on $node"
     docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup
-    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --replication-set=rs --username=${pmm_user} --password=${pmm_pass} $node 127.0.0.1:27017
+    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --cluster=replicaset --replication-set=rs --username=${pmm_user} --password=${pmm_pass} $node 127.0.0.1:27017
 done
 echo
 echo "adding some data"
