@@ -33,7 +33,8 @@ RUN set -ex; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
     percona-release enable original release && \
-    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \   
+    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
+    yum update --refresh -y && \
     yum -y update && \
     if [ $PSMDB_VERSION == "latest" ]; then \
         yum -y install percona-server-mongodb \
@@ -44,9 +45,9 @@ RUN set -ex; \
         yum -y install percona-server-mongodb-${PSMDB_VERSION}.el8 \
                           percona-server-mongodb-tools-${PSMDB_VERSION}.el8 \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el8 \
-                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el8 ; \ 
+                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el8 ; \
     fi && \
-    if [ $PBM_VERSION == "latest" ]; then \              
+    if [ $PBM_VERSION == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el8 ; \
@@ -56,14 +57,14 @@ RUN set -ex; \
         curl -Lf -o /tmp/pmm2-client.tar.gz $PMM_VERSION && \
         cd /tmp && tar -xvf pmm2-client.tar.gz --transform 's,^/*[^/]*,/pmm2-client,S' && \
         cd /tmp/pmm2-client && ./install_tarball && cd ../ && rm -rf pmm2* ;\
-    elif [ $PMM_VERSION == "latest" ]; then \ 
+    elif [ $PMM_VERSION == "latest" ]; then \
         yum -y install pmm2-client ; \
     else \
         yum -y install pmm2-client-${PMM_VERSION}.el8 ; \
-    fi && \ 
+    fi && \
     if [ -f "/usr/bin/mongosh" ] ; then \
         ln -s /usr/bin/mongosh /usr/bin/mongo ; \
-    fi && \ 
+    fi && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
     systemctl enable pmm-agent && \
