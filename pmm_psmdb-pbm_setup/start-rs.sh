@@ -1,5 +1,6 @@
 #!/bin/bash
 set -x
+
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 
 docker network create qa-integration || true
