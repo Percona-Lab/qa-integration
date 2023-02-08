@@ -7,6 +7,7 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
+        - PMM_REPO=${PMM_REPO:-release}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_VERSION=${PMM_VERSION:-latest}
@@ -41,8 +42,6 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
-    ports:
-      - "27028:27017"
     networks:
       - pmm-qa
       - pmm-ui-tests
@@ -65,8 +64,6 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
-    ports:
-      - "27029:27017"
     networks:
       - pmm-qa
       - pmm-ui-tests

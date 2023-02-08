@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 pmm_user=${PMM_USER:-pmm}
 pmm_pass=${PMM_PASS:-pmmpass}
 pbm_user=${PBM_USER:-pbm}
@@ -8,8 +9,12 @@ docker-compose -f docker-compose-sharded.yaml down -v --remove-orphans
 docker-compose -f docker-compose-sharded.yaml build
 docker-compose -f docker-compose-sharded.yaml up -d
 
+echo "waiting 30 seconds for pmm-server to start"
+sleep 30
 echo "configuring pmm-server"
 docker-compose -f docker-compose-sharded.yaml exec -T pmm-server change-admin-password password
+echo "restarting pmm-server"
+docker-compose -f docker-compose-rs.yaml restart pmm-server
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
 

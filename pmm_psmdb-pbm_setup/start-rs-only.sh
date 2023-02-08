@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 docker network create pmm-qa || true
 docker network create qa-integration || true

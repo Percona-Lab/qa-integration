@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 
 docker network create qa-integration || true
@@ -11,9 +12,12 @@ docker-compose -f docker-compose-rs.yaml up -d
 echo
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
-echo
 echo "configuring pmm-server"
-docker-compose -f docker-compose-pmm.yaml exec -T pmm-server change-admin-password $pmm_server_admin_pass
+docker-compose -f docker-compose-sharded.yaml exec -T pmm-server change-admin-password $pmm_server_admin_pass
+echo "restarting pmm-server"
+docker-compose -f docker-compose-rs.yaml restart pmm-server
+echo "waiting 30 seconds for pmm-server to start"
+sleep 30
 bash -x ./configure-replset.sh
 bash -x ./configure-agents.sh
 tests=${TESTS:-yes}

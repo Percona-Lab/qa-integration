@@ -1,5 +1,6 @@
 FROM oraclelinux:8
 ARG REPO=testing
+ARG PMM_REPO=release
 ARG PBM_VERSION=latest
 ARG PSMDB_VERSION=latest
 ARG PMM_VERSION=latest
@@ -32,10 +33,9 @@ RUN set -ex; \
     rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
-    percona-release enable original release && \
+    percona-release enable original ${PMM_REPO} && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
     yum update --refresh -y && \
-    yum -y update && \
     if [ $PSMDB_VERSION == "latest" ]; then \
         yum -y install percona-server-mongodb \
                        percona-server-mongodb-tools \
@@ -60,7 +60,7 @@ RUN set -ex; \
     elif [ $PMM_VERSION == "latest" ]; then \
         yum -y install pmm2-client ; \
     else \
-        yum -y install pmm2-client-${PMM_VERSION}.el8 ; \
+        yum -y install pmm2-client-${PMM_VERSION}-6.el8 ; \
     fi && \
     if [ -f "/usr/bin/mongosh" ] ; then \
         ln -s /usr/bin/mongosh /usr/bin/mongo ; \
