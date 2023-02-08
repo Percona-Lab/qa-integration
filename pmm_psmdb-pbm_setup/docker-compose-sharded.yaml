@@ -202,16 +202,13 @@ services:
       - test-network
 
   mongos:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    depends_on:
+      - build_member
+    image: replica_member/local
     container_name: mongos
     hostname: mongos
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./conf/datagen:/etc/datagen:ro

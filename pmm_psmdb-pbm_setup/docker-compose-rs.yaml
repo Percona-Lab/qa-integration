@@ -17,6 +17,8 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
+    ports:
+      - "127.0.0.1:27017:27017"
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
