@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 pmm_user=${PMM_USER:-pmm}
 pmm_pass=${PMM_PASS:-pmmpass}
 pbm_user=${PBM_USER:-pbm}
@@ -12,6 +13,10 @@ sleep 30
 echo
 echo "configuring pmm-server"
 docker-compose -f docker-compose-rs.yaml exec -T pmm-server change-admin-password password
+echo "restarting pmm-server"
+docker-compose -f docker-compose-rs.yaml restart pmm-server
+echo "waiting 30 seconds for pmm-server to start"
+sleep 30
 echo
 echo "configuring replicaset with members priorities"
 docker-compose -f docker-compose-rs.yaml exec -T rs101 mongo << EOF
