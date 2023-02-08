@@ -60,7 +60,7 @@ RUN set -ex; \
     elif [ $PMM_VERSION == "latest" ]; then \ 
         yum -y install pmm2-client ; \
     else \
-        yum -y install pmm2-client-${PMM_VERSION}.el8 ; \
+        yum -y install pmm2-client-${PMM_VERSION}-6.el8 ; \
     fi && \ 
     if [ -f "/usr/bin/mongosh" ] ; then \
         ln -s /usr/bin/mongosh /usr/bin/mongo ; \
