@@ -147,10 +147,10 @@ echo "adding shards and creating global mongo user"
 docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet 'sh.addShard( "rs1/rs101:27017,rs102:27017,rs103:27017" )'
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval 'sh.addShard( "rs1/rs101:27017,rs102:27017,rs103:27017" )'
 echo
 sleep 20
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet 'sh.addShard( "rs2/rs201:27017,rs202:27017,rs203:27017" )'
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval 'sh.addShard( "rs2/rs201:27017,rs202:27017,rs203:27017" )'
 echo
 sleep 20
 echo
