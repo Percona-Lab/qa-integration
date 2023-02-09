@@ -35,9 +35,6 @@ if [ $cleanup != "no" ]; then
     echo
     echo "cleanup"
     docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
-    docker network rm -f qa-integration
-    docker network rm -f pmm-qa
-    docker network rm -f pmm-ui-tests
     else
     echo
     echo "skipping cleanup"
