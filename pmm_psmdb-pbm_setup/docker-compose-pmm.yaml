@@ -3,6 +3,10 @@ services:
   pmm-server:
     image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
     container_name: pmm-server
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     environment:
       - "PMM_DEBUG=1"
       - "ENABLE_BACKUP_MANAGEMENT=1"
@@ -21,10 +25,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     container_name: test
     hostname: test
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
 
 networks:
-  default:
-    name: qa-integration
+  qa-integration:
+    external: true
+  pmm-ui-tests:
+    external: true
+  pmm-qa:
     external: true
 
 volumes:

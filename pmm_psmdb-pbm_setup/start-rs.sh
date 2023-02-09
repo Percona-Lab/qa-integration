@@ -1,26 +1,25 @@
 #!/bin/bash
-set -x
+set -e
 
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 
 docker network create qa-integration || true
-docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
-docker-compose -f docker-compose-pmm.yaml down -v --remove-orphans
-docker-compose -f docker-compose-rs.yaml build
-docker-compose -f docker-compose-pmm.yaml build
-docker-compose -f docker-compose-pmm.yaml up -d
-docker-compose -f docker-compose-rs.yaml up -d
+docker network create pmm-qa || true
+docker network create pmm-ui-tests || true
+docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
+docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml build
+docker-compose -f docker-compose-pmm.yaml -f docker-compose-rs.yaml up -d
 echo
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
 echo "configuring pmm-server"
-docker-compose -f docker-compose-sharded.yaml exec -T pmm-server change-admin-password $pmm_server_admin_pass
+docker-compose -f docker-compose-pmm.yaml exec -T pmm-server change-admin-password $pmm_server_admin_pass
 echo "restarting pmm-server"
-docker-compose -f docker-compose-rs.yaml restart pmm-server
+docker-compose -f docker-compose-pmm.yaml restart pmm-server
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
-bash -x ./configure-replset.sh
-bash -x ./configure-agents.sh
+bash -e ./configure-replset.sh
+bash -e ./configure-agents.sh
 tests=${TESTS:-yes}
 if [ $tests != "no" ]; then
     echo
@@ -35,8 +34,10 @@ cleanup=${CLEANUP:-yes}
 if [ $cleanup != "no" ]; then
     echo
     echo "cleanup"
-    docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
-    docker-compose -f docker-compose-pmm.yaml down -v --remove-orphans
+    docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
+    docker network rm -f qa-integration
+    docker network rm -f pmm-qa
+    docker network rm -f pmm-ui-tests
     else
     echo
     echo "skipping cleanup"

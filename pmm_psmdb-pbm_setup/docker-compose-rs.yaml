@@ -101,6 +101,10 @@ services:
   createbucket:
     container_name: createbucket
     image: minio/mc
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     depends_on:
       - minio
     entrypoint: >
@@ -108,13 +112,10 @@ services:
 
 networks:
   qa-integration:
-    name: qa-integration
     external: true
   pmm-ui-tests:
-    name: pmm-ui-tests_pmm-network
     external: true
   pmm-qa:
-    name: pmm-qa
     external: true
 
 volumes:
