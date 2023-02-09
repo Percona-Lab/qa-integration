@@ -23,7 +23,7 @@ for node in $nodes
 do
     rs=$(echo $node | awk -F "0" '{print $1}')
     echo "configuring replicaset ${rs} with members priorities"
-    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo --quiet --eval << EOF
+    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo --quiet << EOF
         config = {
             "_id" : "${rs}",
             "members" : [
@@ -49,12 +49,12 @@ EOF
     sleep 60
     echo
     echo "configuring root user on primary $node replicaset $rs"
-    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo --quiet --eval << EOF
+    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo --quiet << EOF
         db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
     echo
     echo "configuring pbm and pmm roles on replicaset $rs"
-    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet --eval << EOF
+    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet << EOF
     db.getSiblingDB("admin").createRole({
         "role": "pbmAnyAction",
         "privileges": [{
@@ -84,7 +84,7 @@ EOF
 EOF
     echo
     echo "creating pbm user for replicaset ${rs}"
-    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet --eval << EOF
+    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet << EOF
     db.getSiblingDB("admin").createUser({
         user: "${pbm_user}",
         pwd: "${pbm_pass}",
@@ -99,7 +99,7 @@ EOF
 EOF
     echo
     echo "creating pmm user for replicaset ${rs}"
-    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet --eval << EOF
+    docker-compose -f docker-compose-sharded.yaml exec -T $node mongo "mongodb://root:root@localhost/?replicaSet=${rs}" --quiet << EOF
     db.getSiblingDB("admin").createUser({
         user: "${pmm_user}",
         pwd: "${pmm_pass}",
@@ -118,7 +118,7 @@ EOF
 done
 
 echo "configuring configserver replicaset with members priorities"
-docker-compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo --quiet --eval << EOF
+docker-compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo --quiet << EOF
     config = {
         "_id" : "rscfg",
         "members" : [
@@ -144,18 +144,18 @@ EOF
 sleep 60
 echo
 echo "adding shards and creating global mongo user"
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo --quiet --eval << EOF
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval 'sh.addShard( "rs1/rs101:27017,rs102:27017,rs103:27017" )'
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet 'sh.addShard( "rs1/rs101:27017,rs102:27017,rs103:27017" )'
 echo
 sleep 20
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval 'sh.addShard( "rs2/rs201:27017,rs202:27017,rs203:27017" )'
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet 'sh.addShard( "rs2/rs201:27017,rs202:27017,rs203:27017" )'
 echo
 sleep 20
 echo
 echo "configuring pbm and pmm roles"
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval << EOF
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet << EOF
 db.getSiblingDB("admin").createRole({
     "role": "pbmAnyAction",
     "privileges": [{
@@ -185,7 +185,7 @@ db.getSiblingDB("admin").createRole({
 EOF
 echo
 echo "creating pbm user"
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval << EOF
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet << EOF
 db.getSiblingDB("admin").createUser({
     user: "${pbm_user}",
     pwd: "${pbm_pass}",
@@ -200,7 +200,7 @@ db.getSiblingDB("admin").createUser({
 EOF
 echo
 echo "creating pmm user"
-docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet --eval << EOF
+docker-compose -f docker-compose-sharded.yaml exec -T mongos mongo "mongodb://root:root@localhost" --quiet << EOF
 db.getSiblingDB("admin").createUser({
     user: "${pmm_user}",
     pwd: "${pmm_pass}",
