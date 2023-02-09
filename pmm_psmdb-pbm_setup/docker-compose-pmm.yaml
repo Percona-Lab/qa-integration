@@ -3,16 +3,14 @@ services:
   pmm-server:
     image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
     container_name: pmm-server
-    networks:
-      - pmm-qa
-      - pmm-ui-tests
-      - qa-integration
     environment:
       - "PMM_DEBUG=1"
       - "ENABLE_BACKUP_MANAGEMENT=1"
     ports:
       - "443:443"
       - "8081:80"
+    networks:
+      - qa-integration
     volumes:
       - pmm-server:/srv
 
@@ -26,16 +24,10 @@ services:
     container_name: test
     hostname: test
     networks:
-      - pmm-qa
-      - pmm-ui-tests
       - qa-integration
 
 networks:
   qa-integration:
-    external: true
-  pmm-ui-tests:
-    external: true
-  pmm-qa:
     external: true
 
 volumes:
