@@ -115,6 +115,7 @@ networks:
     external: true
   pmm-ui-tests:
     external: true
+    name: pmm-ui-tests_pmm-network
   pmm-qa:
     external: true
 
