@@ -7,6 +7,7 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
+        - PMM_REPO=${PMM_REPO:-release}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_VERSION=${PMM_VERSION:-latest}
@@ -201,16 +202,11 @@ services:
       - test-network
 
   mongos:
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+    image: replica_member/local
     container_name: mongos
     hostname: mongos
+    ports:
+        - "127.0.0.1:27017:27017"
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./conf/datagen:/etc/datagen:ro
@@ -219,6 +215,7 @@ services:
     networks:
       - test-network
     depends_on:
+      - build_member
       - rscfg01
       - rscfg02
       - rscfg03
@@ -238,7 +235,7 @@ services:
     command: server /backups
 
   createbucket:
-    container_name: createbucket 
+    container_name: createbucket
     image: minio/mc
     networks:
       - test-network

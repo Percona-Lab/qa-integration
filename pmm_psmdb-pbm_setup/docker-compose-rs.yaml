@@ -7,6 +7,7 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
+        - PMM_REPO=${PMM_REPO:-release}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_VERSION=${PMM_VERSION:-latest}
@@ -16,6 +17,12 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
+    ports:
+      - "27027:27017"
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -23,55 +30,57 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
-      - "PMM_AGENT_SERVER_USERNAME=admin"
-      - "PMM_AGENT_SERVER_PASSWORD=password"
-      - "PMM_AGENT_SERVER_INSECURE_TLS=1"
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
     container_name: rs101
     hostname: rs101
-    networks:
-      - rs1-network
 
   rs102:
     depends_on:
       - build_member
     image: replica_member/local
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
-      - "PMM_AGENT_SERVER_USERNAME=admin"
-      - "PMM_AGENT_SERVER_PASSWORD=password"
-      - "PMM_AGENT_SERVER_INSECURE_TLS=1"
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
     container_name: rs102
     hostname: rs102
-    networks:
-      - rs1-network
 
   rs103:
     depends_on:
       - build_member
     image: replica_member/local
+    networks:
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     environment:
-      - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
-      - "PMM_AGENT_SERVER_USERNAME=admin"
-      - "PMM_AGENT_SERVER_PASSWORD=password"
-      - "PMM_AGENT_SERVER_INSECURE_TLS=1"
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
     container_name: rs103
     hostname: rs103
-    networks:
-      - rs1-network
 
   minio:
     image: minio/minio
@@ -79,7 +88,9 @@ services:
     ports:
       - "9000:9000"
     networks:
-      - rs1-network
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     volumes:
       - backups:/backups
     environment:
@@ -88,45 +99,25 @@ services:
     command: server /backups
 
   createbucket:
-    container_name: createbucket 
+    container_name: createbucket
     image: minio/mc
     networks:
-      - rs1-network
+      - pmm-qa
+      - pmm-ui-tests
+      - qa-integration
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
-  pmm-server:
-    image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
-    container_name: pmm-server
-    environment:
-      - "PMM_DEBUG=1"
-      - "ENABLE_BACKUP_MANAGEMENT=1"
-    ports:
-      - "443:443"
-      - "8081:80"
-    networks:
-      - rs1-network
-    volumes:
-      - pmm-server:/srv
-
-  test:
-    build:
-      dockerfile: ./Dockerfile-testinfra
-      context: .
-    volumes:
-      - ./test:/test
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    container_name: test
-    hostname: test
-    networks:
-      - rs1-network
-
 networks:
-  rs1-network:
-    driver: bridge
+  qa-integration:
+    external: true
+  pmm-ui-tests:
+    external: true
+    name: pmm-ui-tests_pmm-network
+  pmm-qa:
+    external: true
 
 volumes:
-  pmm-server: null
   backups: null
