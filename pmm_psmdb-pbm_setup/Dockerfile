@@ -1,6 +1,6 @@
 FROM oraclelinux:8
 ARG REPO=testing
-ARG PMM_REPO=release
+ARG PMM_REPO=experimental
 ARG PBM_VERSION=latest
 ARG PSMDB_VERSION=latest
 ARG PMM_VERSION=latest

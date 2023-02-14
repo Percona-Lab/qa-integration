@@ -7,7 +7,7 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
-        - PMM_REPO=${PMM_REPO:-release}
+        - PMM_REPO=${PMM_REPO:-experimental}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_VERSION=${PMM_VERSION:-latest}
@@ -21,8 +21,9 @@ services:
       - "27027:27017"
     networks:
       - pmm-qa
-      - pmm-ui-tests
+      - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests2
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -44,8 +45,9 @@ services:
     image: replica_member/local
     networks:
       - pmm-qa
-      - pmm-ui-tests
+      - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests2
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -66,8 +68,9 @@ services:
     image: replica_member/local
     networks:
       - pmm-qa
-      - pmm-ui-tests
+      - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests2
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -89,8 +92,9 @@ services:
       - "9000:9000"
     networks:
       - pmm-qa
-      - pmm-ui-tests
+      - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests2
     volumes:
       - backups:/backups
     environment:
@@ -103,8 +107,9 @@ services:
     image: minio/mc
     networks:
       - pmm-qa
-      - pmm-ui-tests
+      - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests2
     depends_on:
       - minio
     entrypoint: >
@@ -113,9 +118,12 @@ services:
 networks:
   qa-integration:
     external: true
-  pmm-ui-tests:
+  pmm-ui-tests1:
     external: true
     name: pmm-ui-tests_pmm-network
+  pmm-ui-tests2:
+    external: true
+    name: pmm2-upgrade-tests_pmm-network
   pmm-qa:
     external: true
 
