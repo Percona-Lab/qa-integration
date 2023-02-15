@@ -23,6 +23,7 @@ services:
       - pmm-qa
       - pmm-ui-tests1
       - qa-integration
+      - pmm-ui-tests3
       - pmm-ui-tests2
     volumes:
       - ./conf/pbm:/etc/pbm
@@ -48,6 +49,7 @@ services:
       - pmm-ui-tests1
       - qa-integration
       - pmm-ui-tests2
+      - pmm-ui-tests3
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -71,6 +73,7 @@ services:
       - pmm-ui-tests1
       - qa-integration
       - pmm-ui-tests2
+      - pmm-ui-tests3
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
@@ -95,6 +98,7 @@ services:
       - pmm-ui-tests1
       - qa-integration
       - pmm-ui-tests2
+      - pmm-ui-tests3
     volumes:
       - backups:/backups
     environment:
@@ -110,6 +114,7 @@ services:
       - pmm-ui-tests1
       - qa-integration
       - pmm-ui-tests2
+      - pmm-ui-tests3
     depends_on:
       - minio
     entrypoint: >
@@ -124,6 +129,9 @@ networks:
   pmm-ui-tests2:
     external: true
     name: pmm2-upgrade-tests_pmm-network
+  pmm-ui-tests3:
+    external: true
+    name: pmm2-ui-tests_pmm-network
   pmm-qa:
     external: true
 
