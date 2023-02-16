@@ -131,6 +131,7 @@ networks:
     external: true
     name: pmm2-ui-tests_pmm-network
   pmm-qa:
+    name: pmm-qa
     external: true
 
 volumes:
