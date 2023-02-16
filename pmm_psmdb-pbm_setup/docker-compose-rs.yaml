@@ -10,7 +10,7 @@ services:
         - PMM_REPO=${PMM_REPO:-experimental}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-latest}
     command: /bin/bash
 
   rs101:
@@ -91,8 +91,6 @@ services:
   minio:
     image: minio/minio
     container_name: minio
-    ports:
-      - "9000:9000"
     networks:
       - pmm-qa
       - pmm-ui-tests1

@@ -3,7 +3,7 @@ ARG REPO=testing
 ARG PMM_REPO=experimental
 ARG PBM_VERSION=latest
 ARG PSMDB_VERSION=latest
-ARG PMM_VERSION=latest
+ARG PMM_CLIENT_VERSION=latest
 
 RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
 rm -f /lib/systemd/system/multi-user.target.wants/*;\
@@ -47,20 +47,20 @@ RUN set -ex; \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el8 \
                           percona-server-mongodb-mongos-${PSMDB_VERSION}.el8 ; \
     fi && \
-    if [ $PBM_VERSION == "latest" ]; then \
+    if [ $PMM_CLIENT_VERSION == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el8 ; \
     fi && \
-    if [[ $PMM_VERSION == http* ]]; then \
+    if [[ $PMM_CLIENT_VERSION == http* ]]; then \
         yum -y install pmm2-client && \
-        curl -Lf -o /tmp/pmm2-client.tar.gz $PMM_VERSION && \
+        curl -Lf -o /tmp/pmm2-client.tar.gz $PMM_CLIENT_VERSION && \
         cd /tmp && tar -xvf pmm2-client.tar.gz --transform 's,^/*[^/]*,/pmm2-client,S' && \
         cd /tmp/pmm2-client && ./install_tarball && cd ../ && rm -rf pmm2* ;\
-    elif [ $PMM_VERSION == "latest" ]; then \
+    elif [ $PMM_CLIENT_VERSION == "latest" ]; then \
         yum -y install pmm2-client ; \
     else \
-        yum -y install pmm2-client-${PMM_VERSION}-6.el8 ; \
+        yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el8 ; \
     fi && \
     if [ -f "/usr/bin/mongosh" ] ; then \
         ln -s /usr/bin/mongosh /usr/bin/mongo ; \
