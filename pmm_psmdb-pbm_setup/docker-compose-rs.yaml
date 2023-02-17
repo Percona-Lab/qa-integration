@@ -33,7 +33,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
@@ -57,7 +57,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
@@ -81,7 +81,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
