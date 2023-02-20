@@ -47,7 +47,7 @@ RUN set -ex; \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el8 \
                           percona-server-mongodb-mongos-${PSMDB_VERSION}.el8 ; \
     fi && \
-    if [ $PMM_CLIENT_VERSION == "latest" ]; then \
+    if [ $PBM_VERSION == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el8 ; \
