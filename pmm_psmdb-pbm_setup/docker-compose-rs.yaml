@@ -10,7 +10,7 @@ services:
         - PMM_REPO=${PMM_REPO:-experimental}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-latest}
     command: /bin/bash
 
   rs101:
@@ -33,7 +33,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
@@ -57,7 +57,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
@@ -81,7 +81,7 @@ services:
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      PMM_AGENT_SERVER_ADDRESS: pmm-server:443
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
       PMM_AGENT_SERVER_USERNAME: admin
       PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
       PMM_AGENT_SERVER_INSECURE_TLS: 1
@@ -91,8 +91,6 @@ services:
   minio:
     image: minio/minio
     container_name: minio
-    ports:
-      - "9000:9000"
     networks:
       - pmm-qa
       - pmm-ui-tests1
@@ -133,6 +131,7 @@ networks:
     external: true
     name: pmm2-ui-tests_pmm-network
   pmm-qa:
+    name: pmm-qa
     external: true
 
 volumes:

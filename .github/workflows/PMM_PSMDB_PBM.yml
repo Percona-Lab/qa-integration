@@ -31,7 +31,7 @@ jobs:
     env:
       PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
       PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
-      PMM_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v2
@@ -46,7 +46,7 @@ jobs:
     env:
       PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
       PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
-      PMM_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v2

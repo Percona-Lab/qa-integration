@@ -10,7 +10,7 @@ services:
         - PMM_REPO=${PMM_REPO:-release}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
+        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-latest}
     command: /bin/bash
 
   rs101:
@@ -117,14 +117,6 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
-    build:
-      dockerfile: ./Dockerfile
-      context: .
-      args:
-        - REPO=${REPO:-testing}
-        - PBM_VERSION=${PBM_VERSION:-latest}
-        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_VERSION=${PMM_VERSION:-latest}
     volumes:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs2:/etc/mongod
