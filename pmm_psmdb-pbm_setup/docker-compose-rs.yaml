@@ -30,6 +30,7 @@ services:
       - ./conf/mongod-rs:/etc/mongod
       - ./conf/datagen:/etc/datagen:ro
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -54,6 +55,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -78,6 +80,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
