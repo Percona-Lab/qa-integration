@@ -1,9 +1,8 @@
 #!/bin/sh
 
 # Internal variables
-declare PGSQL_VERSION CLIENT_VERSION PGSQL_PGSM_CONTAINER PMM_CONTAINER_NAME PMM_CONTAINER_PORT PMM_CONTAINER_IMAGE PMM_UI_BRANCH PMM_QA_GIT_BRANCH PGSTAT_MONITOR_BRANCH PGSTAT_MONITOR_REPO
+declare PGSQL_VERSION CLIENT_VERSION PMM_CONTAINER_NAME PMM_CONTAINER_PORT PMM_CONTAINER_IMAGE PMM_UI_BRANCH PMM_QA_GIT_BRANCH PGSTAT_MONITOR_BRANCH PGSTAT_MONITOR_REPO
 export CLIENT_VERSION=dev-latest
-export PGSQL_PGSM_CONTAINER=pgsql_pgsm
 export PMM_CONTAINER_NAME=pmm-server
 export PMM_CONTAINER_PORT=443
 export PMM_CONTAINER_IMAGE=perconalab/pmm-server:dev-latest
@@ -20,9 +19,6 @@ while [ $# -gt 0 ]; do
       ;;
     --client-version=*)
       export CLIENT_VERSION="${1#*=}"
-      ;;
-    --pgsql-pgsm-container=*)
-      export PGSQL_PGSM_CONTAINER="${1#*=}"
       ;;
     --pmm-container-name=*)
       export PMM_CONTAINER_NAME="${1#*=}"
