@@ -76,5 +76,4 @@ RUN set -ex; \
 COPY conf/sysconfig/mongod /etc/sysconfig/
 COPY keyfile /etc/keyfile
 RUN chown mongod /etc/keyfile && chmod 400 /etc/keyfile
-RUN mkdir /tmp/backup_data/ && chmod 777 /tmp/backup_data/
 EXPOSE 27017
