@@ -101,7 +101,7 @@ services:
       - pmm-ui-tests2
       - pmm-ui-tests3
     volumes:
-      - backups:/backups
+      - /tmp/minio/backups:/backups
     environment:
       - "MINIO_ACCESS_KEY=minio1234"
       - "MINIO_SECRET_KEY=minio1234"
@@ -136,6 +136,3 @@ networks:
   pmm-qa:
     name: pmm-qa
     external: true
-
-volumes:
-  backups: null
