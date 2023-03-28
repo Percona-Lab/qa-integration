@@ -30,7 +30,7 @@ db.getSiblingDB("admin").createRole({
 });
 db.getSiblingDB("admin").createUser({
    user: "pmm_mongodb",
-   pwd: "password",
+   pwd: "5M](Q%q/U+YQ<^m",
    roles: [
       { role: "explainRole", db: "admin" },
       { role: "clusterMonitor", db: "admin" },
