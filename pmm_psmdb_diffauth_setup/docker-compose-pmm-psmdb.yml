@@ -82,6 +82,8 @@ services:
       - PMM_AGENT_SERVER_PASSWORD=admin
       - PMM_AGENT_SERVER_ADDRESS=pmm-server:443
       - PMM_AGENT_CONFIG_FILE=config/pmm-agent.yaml
+    ports:
+      - "42000-42020:42000-42020"
     volumes:
       - 'pmm-client-data:/srv'
       - ./conf:/pmm_data

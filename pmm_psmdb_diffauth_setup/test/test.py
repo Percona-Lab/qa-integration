@@ -5,6 +5,8 @@ import re
 import datetime
 import time
 import os
+import json
+import requests
 
 env_vars = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']
 
@@ -22,9 +24,27 @@ def run_test(add_db_command):
     except AssertionError:
         pytest.fail("Fail to add MongoDB to pmm-admin")
     time.sleep(60)
-    one_minute_ago = datetime.datetime.now() - datetime.timedelta(minutes=1)
+
+    pmm_admin_list = json.loads(docker_pmm_client.check_output('pmm-admin list --json', timeout=30))
+    for agent in pmm_admin_list['agent']:
+      if agent['agent_type'] == 'MONGODB_EXPORTER':
+         agent_id = agent['agent_id']
+         agent_port = agent['port']
+         break
+
+    url = f'http://pmm-client:{agent_port}/metrics'
+    try:
+        response = requests.get(url, auth=('pmm', agent_id), timeout=5)
+        assert response.status_code == 200, f"Request for metrics failed with status code {response.status_code}"
+        pattern = r'mongodb_up (\d+)'
+        result = re.search(pattern, response.text)
+        assert result is not None, "MongoDB related data isn't exported"
+    except requests.exceptions.ConnectionError:
+        pytest.fail(f"Connection to {url} failed")
+
+    one_minute_ago = datetime.datetime.now() - datetime.timedelta(seconds=30)
     logs = docker_pmm_client_host.logs(since=one_minute_ago).decode('utf-8')
-    error_pattern = re.compile(r'.*(ERR|ERRO|error).*\b(cannot(?=.*(?:connect|get|retrieve|decode|load|create)))\b.*mongodb_exporter.*', re.IGNORECASE)
+    error_pattern = re.compile(r'.*(ERR|ERRO|error).*\b(cannot(?=.*(?:connect|get|retrieve|decode|load|create)))\b.*(mongodb_exporter).*', re.IGNORECASE)
     error_logs = '\n'.join(filter(error_pattern.search, logs.split('\n')))
     assert error_logs == '', f"Found error logs: {error_logs}"
 
