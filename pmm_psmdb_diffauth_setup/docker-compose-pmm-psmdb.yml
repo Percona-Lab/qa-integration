@@ -51,7 +51,7 @@ services:
       - 'psmdb-server-data:/data/db'
     healthcheck:
       test: |
-       test $$($${PSMDB_CLI} --quiet -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval "try { rs.initiate().ok } catch (_) { rs.status().ok }") -eq 1
+       test $$($${PSMDB_CLI} --quiet -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
       interval: 5s
       start_period: 10s
       retries: 3
