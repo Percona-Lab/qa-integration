@@ -54,3 +54,21 @@ jobs:
       run: |
         ./start-sharded.sh
       working-directory: ./pmm_psmdb-pbm_setup
+
+  test_diff_auth:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 20
+    env:
+      PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
+      PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+    steps:
+    - uses: KengoTODA/actions-setup-docker-compose@v1
+      with:
+       version: '2.17.2'
+    - uses: actions/checkout@v3
+    - name: test-auth
+      run: |
+        ./test-auth.sh
+      working-directory: ./pmm_psmdb_diffauth_setup

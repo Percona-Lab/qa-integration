@@ -1,11 +1,18 @@
-# PSMDB_SERVER - default percona/percona-server-mongodb:5.0
-# PSMDB_CLI - default mongo, use mongosh with images percona-server-mongodb:6.0/latest
-# PMM_CLIENT - default perconalab/pmm-client:dev-latest
-# PMM_SERVER - default perconalab/pmm-server:dev-latest
-# AWS_USERNAME - username of AWS user whose creds are provided, by default AWS auth is disabled (not supported for PSMDB 4.2)
-# AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY self descriptive
 ---
 services:
+  build_member:
+    image: replica_member/local
+    build:
+      dockerfile: ../pmm_psmdb-pbm_setup/Dockerfile
+      context: ../pmm_psmdb-pbm_setup/
+      args:
+        - REPO=${REPO:-testing}
+        - PMM_REPO=${PMM_REPO:-experimental}
+        - PBM_VERSION=${PBM_VERSION:-latest}
+        - PSMDB_VERSION=${PSMDB_VERSION:-latest}
+        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-latest}
+    command: /bin/bash
+
   test:
     container_name: test
     hostname: test
@@ -13,45 +20,38 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     build:
-      dockerfile: ./Dockerfile-testinfra
+      dockerfile: ../pmm_psmdb-pbm_setup/Dockerfile-testinfra
       context: .
     volumes:
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  psmdbserver:
-    container_name: psmdbserver
-    hostname: psmdbserver
-    image: ${PSMDB_SERVER:-percona/percona-server-mongodb:5.0}
+  psmdb-server:
+    container_name: psmdb-server
+    hostname: psmdb-server
+    image: replica_member/local
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=dba
-      - MONGO_INITDB_ROOT_PASSWORD=secret
-      - MONGO_INITDB_DATABASE=admin
-      - PSMDB_CLI=${PSMDB_CLI:-mongo}
+      - PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      - PMM_AGENT_SERVER_USERNAME=admin
+      - PMM_AGENT_SERVER_PASSWORD=admin
+      - PMM_AGENT_SERVER_ADDRESS=pmm-server:443
     entrypoint:
       - bash
       - -c
       - |
-         cp /mongodb_data/keyfile.devel /home/mongodb/keyfile
-         chmod 400 /home/mongodb/keyfile
-         exec /entrypoint.sh $$@
-    command:
-      - mongod
-      - --bind_ip=0.0.0.0
-      - --replSet=rs0
-      - --keyFile=/home/mongodb/keyfile
-      - --tlsMode=allowTLS
-      - --tlsCAFile=/mongodb_data/certs/ca.crt
-      - --tlsCertificateKeyFile=/mongodb_data/certs/server.pem
-      - --config=/mongodb_data/mongod.conf
-      - --setParameter=authenticationMechanisms=SCRAM-SHA-1,PLAIN,MONGODB-X509${AWS_USERNAME:+,MONGODB-AWS}
+         cp /mongodb_certs/ca-certs.pem /etc/pki/tls/certs/
+         exec /usr/sbin/init
     volumes:
-      - ./conf:/mongodb_data
-      - ./init:/docker-entrypoint-initdb.d/
+      - ./conf:/etc/mongod
+      - ./certs:/mongodb_certs
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - 'psmdb-server-data:/data/db'
+    privileged: true
+    ports:
+      - "42000-42020:42000-42020"
     healthcheck:
       test: |
-       test $$($${PSMDB_CLI} --quiet -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
+       test $$(mongo --quiet --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
       interval: 5s
       start_period: 10s
       retries: 3
@@ -62,40 +62,19 @@ services:
   pmm-server:
     container_name: pmm-server
     hostname: pmm-server
-    image: ${PMM_SERVER:-perconalab/pmm-server:dev-latest}
+    image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
     environment:
       - "PMM_DEBUG=1"
     ports:
       - "443:443"
       - "8081:80"
     volumes:
+      - ./certs:/srv/nginx
       - 'pmm-server-data:/srv'
 
-  pmm-client:
-    container_name: pmm-client
-    hostname: pmm-client
-    image: ${PMM_CLIENT:-perconalab/pmm-client:dev-latest}
-    environment:
-      - PMM_AGENT_SETUP=1
-      - PMM_AGENT_SERVER_INSECURE_TLS=1
-      - PMM_AGENT_SERVER_USERNAME=admin
-      - PMM_AGENT_SERVER_PASSWORD=admin
-      - PMM_AGENT_SERVER_ADDRESS=pmm-server:443
-      - PMM_AGENT_CONFIG_FILE=config/pmm-agent.yaml
-    ports:
-      - "42000-42020:42000-42020"
-    volumes:
-      - 'pmm-client-data:/srv'
-      - ./conf:/pmm_data
-    depends_on:
-      pmm-server:
-       condition: service_healthy
-      psmdbserver:
-       condition: service_healthy
-
-  ldapserver:
-    container_name: ldapserver
-    hostname: ldapserver
+  ldap-server:
+    container_name: ldap-server
+    hostname: ldap-server
     image: bitnami/openldap:2
     environment:
       - LDAP_ADMIN_USERNAME=admin
@@ -107,6 +86,27 @@ services:
       - '1636:1636'
     volumes:
       - 'openldap-data:/bitnami/openldap'
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    volumes:
+      - /tmp/minio/backups:/backups
+    environment:
+      - "MINIO_ACCESS_KEY=minio1234"
+      - "MINIO_SECRET_KEY=minio1234"
+    command: server /backups
+    depends_on:
+      psmdb-server:
+       condition: service_healthy
+
+  createbucket:
+    container_name: createbucket
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
 volumes:
   psmdb-server-data:
