@@ -14,7 +14,7 @@
 set -e
 
 # PSMDB 4.2 doesn't support AWS auth
-if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2"* ]]; then
+if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2."* ]]; then
     sed -i 's/,MONGODB-AWS//' conf/mongod.conf
     export SKIP_AWS_TESTS="true"
 fi
@@ -77,7 +77,9 @@ cleanup=${CLEANUP:-yes}
 if [ $cleanup = "yes" ]; then
     echo "cleanup"
     docker-compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
-    sed -i 's/MONGODB-X509/MONGODB-X509,MONGODB-AWS/' conf/mongod.conf
+    if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2"* ]]; then
+       sed -i 's/MONGODB-X509/MONGODB-X509,MONGODB-AWS/' conf/mongod.conf
+    fi
     else
     echo "skipping cleanup"
 fi
