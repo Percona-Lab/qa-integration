@@ -10,7 +10,7 @@ on:
         required: false
   push:
     branches:
-      - main
+      - add-pmm-ps-basic-workflow-script
 
   pull_request:
     branches:
@@ -28,6 +28,12 @@ jobs:
     
     - name: Install Ansible and update the node
       run: sudo apt-get update -y && sudo apt-get install ansible -y
+
+    - name: Install Percona Release Package
+      run: wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb && sudo dpkg -i percona-release_latest.generic_all.deb
+
+    - name: Install PMM Client 
+      run: sudo apt update -y && sudo apt install -y pmm2-client
 
     - name: test-pmm-ps
       run: |
