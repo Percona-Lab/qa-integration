@@ -10,7 +10,7 @@ PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/ps-$PS_VERSION/P
 # Delete if the Repo already checkedout
 sudo rm -r pmm-qa || true 
 
-git clone -b main https://github.com/percona/pmm-qa/
+git clone -b PMM-7-tarball-ms-pxc https://github.com/percona/pmm-qa/
 
 cd pmm-qa
 
@@ -24,7 +24,8 @@ docker run --detach --restart always --publish 443:443 --name pmm-server $PMM_IM
 cd pmm-tests
 
 #Run for ms version and ms client 1
-./pmm-framework.sh --ps-version $PS_VERSION --addclient=ms,1 --pmm2
+./pmm-framework.sh --ps-version ps-$PS_VERSION --addclient=ms,1 --pmm2 --ms-tarball $PS_TARBALL_PATH
+
 
 #Run for ps version and ps client 1
-./pmm-framework.sh --ps-version $PS_VERSION --addclient=ps,1 --pmm2
+./pmm-framework.sh --ps-version ps-$PS_VERSION --addclient=ps,1 --pmm2 --ms-tarball $PS_TARBALL_PATH
