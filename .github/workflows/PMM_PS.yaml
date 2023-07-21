@@ -10,7 +10,7 @@ on:
         required: false
   push:
     branches:
-      - add-pmm-ps-basic-workflow-script
+      - main
 
   pull_request:
     branches:
