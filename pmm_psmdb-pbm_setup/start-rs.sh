@@ -2,12 +2,16 @@
 set -e
 
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
+profile=${COMPOSE_PROFILES:-classic}
 
 docker network create qa-integration || true
 docker network create pmm-qa || true
 docker network create pmm-ui-tests_pmm-network || true
 docker network create pmm2-upgrade-tests_pmm-network || true
 docker network create pmm2-ui-tests_pmm-network || true
+
+export COMPOSE_PROFILES=${profile}
+
 docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
 docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml build
 docker-compose -f docker-compose-pmm.yaml -f docker-compose-rs.yaml up -d

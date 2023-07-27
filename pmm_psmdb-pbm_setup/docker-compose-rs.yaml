@@ -2,6 +2,7 @@ version: "3"
 services:
   build_member:
     image: replica_member/local
+    profiles: ["classic", "extra"]
     build:
       dockerfile: ./Dockerfile
       context: .
@@ -17,6 +18,7 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
+    profiles: ["classic", "extra"]
     ports:
       - "27027:27017"
     networks:
@@ -45,6 +47,7 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
+    profiles: ["classic", "extra"]
     networks:
       - pmm-qa
       - pmm-ui-tests1
@@ -70,6 +73,7 @@ services:
     depends_on:
       - build_member
     image: replica_member/local
+    profiles: ["classic", "extra"]
     networks:
       - pmm-qa
       - pmm-ui-tests1
@@ -91,9 +95,92 @@ services:
     container_name: rs103
     hostname: rs103
 
+  rs201:
+    depends_on:
+      - build_member
+    image: replica_member/local
+    profiles: ["extra"]
+    ports:
+      - "27037:27017"
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests3
+      - pmm-ui-tests2
+    volumes:
+      - ./conf/pbm:/etc/pbm
+      - ./conf/mongod-rs:/etc/mongod
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
+    privileged: true
+    environment:
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
+    container_name: rs201
+    hostname: rs201
+
+  rs202:
+    depends_on:
+      - build_member
+    image: replica_member/local
+    profiles: ["extra"]
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests2
+      - pmm-ui-tests3
+    volumes:
+      - ./conf/pbm:/etc/pbm
+      - ./conf/mongod-rs:/etc/mongod
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
+    privileged: true
+    environment:
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
+    container_name: rs202
+    hostname: rs202
+
+  rs203:
+    depends_on:
+      - build_member
+    image: replica_member/local
+    profiles: ["extra"]
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests2
+      - pmm-ui-tests3
+    volumes:
+      - ./conf/pbm:/etc/pbm
+      - ./conf/mongod-rs:/etc/mongod
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /tmp/backup_data:/tmp/backup_data
+    privileged: true
+    environment:
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:443}
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
+    container_name: rs203
+    hostname: rs203
+
   minio:
     image: minio/minio
+    profiles: ["classic", "extra"]
     container_name: minio
+    depends_on:
+      - build_member
     networks:
       - pmm-qa
       - pmm-ui-tests1
@@ -110,6 +197,7 @@ services:
   createbucket:
     container_name: createbucket
     image: minio/mc
+    profiles: ["classic", "extra"]
     networks:
       - pmm-qa
       - pmm-ui-tests1
