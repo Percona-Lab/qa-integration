@@ -7,10 +7,14 @@ echo $PS_VERSION
 
 PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/ps-$PS_VERSION/Percona-Server-$PS_VERSION-Linux.x86_64.glibc2.28.tar.gz
 
+PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/
+
+PMM_QA_REPO_BRANCH=PMM-7-tarball-ms-pxc
+
 # Delete if the Repo already checkedout
 sudo rm -r pmm-qa || true 
 
-git clone -b PMM-7-tarball-ms-pxc https://github.com/percona/pmm-qa/
+git clone -b $PMM_QA_REPO_BRANCH $PMM_QA_REPO_URL
 
 cd pmm-qa
 
