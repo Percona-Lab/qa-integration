@@ -33,7 +33,7 @@ jobs:
       run: wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb && sudo dpkg -i percona-release_latest.generic_all.deb
      
     - name: Install Enable percona-release experimental for dev-latest installation of pmm2-client
-      run: percona-release enable-only original experimental
+      run: sudo percona-release enable-only original experimental
      
     - name: Install PMM Client 
       run: sudo apt update -y && sudo apt install -y pmm2-client
