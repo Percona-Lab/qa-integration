@@ -9,7 +9,7 @@ PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/ps-$PS_VERSION/P
 
 PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/
 
-PMM_QA_REPO_BRANCH=PMM-7-tarball-ms-pxc
+PMM_QA_REPO_BRANCH=main
 
 # Delete if the Repo already checkedout
 sudo rm -r pmm-qa || true 
