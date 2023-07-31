@@ -36,7 +36,7 @@ jobs:
       run: sudo percona-release enable-only original experimental
      
     - name: Install PMM Client 
-      run: sudo apt update -y && sudo apt install -y pmm2-client
+      run: sudo apt update -y && sudo apt-get upgrade -y && sudo apt-get install -y pmm2-client
 
     - name: test-pmm-ps
       run: |
