@@ -5,7 +5,9 @@
 
 echo $PS_VERSION
 
-PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/ps-$PS_VERSION/Percona-Server-$PS_VERSION-Linux.x86_64.glibc2.28.tar.gz
+PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/ps-$PS_VERSION/Percona-Server-$PS_VERSION-Linux.x86_64.glibc$PS_GLIBC.tar.gz
+
+MS_TARBALL_PATH=https://dev.mysql.com/get/Downloads/MySQL-8/mysql-$MS_VERSION-linux-glibc$MS_GLIBC-x86_64.tar.xz
 
 PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/
 
@@ -28,7 +30,7 @@ docker run --detach --restart always --publish 443:443 --name pmm-server $PMM_IM
 cd pmm-tests
 
 #Run for ms version and ms client 1
-./pmm-framework.sh --ps-version ps-$PS_VERSION --addclient=ms,1 --pmm2 --ms-tarball $PS_TARBALL_PATH
+./pmm-framework.sh --ms-version ms-$PS_VERSION --addclient=ms,1 --pmm2 --ms-tarball $MS_TARBALL_PATH
 
 
 #Run for ps version and ps client 1

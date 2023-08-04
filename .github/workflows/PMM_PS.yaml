@@ -5,6 +5,9 @@ on:
       ps_version:
         description: "ps version"
         required: true
+      ms_version:
+        description: "ms version"
+        required: true
       pmm_image:
         description: "pmm_image"
         required: false
@@ -22,6 +25,9 @@ jobs:
     timeout-minutes: 20
     env:
       PS_VERSION: ${{ github.event.inputs.ps_version || '8.0.32-24' }}
+      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      MS_VERSION: ${{ github.event.inputs.ms_version || '8.0.32' }}
+      MS_GLIBC: ${{ github.event.inputs.ms_glibc || '2.12' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v2
