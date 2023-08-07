@@ -1,12 +1,12 @@
-name: PMM_PS
+name: PMM_MS
 on:
   workflow_dispatch:
     inputs:
-      ps_version:
-        description: "ps version"
+      ms_version:
+        description: "ms version"
         required: true
-      ps_glibc:
-        description: "ps glibc version"
+      ms_glibc:
+        description: "ms glibc version"
         required: true
       pmm_image:
         description: "pmm_image"
@@ -20,39 +20,26 @@ on:
       - main
 
 jobs:
-  PMM_PS_TEST:
+  PMM_MS_TEST:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
-      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      MS_VERSION: ${{ github.event.inputs.ms_version || '8.0.32' }}
+      MS_GLIBC: ${{ github.event.inputs.ms_glibc || '2.12' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
-      
+    
     steps:
     - uses: actions/checkout@v2
 
-    - name: PS_VERSION ENV Setup
-      run: |
-        if [[ -n "${{ github.event.inputs.ps_version }}" ]]; then
-          PS_VERSION="${{ github.event.inputs.ps_version }}"
-          PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
-        else
-          wget https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS
-          PS_VERSION="$(grep 'PS80_VER' VERSIONS | cut -d = -f 2)"
-          PS_VERSION_PATH=$(echo "ps-release-$PS_VERSION")
-        fi
-        echo "PS_VERSION=${PS_VERSION}" >> $GITHUB_ENV
-        echo "PS_VERSION_PATH=${PS_VERSION_PATH}" >> $GITHUB_ENV
-
     - name: Concatenate values to environment file
       run: |
-        echo "PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PS_VERSION_PATH}}/Percona-Server-${{env.PS_VERSION}}-Linux.x86_64.glibc${{env.PS_GLIBC}}.tar.gz" >> $GITHUB_ENV
+        echo "MS_TARBALL_PATH=https://dev.mysql.com/get/Downloads/MySQL-8/mysql-${{env.MS_VERSION}}-linux-glibc${{env.MS_GLIBC}}-x86_64.tar.xz" >> $GITHUB_ENV
         echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
         echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
 
-
     - name: Check environment variable is available
       run: |
-        echo "${{ env.PS_TARBALL_PATH }}" 
+        echo "${{ env.MS_TARBALL_PATH }}" 
         echo "${{ env.PMM_QA_REPO_URL }}" 
         echo "${{ env.PMM_QA_REPO_BRANCH }}" 
 
@@ -87,20 +74,6 @@ jobs:
     - name: setup pmm-admin config
       run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
 
-    - name: Run for PS tests
-      run: ./pmm-framework.sh --ps-version ps-${{ env.PS_VERSION }} --addclient=ps,1 --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }}
+    - name: Run for MS tests
+      run: ./pmm-framework.sh --ms-version ms-${{ env.MS_VERSION }} --addclient=ms,1 --pmm2 --ms-tarball ${{ env.MS_TARBALL_PATH }}
       working-directory: pmm-qa/pmm-tests
-
-    - name: Install Node js 
-      run: wget https://raw.githubusercontent.com/nodesource/distributions/master/deb/setup_16.x && chmod +x setup_16.x && sudo ./setup_16.x 
-    
-    - name: Checkout the repo and install node packages
-      run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
-
-    - name: Install npx dependencies
-      run: sudo npx playwright install-deps && npx codeceptjs def pr.codecept.js
-      working-directory: pmm-ui-tests
-      
-    - name: Run the Integration tests of PS
-      run: npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_ps_integration_test.js --steps --debug
-      working-directory: pmm-ui-tests
