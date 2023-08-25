@@ -1,0 +1,79 @@
+name: PMM_MS
+on:
+  workflow_dispatch:
+    inputs:
+      ms_version:
+        description: "ms version"
+        required: true
+      ms_glibc:
+        description: "ms glibc version"
+        required: true
+      pmm_image:
+        description: "pmm_image"
+        required: false
+  push:
+    branches:
+      - add-pmm-ps-pxc-ms-workflow
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  PMM_MS_TEST:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 20
+    env:
+      MS_VERSION: ${{ github.event.inputs.ms_version || '8.0.32' }}
+      MS_GLIBC: ${{ github.event.inputs.ms_glibc || '2.12' }}
+      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Concatenate values to environment file
+      run: |
+        echo "MS_TARBALL_PATH=https://dev.mysql.com/get/Downloads/MySQL-8/mysql-${{env.MS_VERSION}}-linux-glibc${{env.MS_GLIBC}}-x86_64.tar.xz" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
+
+    - name: Check environment variable is available
+      run: |
+        echo "${{ env.MS_TARBALL_PATH }}" 
+        echo "${{ env.PMM_QA_REPO_URL }}" 
+        echo "${{ env.PMM_QA_REPO_BRANCH }}" 
+
+    - name: Install Ansible and update the node
+      run: sudo apt-get update -y && sudo apt-get install ansible -y
+
+    - name: Install Percona Release Package
+      run: wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb && sudo dpkg -i percona-release_latest.generic_all.deb
+     
+    - name: Install Enable percona-release experimental for dev-latest installation of pmm2-client
+      run: sudo percona-release enable-only original experimental
+     
+    - name: Install PMM Client 
+      run: sudo apt update -y && sudo apt-get upgrade -y && sudo apt-get install -y pmm2-client
+
+    - name: Delete if the Repo already checked out
+      run: sudo rm -r pmm-qa || true 
+
+    - name: Clone the PMM_QA repo 
+      run: git clone -b ${{ env.PMM_QA_REPO_BRANCH }} ${{ env.PMM_QA_REPO_URL }}
+      
+    - name: Give write perimssion to the bash script
+      run: chmod +x ./pmm-tests/pmm-framework.sh
+      working-directory: pmm-qa
+
+    - name: Run the pmm container in backgrounds
+      run: docker run --detach --restart always -p 443:443 -p 80:80 --name pmm-server ${{ env.PMM_IMAGE }}
+
+    - name: Wait before pmm-admin config command
+      run: sleep 120
+
+    - name: setup pmm-admin config
+      run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
+
+    - name: Run for MS tests
+      run: ./pmm-framework.sh --ms-version ms-${{ env.MS_VERSION }} --addclient=ms,1 --pmm2 --ms-tarball ${{ env.MS_TARBALL_PATH }}
+      working-directory: pmm-qa/pmm-tests
