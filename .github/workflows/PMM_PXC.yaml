@@ -1,0 +1,114 @@
+name: PMM_PXC
+on:
+  workflow_dispatch:
+    inputs:
+      pxc_version:
+        description: "pxc version"
+        required: false
+      pxc_glibc:
+        description: "pxc glibc version"
+        required: true
+      pmm_image:
+        description: "pmm_image"
+        required: false
+  push:
+    branches:
+      - main
+      - add-pmm-ps-pxc-ms-workflow
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  PMM_PXC_TEST:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 20
+    env:
+      PXC_GLIBC: ${{ github.event.inputs.pxc_glibc || '2.35' }}
+      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: PXC_VERSION ENV Setup
+      run: |
+        if [[ -n "${{ github.event.inputs.pxc_version }}" ]]; then
+          PXC_VERSION="${{ github.event.inputs.pxc_version }}"
+          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
+          PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
+        else
+          wget https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS
+          PXC_VERSION="$(grep 'PXC80_VER' VERSIONS | cut -d = -f 2)"
+          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION.1")
+          PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
+        fi
+        echo "PXC_VERSION=${PXC_VERSION}"  | sed 's/"//g'  >> $GITHUB_ENV
+        echo "PXC_VERSION_TAR=${PXC_VERSION}.1"  | sed 's/"//g' >> $GITHUB_ENV
+        echo "PXC_VERSION_PATH=${PXC_VERSION_PATH}" >> $GITHUB_ENV
+        echo "PXC_VERSION_TRIMED=${PXC_VERSION_TRIMED}" >> $GITHUB_ENV
+
+    - name: Concatenate values to environment file
+      run: |
+        echo "PXC_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PXC_VERSION_PATH}}/Percona-XtraDB-Cluster_${{env.PXC_VERSION_TAR}}_Linux.x86_64.glibc${{env.PXC_GLIBC}}.tar.gz" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
+
+    - name: Check environment variable is available
+      run: |
+        echo "${{ env.PXC_TARBALL_PATH }}" 
+        echo "${{ env.PMM_QA_REPO_URL }}" 
+        echo "${{ env.PMM_QA_REPO_BRANCH }}" 
+
+    - name: Install Ansible and update the node
+      run: sudo apt-get update -y && sudo apt-get install ansible -y
+
+    - name: Install Percona Release Package
+      run: wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb && sudo dpkg -i percona-release_latest.generic_all.deb
+     
+    - name: Install Enable percona-release experimental for dev-latest installation of pmm2-client
+      run: sudo percona-release enable-only original experimental
+     
+    - name: Install PMM Client 
+      run: sudo apt update -y && sudo apt-get upgrade -y && sudo apt-get install -y pmm2-client
+
+    - name: Delete if the Repo already checked out
+      run: sudo rm -r pmm-qa || true 
+
+    - name: Clone the PMM_QA repo 
+      run: git clone -b ${{ env.PMM_QA_REPO_BRANCH }} ${{ env.PMM_QA_REPO_URL }}
+      
+    - name: Give write perimssion to the bash script
+      run: chmod +x ./pmm-tests/pmm-framework.sh
+      working-directory: pmm-qa
+
+    - name: Run the pmm container in backgrounds
+      run: docker run --detach --restart always -p 443:443 -p 80:80 --name pmm-server ${{ env.PMM_IMAGE }}
+
+    - name: Wait before pmm-admin config command
+      run: sleep 120
+
+    - name: setup pmm-admin config
+      run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
+
+    - name: Run for PXC tests
+      run: ./pmm-framework.sh --pxc-version ${{ env.PXC_VERSION }} --addclient=pxc,1 --pmm2 --pxc-tarball ${{ env.PXC_TARBALL_PATH }}
+      working-directory: pmm-qa/pmm-tests
+
+    - name: Install Node js 
+      run: |
+        wget https://nodejs.org/download/release/v16.20.2/node-v16.20.2-linux-arm64.tar.gz 
+        tar -xvzf node-v16.20.2-linux-arm64.tar.gz
+        sudo mv node-v16.20.2-linux-arm64 /usr/local/nodejs
+        echo 'export PATH=$PATH:/usr/local/nodejs/bin' >> ~/.bashrc
+        source ~/.bashrc
+        
+    - name: Checkout the repo and install node packages
+      run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
+
+    - name: Install npx dependencies
+      run: cd pmm-ui-tests && sudo npx playwright install-deps && npx codeceptjs def pr.codecept.js
+      
+    - name: Run the Integration tests of PXC
+      run: npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pxc_integration_test.js --steps --debug
+      working-directory: pmm-ui-tests
+
