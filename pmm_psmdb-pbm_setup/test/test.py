@@ -13,7 +13,7 @@ testinfra_hosts = ['docker://rs101','docker://rs102','docker://rs103']
 pytest.location_id = ''
 pytest.service_id = ''
 pytest.artifact_id = ''
-pytest.artifact_name = ''
+pytest.artifact_pbm_meta = ''
 pytest.pbm_backup_name = ''
 pytest.restore_id = ''
 
@@ -77,7 +77,7 @@ def test_pmm_artifact():
                     done = True
                     print('Artifact data:')
                     print(artifact)
-                    pytest.artifact_name = artifact['name']
+                    pytest.artifact_pbm_meta = artifact['metadata_list'][0]['pbm_metadata']['name']
                     break
         if done:
             backup_complete = True
@@ -91,7 +91,7 @@ def test_pbm_artifact():
     parsed_status = json.loads(status)
     print('\nChecking if the backup is completed in pbm status')
     print(parsed_status)
-    assert pytest.artifact_name in parsed_status['backups']['path']
+    assert pytest.artifact_pbm_meta == parsed_status['backups']['snapshot'][0]['name']
     assert parsed_status['backups']['snapshot'][0]['status'] == "done"
     pytest.pbm_backup_name = parsed_status['backups']['snapshot'][0]['name']
 
