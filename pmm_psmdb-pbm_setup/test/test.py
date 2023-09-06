@@ -14,7 +14,7 @@ pytest.location_id = ''
 pytest.service_id = ''
 pytest.artifact_id = ''
 pytest.artifact_pbm_meta = ''
-pytest.artifact_is_sharded = ''
+pytest.artifact_is_sharded = False
 pytest.pbm_backup_name = ''
 pytest.restore_id = ''
 
@@ -79,7 +79,8 @@ def test_pmm_artifact():
                     print('Artifact data:')
                     print(artifact)
                     pytest.artifact_pbm_meta = artifact['metadata_list'][0]['pbm_metadata']['name']
-                    pytest.artifact_is_sharded = artifact['is_sharded_cluster']
+                    if "is_sharded_cluster" in artifact:
+                         pytest.artifact_is_sharded = artifact['is_sharded_cluster']
                     break
         if done:
             backup_complete = True
