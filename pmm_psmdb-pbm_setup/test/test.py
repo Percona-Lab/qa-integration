@@ -13,7 +13,8 @@ testinfra_hosts = ['docker://rs101','docker://rs102','docker://rs103']
 pytest.location_id = ''
 pytest.service_id = ''
 pytest.artifact_id = ''
-pytest.artifact_name = ''
+pytest.artifact_pbm_meta = ''
+pytest.artifact_is_sharded = False
 pytest.pbm_backup_name = ''
 pytest.restore_id = ''
 
@@ -77,7 +78,9 @@ def test_pmm_artifact():
                     done = True
                     print('Artifact data:')
                     print(artifact)
-                    pytest.artifact_name = artifact['name']
+                    pytest.artifact_pbm_meta = artifact['metadata_list'][0]['pbm_metadata']['name']
+                    if "is_sharded_cluster" in artifact:
+                         pytest.artifact_is_sharded = artifact['is_sharded_cluster']
                     break
         if done:
             backup_complete = True
@@ -91,11 +94,13 @@ def test_pbm_artifact():
     parsed_status = json.loads(status)
     print('\nChecking if the backup is completed in pbm status')
     print(parsed_status)
-    assert pytest.artifact_name in parsed_status['backups']['path']
+    assert pytest.artifact_pbm_meta == parsed_status['backups']['snapshot'][0]['name']
     assert parsed_status['backups']['snapshot'][0]['status'] == "done"
     pytest.pbm_backup_name = parsed_status['backups']['snapshot'][0]['name']
 
 def test_pmm_start_restore():
+    if pytest.artifact_is_sharded == True:
+        pytest.skip("Unsupported setup for restore from UI")
     data = {
         'service_id': pytest.service_id,
         'artifact_id': pytest.artifact_id
@@ -107,6 +112,8 @@ def test_pmm_start_restore():
     pytest.restore_id = req.json()['restore_id']
 
 def test_pmm_restore():
+    if pytest.artifact_is_sharded == True:
+        pytest.skip("Unsupported setup for restore from UI")
     restore_complete = False
     for i in range(600):
         done = False
@@ -129,6 +136,8 @@ def test_pmm_restore():
     assert restore_complete
 
 def test_pbm_restore():
+    if pytest.artifact_is_sharded == True:
+        pytest.skip("Unsupported setup for restore from UI")
     restore_list = docker_rs101.check_output('pbm list --restore --out json')
     parsed_restore_list = json.loads(restore_list)
     print('\nChecking if the restore is completed in pbm status')
