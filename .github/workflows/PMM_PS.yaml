@@ -3,18 +3,17 @@ on:
   workflow_dispatch:
     inputs:
       ps_version:
-        description: "ps version"
+        description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
         required: true
       ps_glibc:
-        description: "ps glibc version"
+        description: "ps glibc version, example: 2.28"
         required: true
       pmm_image:
-        description: "pmm_image"
+        description: "pmm_image, example: perconalab/pmm-server:dev-latest"
         required: false
   push:
     branches:
       - main
-      - add-pmm-ps-pxc-ms-workflow
 
   pull_request:
     branches:
@@ -22,7 +21,7 @@ on:
 
 jobs:
   PMM_PS_TEST:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
@@ -53,13 +52,6 @@ jobs:
         echo "PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PS_VERSION_PATH}}/Percona-Server-${{env.PS_VERSION}}-Linux.x86_64.glibc${{env.PS_GLIBC}}.tar.gz" >> $GITHUB_ENV
         echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
         echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
-
-
-    - name: Check environment variable is available
-      run: |
-        echo "${{ env.PS_TARBALL_PATH }}" 
-        echo "${{ env.PMM_QA_REPO_URL }}" 
-        echo "${{ env.PMM_QA_REPO_BRANCH }}" 
 
     - name: Install Ansible and update the node
       run: sudo apt-get update -y && sudo apt-get install ansible -y
@@ -95,14 +87,6 @@ jobs:
     - name: Run for PS tests
       run: ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=slowlog
       working-directory: pmm-qa/pmm-tests
-
-    - name: Install Node js 
-      run: |
-        wget https://nodejs.org/download/release/v16.20.2/node-v16.20.2-linux-arm64.tar.gz 
-        tar -xvzf node-v16.20.2-linux-arm64.tar.gz
-        sudo mv node-v16.20.2-linux-arm64 /usr/local/nodejs
-        echo 'export PATH=$PATH:/usr/local/nodejs/bin' >> ~/.bashrc
-        source ~/.bashrc
     
     - name: Checkout the repo and install node packages
       run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
