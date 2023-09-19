@@ -1,0 +1,100 @@
+name: PMM_PS
+on:
+  workflow_dispatch:
+    inputs:
+      ps_version:
+        description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
+        required: true
+      ps_glibc:
+        description: "ps glibc version, example: 2.28"
+        required: true
+      pmm_image:
+        description: "pmm_image, example: perconalab/pmm-server:dev-latest"
+        required: false
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  PMM_PS_TEST:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+      
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: PS_VERSION ENV Setup
+      run: |
+        if [[ -n "${{ github.event.inputs.ps_version }}" ]]; then
+          PS_VERSION="${{ github.event.inputs.ps_version }}"
+          PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
+          PS_VERSION_TRIMED=$(echo ${PS_VERSION%-*})
+        else
+          wget https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS
+          PS_VERSION="$(grep 'PS80_VER' VERSIONS | cut -d = -f 2)"
+          PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
+          PS_VERSION_TRIMED=$(echo ${PS_VERSION_FULL%-*})
+        fi
+        echo "PS_VERSION=${PS_VERSION}" | sed 's/"//g' >> $GITHUB_ENV
+        echo "PS_VERSION_PATH=${PS_VERSION_PATH}" >> $GITHUB_ENV
+        echo "PS_VERSION_TRIMED=${PS_VERSION_TRIMED}" >> $GITHUB_ENV
+
+
+    - name: Concatenate values to environment file
+      run: |
+        echo "PS_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PS_VERSION_PATH}}/Percona-Server-${{env.PS_VERSION}}-Linux.x86_64.glibc${{env.PS_GLIBC}}.tar.gz" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
+        echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
+
+    - name: Install Ansible and update the node
+      run: sudo apt-get update -y && sudo apt-get install ansible -y
+
+    - name: Install Percona Release Package
+      run: wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb && sudo dpkg -i percona-release_latest.generic_all.deb
+     
+    - name: Install Enable percona-release experimental for dev-latest installation of pmm2-client
+      run: sudo percona-release enable-only original experimental
+     
+    - name: Install PMM Client 
+      run: sudo apt update -y && sudo apt-get upgrade -y && sudo apt-get install -y pmm2-client
+
+    - name: Delete if the Repo already checked out
+      run: sudo rm -r pmm-qa || true 
+
+    - name: Clone the PMM_QA repo 
+      run: git clone -b ${{ env.PMM_QA_REPO_BRANCH }} ${{ env.PMM_QA_REPO_URL }}
+      
+    - name: Give write perimssion to the bash script
+      run: chmod +x ./pmm-tests/pmm-framework.sh
+      working-directory: pmm-qa
+
+    - name: Run the pmm container in backgrounds
+      run: docker run --detach --restart always -p 443:443 -p 80:80 --name pmm-server ${{ env.PMM_IMAGE }}
+
+    - name: Wait before pmm-admin config command
+      run: sleep 120
+
+    - name: setup pmm-admin config
+      run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
+
+    - name: Run for PS tests
+      run: ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=slowlog
+      working-directory: pmm-qa/pmm-tests
+    
+    - name: Checkout the repo and install node packages
+      run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
+
+    - name: Install npx dependencies
+      run: sudo npx playwright install-deps && npx codeceptjs def pr.codecept.js
+      working-directory: pmm-ui-tests
+      
+    - name: Run the Integration tests of PS
+      run: npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_ps_integration_test.js --steps --debug
+      working-directory: pmm-ui-tests
