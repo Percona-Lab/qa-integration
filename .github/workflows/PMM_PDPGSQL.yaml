@@ -73,7 +73,7 @@ jobs:
       run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
 
     - name: Run for PDPGSQL tests
-      run: ./pmm-framework.sh --pdpgsql-version=16 --pmm2 --download --addclient=pgpgsql,1
+      run: ./pmm-framework.sh --pdpgsql-version=16 --pmm2 --download --addclient=pdpgsql,1
       working-directory: pmm-qa/pmm-tests
     
     - name: Checkout the repo and install node packages
