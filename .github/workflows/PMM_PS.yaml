@@ -7,7 +7,7 @@ on:
         required: true
       ps_glibc:
         description: "ps glibc version, example: 2.28"
-        required: true
+        required: false
       pmm_image:
         description: "pmm_image, example: perconalab/pmm-server:dev-latest"
         required: false
