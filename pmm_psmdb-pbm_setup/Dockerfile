@@ -59,11 +59,12 @@ RUN set -ex; \
         cd /tmp/pmm2-client && ./install_tarball && cd ../ && rm -rf pmm2* ;\
     elif [ $PMM_CLIENT_VERSION == "latest" ]; then \
         yum -y install pmm2-client ; \
+    elif [ $PMM_CLIENT_VERSION == "pmm2-rc" ]; then \
+        percona-release enable original testing \
+        yum update --refresh -y \
+        yum -y install pmm2-client ; \
     else \
         yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el8 ; \
-    fi && \
-    if [ -f "/usr/bin/mongosh" ] ; then \
-        ln -s /usr/bin/mongosh /usr/bin/mongo ; \
     fi && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
@@ -75,5 +76,6 @@ RUN set -ex; \
 
 COPY conf/sysconfig/mongod /etc/sysconfig/
 COPY keyfile /etc/keyfile
+RUN ln -s /usr/bin/mongosh /usr/bin/mongo || true
 RUN chown mongod /etc/keyfile && chmod 400 /etc/keyfile
 EXPOSE 27017
