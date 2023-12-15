@@ -18,7 +18,8 @@ on:
   push:
     branches:
       - main
-
+      - pmm-pxc-proxysql2-packages
+      
   pull_request:
     branches:
       - main
