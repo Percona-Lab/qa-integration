@@ -1,4 +1,4 @@
-FROM oraclelinux:8
+FROM oraclelinux:9
 ARG REPO=testing
 ARG PMM_REPO=experimental
 ARG PBM_VERSION=latest
@@ -35,7 +35,7 @@ RUN set -ex; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
     percona-release enable original ${PMM_REPO} && \
-    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
+    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     yum update --refresh -y && \
     if [ $PSMDB_VERSION == "latest" ]; then \
         yum -y install percona-server-mongodb \
@@ -43,15 +43,15 @@ RUN set -ex; \
                        percona-server-mongodb-server \
                        percona-server-mongodb-mongos ; \
     else \
-        yum -y install percona-server-mongodb-${PSMDB_VERSION}.el8 \
-                          percona-server-mongodb-tools-${PSMDB_VERSION}.el8 \
-                          percona-server-mongodb-server-${PSMDB_VERSION}.el8 \
-                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el8 ; \
+        yum -y install percona-server-mongodb-${PSMDB_VERSION}.el9 \
+                          percona-server-mongodb-tools-${PSMDB_VERSION}.el9 \
+                          percona-server-mongodb-server-${PSMDB_VERSION}.el9 \
+                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el9 ; \
     fi && \
     if [ $PBM_VERSION == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
-        yum -y install percona-backup-mongodb-${PBM_VERSION}.el8 ; \
+        yum -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
     fi && \
     if [[ $PMM_CLIENT_VERSION == http* ]]; then \
         yum -y install pmm2-client && \
@@ -65,7 +65,7 @@ RUN set -ex; \
         yum update --refresh -y \
         yum -y install pmm2-client ; \
     else \
-        yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el8 ; \
+        yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
