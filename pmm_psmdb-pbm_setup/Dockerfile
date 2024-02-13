@@ -58,7 +58,7 @@ RUN set -ex; \
         curl -Lf -o /tmp/pmm2-client.tar.gz $PMM_CLIENT_VERSION && \
         cd /tmp && tar -xvf pmm2-client.tar.gz --transform 's,^/*[^/]*,/pmm2-client,S' && \
         cd /tmp/pmm2-client && ./install_tarball && cd ../ && rm -rf pmm2* ;\
-    elif [ $PMM_CLIENT_VERSION == "latest" ]; then \
+    elif [ $PMM_CLIENT_VERSION == "latest" || $PMM_CLIENT_VERSION == "dev-latest" ]; then \
         yum -y install pmm2-client ; \
     elif [ $PMM_CLIENT_VERSION == "pmm2-rc" ]; then \
         percona-release enable original testing \
