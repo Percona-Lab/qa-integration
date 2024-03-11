@@ -42,6 +42,8 @@ curl -L -s https://bit.ly/dbdeployer | bash || true
 ### Get the tarball
 wget ${ps_tarball}
 mkdir ~/ps${ps_version} || true
+mkdir /tmp || true
+chmod 1777 /tmp || true
 
 ## Deploy DB deployer
 export tar_ball_name=$(ls Percona-Server*)

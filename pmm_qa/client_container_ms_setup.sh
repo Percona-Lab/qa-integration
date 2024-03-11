@@ -39,11 +39,14 @@ curl -L -s https://bit.ly/dbdeployer | bash || true
 ### Get the tarball
 wget ${ms_tarball}
 mkdir ~/ms${ms_version} || true
+mkdir /tmp || true
+chmod 1777 /tmp || true
 
 ## Deploy DB deployer
 export tar_ball_name=$(ls mysql-*)
 dbdeployer unpack ${tar_ball_name} --sandbox-binary=~/ms${ms_version} --overwrite
 export db_version_sandbox=$(ls ~/ms${ms_version})
+export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
 if [[ $number_of_nodes == 1 ]];then
    if [[ ! -z $group_replication ]]; then
@@ -71,14 +74,14 @@ if [[ $number_of_nodes == 1 ]];then
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_admin_statements=ON;"
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
         fi
-        #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-group-replication-node-$j
-        pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-prod --cluster=ms-prod-cluster --replication-set=ms-repl ms-group-replication-node-$j --debug 127.0.0.1:$node_port
+        #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-group-replication-node
+        pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-prod --cluster=ms-prod-cluster --replication-set=ms-repl ms-group-replication-node-$j-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$node_port
         node_port=$(($node_port + 1))
         sleep 20
       done
    else
-      #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-single-$IP_ADDRESS
-      pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ms-single 127.0.0.1:$node_port
+      #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-single
+      pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ms-single-${SERVICE_RANDOM_NUMBER} 127.0.0.1:$node_port
    fi
 else
      dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0
@@ -93,11 +96,11 @@ else
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
         fi
         if [ $(( ${j} % 2 )) -eq 0 ]; then
-          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-prod --cluster=ms-prod-cluster --replication-set=ms-repl2 ms-multiple-node-$j --debug 127.0.0.1:$node_port
+          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-prod --cluster=ms-prod-cluster --replication-set=ms-repl2 ms-multiple-node-$j-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$node_port
         else
-          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-dev --cluster=ms-dev-cluster --replication-set=ms-repl1 ms-multiple-node-$j --debug 127.0.0.1:$node_port
+          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ms-dev --cluster=ms-dev-cluster --replication-set=ms-repl1 ms-multiple-node-$j-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$node_port
         fi
-        #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-multiple-node-$j-$IP_ADDRESS
+        #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-multiple-node
         node_port=$(($node_port + 1))
         sleep 20
     done
