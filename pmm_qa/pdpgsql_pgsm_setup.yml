@@ -31,7 +31,7 @@
   - name: Prepare Container for PostgreSQL
     shell: >
       sudo docker run -d --name={{ pdpgsql_pgsm_container }}
-      -p 5437:5432
+      -p 5447:5432
       phusion/baseimage:focal-1.2.0
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container

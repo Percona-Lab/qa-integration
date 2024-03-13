@@ -2,6 +2,7 @@
 import subprocess
 import argparse
 import os
+import sys
 
 # Database configurations
 database_configs = {
@@ -82,8 +83,12 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
+
+    # Get Script Dir
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
     # Path to Ansible playbook
-    playbook_path = os.getcwd() + '/ps_pmm_setup.yml'
+    playbook_path = script_dir + '/ps_pmm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -108,8 +113,11 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running.., Exiting")
         exit()
 
+    # Get Script Dir
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
     # Path to Ansible playbook
-    playbook_path = os.getcwd() + '/ms_pmm_setup.yml'
+    playbook_path = script_dir + '/ms_pmm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -135,8 +143,11 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Get Script Dir
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
     # Path to Ansible playbook
-    playbook_path = os.getcwd() + '/pdpgsql_pgsm_setup.yml'
+    playbook_path = script_dir + '/pdpgsql_pgsm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -159,8 +170,11 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Get Script Dir
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
     # Path to Ansible playbook
-    playbook_path = os.getcwd() + '/pgsql_pgsm_setup.yml'
+    playbook_path = script_dir + '/pgsql_pgsm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
