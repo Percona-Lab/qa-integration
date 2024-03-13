@@ -1,3 +1,5 @@
+import os
+
 import requests
 import docker
 import pytest
@@ -10,6 +12,8 @@ docker_rs102 = testinfra.get_host('docker://rs102')
 docker_rs103 = testinfra.get_host('docker://rs103')
 testinfra_hosts = ['docker://rs101','docker://rs102','docker://rs103']
 
+pytest.pmm_server_url = os.getenv('PMM_SERVER_CONTAINER_ADDRESS')
+
 pytest.location_id = ''
 pytest.service_id = ''
 pytest.artifact_id = ''
@@ -19,7 +23,7 @@ pytest.pbm_backup_name = ''
 pytest.restore_id = ''
 
 def test_pmm_services():
-    req = requests.post('https://pmm-server/v1/inventory/Services/List',json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    req = requests.post(f"https://{pytest.pmm_server_url}/v1/inventory/Services/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
     print('\nGetting all mongodb services:')
     mongodb = req.json()['mongodb']
     print(mongodb)
@@ -43,7 +47,7 @@ def test_pmm_add_location():
           'bucket_name': 'bcp'
           }
         }
-    req = requests.post('https://pmm-server/v1/management/backup/Locations/Add',json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Locations/Add",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
     print('\nAdding new location:')
     print(req.json())
     assert "location_id" in req.json()['location_id']
@@ -58,7 +62,7 @@ def test_pmm_logical_backup():
         'retries': 0,
         'data_model': 'LOGICAL'
         }
-    req = requests.post('https://pmm-server/v1/management/backup/Backups/Start',json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Backups/Start",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
     print('\nCreating logical backup:')
     print(req.json())
     assert "artifact_id" in req.json()['artifact_id']
@@ -68,7 +72,7 @@ def test_pmm_artifact():
     backup_complete = False
     for i in range(600):
         done = False
-        req = requests.post('https://pmm-server/v1/management/backup/Artifacts/List',json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+        req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Artifacts/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
         assert req.json()['artifacts']
         for artifact in req.json()['artifacts']:
             if artifact['artifact_id'] == pytest.artifact_id:
@@ -105,7 +109,7 @@ def test_pmm_start_restore():
         'service_id': pytest.service_id,
         'artifact_id': pytest.artifact_id
         }
-    req = requests.post('https://pmm-server/v1/management/backup/Backups/Restore',json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Backups/Restore",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
     print('\nRestoring logical backup:')
     print(req.json())
     assert "restore_id" in req.json()['restore_id']
@@ -117,7 +121,7 @@ def test_pmm_restore():
     restore_complete = False
     for i in range(600):
         done = False
-        req = requests.post('https://pmm-server/v1/management/backup/RestoreHistory/List',json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+        req = requests.post("https://{pytest.pmm_server_url}/v1/management/backup/RestoreHistory/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
         assert req.json()['items']
         for item in req.json()['items']:
             if item['restore_id'] == pytest.restore_id:
