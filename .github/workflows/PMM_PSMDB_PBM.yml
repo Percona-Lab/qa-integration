@@ -5,34 +5,40 @@ on:
     inputs:
       psmdb_version:
         description: "psmdb version"
+        default: "latest"
         required: false
       pbm_version:
         description: "pbm version"
+        default: "latest"
         required: false
       pmm_version:
         description: "pmm2-client version"
+        default: "3-dev-latest"
         required: false
       pmm_image:
         description: "pmm-server docker image"
+        default: "perconalab/pmm-server:3-dev-latest"
         required: false
 
   push:
     branches:
       - main
+      - -v3
 
   pull_request:
     branches:
       - main
+      - v3
 
 jobs:
   test_replica_set:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
-      PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
-      PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
-      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
-      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+      PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
+      PBM_VERSION: ${{ inputs.pbm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ inputs.pmm_version || '3-dev-latest' }}
+      PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server:3-dev-latest' }}
     steps:
     - uses: actions/checkout@v2
     - name: test-rs
@@ -44,10 +50,10 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
-      PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
-      PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
-      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
-      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+      PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
+      PBM_VERSION: ${{ inputs.pbm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ inputs.pmm_version || '3-dev-latest' }}
+      PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server:3-dev-latest' }}
     steps:
     - uses: actions/checkout@v2
     - name: test-sharded
@@ -59,10 +65,10 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
-      PSMDB_VERSION: ${{ github.event.inputs.psmdb_version || 'latest' }}
-      PBM_VERSION: ${{ github.event.inputs.pbm_version || 'latest' }}
-      PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
-      PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+      PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
+      PBM_VERSION: ${{ inputs.pbm_version || 'latest' }}
+      PMM_CLIENT_VERSION: ${{ inputs.pmm_version || '3-dev-latest' }}
+      PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server:3-dev-latest' }}
     steps:
     - uses: KengoTODA/actions-setup-docker-compose@v1
       with:
