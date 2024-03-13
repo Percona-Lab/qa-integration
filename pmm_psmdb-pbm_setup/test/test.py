@@ -1,7 +1,6 @@
 import os
 
 import requests
-import docker
 import pytest
 import testinfra
 import time
@@ -10,9 +9,9 @@ import json
 docker_rs101 = testinfra.get_host('docker://rs101')
 docker_rs102 = testinfra.get_host('docker://rs102')
 docker_rs103 = testinfra.get_host('docker://rs103')
-testinfra_hosts = ['docker://rs101','docker://rs102','docker://rs103']
+testinfra_hosts = ['docker://rs101', 'docker://rs102', 'docker://rs103']
 
-pytest.pmm_server_url = os.getenv('PMM_SERVER_CONTAINER_ADDRESS')
+pmm_server_url = os.getenv('PMM_SERVER_CONTAINER_ADDRESS')
 
 pytest.location_id = ''
 pytest.service_id = ''
@@ -22,8 +21,10 @@ pytest.artifact_is_sharded = False
 pytest.pbm_backup_name = ''
 pytest.restore_id = ''
 
+
 def test_pmm_services():
-    req = requests.post(f"https://{pytest.pmm_server_url}/v1/inventory/Services/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    req = requests.post(f"https://{pmm_server_url}/v1/inventory/Services/List", json={},
+                        headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nGetting all mongodb services:')
     mongodb = req.json()['mongodb']
     print(mongodb)
@@ -32,26 +33,29 @@ def test_pmm_services():
     for service in mongodb:
         assert "rs" or "mongos" in service['service_name']
         if not "mongos" in service['service_name']:
-             pytest.service_id = service['service_id']
+            pytest.service_id = service['service_id']
     print('This service_id will be used in the next steps')
     print(pytest.service_id)
+
 
 def test_pmm_add_location():
     data = {
         'name': 'test',
         'description': 'test',
         's3_config': {
-          'endpoint': 'http://minio:9000',
-          'access_key': 'minio1234',
-          'secret_key': 'minio1234',
-          'bucket_name': 'bcp'
-          }
+            'endpoint': 'http://minio:9000',
+            'access_key': 'minio1234',
+            'secret_key': 'minio1234',
+            'bucket_name': 'bcp'
         }
-    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Locations/Add",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    }
+    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Locations/Add", json=data,
+                        headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nAdding new location:')
     print(req.json())
     assert "location_id" in req.json()['location_id']
     pytest.location_id = req.json()['location_id']
+
 
 def test_pmm_logical_backup():
     data = {
@@ -61,18 +65,21 @@ def test_pmm_logical_backup():
         'description': 'test',
         'retries': 0,
         'data_model': 'LOGICAL'
-        }
-    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Backups/Start",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    }
+    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Backups/Start", json=data,
+                        headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nCreating logical backup:')
     print(req.json())
     assert "artifact_id" in req.json()['artifact_id']
     pytest.artifact_id = req.json()['artifact_id']
 
+
 def test_pmm_artifact():
     backup_complete = False
     for i in range(600):
         done = False
-        req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Artifacts/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+        req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Artifacts/List", json={},
+                            headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
         assert req.json()['artifacts']
         for artifact in req.json()['artifacts']:
             if artifact['artifact_id'] == pytest.artifact_id:
@@ -84,7 +91,7 @@ def test_pmm_artifact():
                     print(artifact)
                     pytest.artifact_pbm_meta = artifact['metadata_list'][0]['pbm_metadata']['name']
                     if "is_sharded_cluster" in artifact:
-                         pytest.artifact_is_sharded = artifact['is_sharded_cluster']
+                        pytest.artifact_is_sharded = artifact['is_sharded_cluster']
                     break
         if done:
             backup_complete = True
@@ -92,6 +99,7 @@ def test_pmm_artifact():
         else:
             time.sleep(1)
     assert backup_complete
+
 
 def test_pbm_artifact():
     status = docker_rs101.check_output('pbm status --out json')
@@ -102,18 +110,21 @@ def test_pbm_artifact():
     assert parsed_status['backups']['snapshot'][0]['status'] == "done"
     pytest.pbm_backup_name = parsed_status['backups']['snapshot'][0]['name']
 
+
 def test_pmm_start_restore():
     if pytest.artifact_is_sharded == True:
         pytest.skip("Unsupported setup for restore from UI")
     data = {
         'service_id': pytest.service_id,
         'artifact_id': pytest.artifact_id
-        }
-    req = requests.post(f"https://{pytest.pmm_server_url}/v1/management/backup/Backups/Restore",json=data,headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+    }
+    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Backups/Restore", json=data,
+                        headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nRestoring logical backup:')
     print(req.json())
     assert "restore_id" in req.json()['restore_id']
     pytest.restore_id = req.json()['restore_id']
+
 
 def test_pmm_restore():
     if pytest.artifact_is_sharded == True:
@@ -121,7 +132,8 @@ def test_pmm_restore():
     restore_complete = False
     for i in range(600):
         done = False
-        req = requests.post("https://{pytest.pmm_server_url}/v1/management/backup/RestoreHistory/List",json={},headers = {"authorization": "Basic YWRtaW46cGFzc3dvcmQ="},verify=False)
+        req = requests.post("https://{pmm_server_url}/v1/management/backup/RestoreHistory/List", json={},
+                            headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
         assert req.json()['items']
         for item in req.json()['items']:
             if item['restore_id'] == pytest.restore_id:
@@ -138,6 +150,7 @@ def test_pmm_restore():
         else:
             time.sleep(1)
     assert restore_complete
+
 
 def test_pbm_restore():
     if pytest.artifact_is_sharded == True:
