@@ -17,6 +17,10 @@ database_configs = {
         "versions": ["5.7", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "dev-latest", "TARBALL": ""}
     },
+    "PGSQL": {
+        "versions": ["11", "12", "14", "15", "16"],
+        "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
+    },
     "PDPGSQL": {
         "versions": ["11", "12", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
@@ -132,6 +136,30 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         exit()
 
     # Path to Ansible playbook
+    playbook_path = os.getcwd() + '/pdpgsql_pgsm_setup.yml'
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PGSTAT_MONITOR_BRANCH': 'main',
+        'PDPGSQL_VERSION': os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pmm_' + os.getenv('PDPGSQL_VERSION', db_version) if db_version else 'pdpgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+    }
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_path, env_vars, args)
+
+def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Path to Ansible playbook
     playbook_path = os.getcwd() + '/pgsql_pgsm_setup.yml'
 
     # Define environment variables for playbook
@@ -139,7 +167,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PGSQL_VERSION': os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSM_CONTAINER': 'pdpgsql_pmm_' + os.getenv('PS_VERSION', db_version) if db_version else 'pdpgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PGSQL_PGSM_CONTAINER': 'pgsql_pmm_' + os.getenv('PGSQL_VERSION', db_version) if db_version else 'pgsql_pmm_' + database_configs[db_type]["versions"][-1],
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
@@ -166,6 +194,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_mysql(db_type, db_version, db_config, args)
     elif db_type == 'PDMYSQL':
         setup_pdmysql(db_type, db_version, db_config, args)
+    elif db_type == 'PGSQL':
+        setup_pgsql(db_type, db_version, db_config, args)
     elif db_type == 'PDPGSQL':
         setup_pdpgsql(db_type, db_version, db_config, args)
     else:
@@ -179,8 +209,8 @@ if __name__ == "__main__":
     # Add arguments
     parser.add_argument("--database", "--d", action='append', nargs='+',metavar='database=version,option=value',
                         help="List of database options format 'db_type[,version][,key1=value1,key2=value2,...]' (e.g."
-                             "'mysql=5.7,QUERY_SORUCE=perfschema,CLIENT_VERSION=dev-latest')"
-                             "'pdpgsql=16,USE_SCOKET=1,CLIENT_VERSION=2.41.1')")
+                             "'mysql=5.7,QUERY_SOURCE=perfschema,CLIENT_VERSION=dev-latest')"
+                             "'pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=2.41.1')")
     parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect')
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client versoin/tarball')
