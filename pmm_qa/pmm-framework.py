@@ -28,7 +28,18 @@ database_configs = {
     }
 }
 
-def run_ansible_playbook(playbook_path, env_vars, args):
+def run_ansible_playbook(playbook_filename, env_vars, args):
+    try:
+        # Install Ansible
+        subprocess.run(['sudo', 'yum', 'install', 'ansible', '-y'])
+    except Exception as e:
+        print(f"Error installing Ansible: {e}")
+
+    # Get Script Dir
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
+    playbook_path = script_dir + "/" + playbook_filename;
+
     # Build the commands to execute the playbook
     command = ["ansible-playbook", f"{playbook_path}", f'-e os_type=linux', f'--connection=local',
                f'-l localhost', f'-i localhost,']
@@ -84,12 +95,6 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    # Path to Ansible playbook
-    playbook_path = script_dir + '/ps_pmm_setup.yml'
-
     # Define environment variables for playbook
     env_vars = {
         'PS_NODES': '1',
@@ -102,8 +107,11 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
     }
 
+    # Ansible playbook filename
+    playbook_filename = 'ps_pmm_setup.yml'
+
     # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_path, env_vars, args)
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 
 def setup_mysql(db_type, db_version=None, db_config=None, args=None):
@@ -112,12 +120,6 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running.., Exiting")
         exit()
-
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    # Path to Ansible playbook
-    playbook_path = script_dir + '/ms_pmm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -132,8 +134,11 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
     }
 
+    # Ansible playbook filename
+    playbook_filename = 'ms_pmm_setup.yml'
+
     # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_path, env_vars, args)
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 
 def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
@@ -142,12 +147,6 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
-
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    # Path to Ansible playbook
-    playbook_path = script_dir + '/pdpgsql_pgsm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -160,8 +159,11 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
     }
 
+    # Ansible playbook filename
+    playbook_filename = 'pdpgsql_pgsm_setup.yml'
+
     # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_path, env_vars, args)
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -169,12 +171,6 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
-
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    # Path to Ansible playbook
-    playbook_path = script_dir + '/pgsql_pgsm_setup.yml'
 
     # Define environment variables for playbook
     env_vars = {
@@ -187,8 +183,11 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
     }
 
+    # Ansible playbook filename
+    playbook_filename = 'pgsql_pgsm_setup.yml'
+
     # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_path, env_vars, args)
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 
 # Function to set up a databases based on choice
