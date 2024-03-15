@@ -8,7 +8,7 @@ import sys
 database_configs = {
     "PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0"],
-        "configurations": {"CLIENT_VERSION": "dev-latest"}
+        "configurations": {"CLIENT_VERSION": "dev-latest", "PSMDB_SETUP": "replica", "TARBALL": ""}
     },
     "MYSQL": {
         "versions": ["8.0"],
@@ -29,9 +29,10 @@ database_configs = {
 }
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
+
+    # Install Ansible
     try:
-        # Install Ansible
-        subprocess.run(['sudo', 'yum', 'install', 'ansible', '-y'])
+        subprocess.run(['yum', 'install', 'ansible', '-y'])
     except Exception as e:
         print(f"Error installing Ansible: {e}")
 
@@ -211,6 +212,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_pgsql(db_type, db_version, db_config, args)
     elif db_type == 'PDPGSQL':
         setup_pdpgsql(db_type, db_version, db_config, args)
+    elif db_type == 'PSMDB':
+        setup_psmdb(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit()
@@ -250,16 +253,19 @@ if __name__ == "__main__":
                 if value is not None:
                     value = value.upper()
 
-                if key in database_configs:
-                    db_type = key
-                    if value in database_configs[db_type]["versions"]:
-                        db_version = value
+                try:
+                    if key in database_configs:
+                        db_type = key
+                        if value in database_configs[db_type]["versions"]:
+                            db_version = value
+                        else:
+                            print(f"Option value {value} is not recognised, will be using default value")
+                    elif key in database_configs[db_type]["configurations"]:
+                            db_config[key] = value
                     else:
-                        print(f"Config value {value} is not recognised, for option {db_type} will be using default value")
-                elif key in database_configs[db_type]["configurations"]:
-                        db_config[key] = value
-                else:
-                    print(f"Config key {key} is not recognised, for option {db_type} will be using default value")
+                        print(f"Option {key} is not recognised, will be using default option")
+                except KeyError:
+                    print(f"Option {key} is not recognised, Please check")
 
         # Set up the specified database
         setup_database(db_type, db_version, db_config, args)
