@@ -19,11 +19,11 @@ database_configs = {
         "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "dev-latest", "TARBALL": ""}
     },
     "PGSQL": {
-        "versions": ["11", "12", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
-        "versions": ["11", "12", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
     }
 }
@@ -32,7 +32,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
 
     # Install Ansible
     try:
-        subprocess.run(['yum', 'install', 'ansible', '-y'])
+        subprocess.run(['sudo','yum', 'install', 'ansible', '-y'])
     except Exception as e:
         print(f"Error installing Ansible: {e}")
 
@@ -44,8 +44,10 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     # Build the commands to execute the playbook
     command = ["ansible-playbook", f"{playbook_path}", f'-e os_type=linux', f'--connection=local',
                f'-l localhost', f'-i localhost,']
+
     if args.verbose:
         print(f'Options set after considering defaults: {env_vars}')
+
     subprocess.run(command, env=env_vars, check=True)
 
 def get_running_container_name():
@@ -101,7 +103,8 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
         'PS_NODES': '1',
         'PS_VERSION':  os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PS_CONTAINER': 'pdmysql_pmm_' + os.getenv('PS_VERSION', db_version) if db_version else 'pdmysql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PS_CONTAINER': 'pdmysql_pmm_' + os.getenv('PS_VERSION') if os.environ.get(
+            'PS_VERSION') else 'pdmysql_pmm_' + db_version or 'pdmysql_pmm_' + database_configs[db_type]["versions"][-1],
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
@@ -128,7 +131,8 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'MS_NODES': '3' if get_value('GROUP_REPLICATION', db_type, args, db_config) else '1',
         'MS_VERSION': os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'MS_CONTAINER': 'mysql_pmm_' + os.getenv('PS_VERSION', db_version) if db_version else 'mysql_pmm_' + database_configs[db_type]["versions"][-1],
+        'MS_CONTAINER': 'mysql_pmm_' + os.getenv('MS_VERSION') if os.environ.get(
+            'MS_VERSION') else 'mysql_pmm_' + db_version or 'mysql_pmm_' + database_configs[db_type]["versions"][-1],
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args,  db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
@@ -154,7 +158,8 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PDPGSQL_VERSION': os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pmm_' + os.getenv('PDPGSQL_VERSION', db_version) if db_version else 'pdpgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pmm_' + os.getenv('PDPGSQL_VERSION') if os.environ.get(
+            'PDPGSQL_VERSION') else 'pdpgsql_pmm_' + db_version or 'pdpgsql_pmm_' + database_configs[db_type]["versions"][-1],
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
@@ -178,7 +183,8 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PGSQL_VERSION': os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSM_CONTAINER': 'pgsql_pmm_' + os.getenv('PGSQL_VERSION', db_version) if db_version else 'pgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PGSQL_PGSM_CONTAINER': 'pgsql_pmm_' + os.getenv('PGSQL_VERSION') if os.environ.get(
+            'PGSQL_VERSION') else 'pgsql_pmm_' + db_version or 'pgsql_pmm_' + database_configs[db_type]["versions"][-1],
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
@@ -195,12 +201,12 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 def setup_database(db_type, db_version=None, db_config=None, args=None):
     if args.verbose:
         if db_version:
-            print(f"Setting up {db_type} version {version}", end=" ")
+            print(f"Setting up {db_type} version {db_version}", end=" ")
         else:
             print(f"Setting up {db_type}", end=" ")
 
         if db_config:
-            print(f"with configuration: {config}")
+            print(f"with configuration: {db_config}")
         else:
             print()
 
@@ -212,8 +218,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_pgsql(db_type, db_version, db_config, args)
     elif db_type == 'PDPGSQL':
         setup_pdpgsql(db_type, db_version, db_config, args)
-    elif db_type == 'PSMDB':
-        setup_psmdb(db_type, db_version, db_config, args)
+    # elif db_type == 'PSMDB':
+    #    setup_psmdb(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit()
