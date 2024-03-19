@@ -132,7 +132,7 @@ def test_pmm_restore():
     restore_complete = False
     for i in range(600):
         done = False
-        req = requests.post("https://{pmm_server_url}/v1/management/backup/RestoreHistory/List", json={},
+        req = requests.post(f"https://{pmm_server_url}/v1/management/backup/RestoreHistory/List", json={},
                             headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
         assert req.json()['items']
         for item in req.json()['items']:
