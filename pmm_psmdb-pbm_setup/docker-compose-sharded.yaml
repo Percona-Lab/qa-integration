@@ -237,14 +237,14 @@ services:
       /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
   pmm-server:
-    image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
+    image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
     container_name: pmm-server
     environment:
       - "PMM_DEBUG=1"
       - "ENABLE_BACKUP_MANAGEMENT=1"
     ports:
-      - "443:443"
-      - "8081:80"
+      - "443:8443"
+      - "8081:8080"
     networks:
       - test-network
     volumes:
