@@ -63,6 +63,11 @@ services:
     container_name: pmm-server
     hostname: pmm-server
     image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://127.0.0.1:8080/ping" ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
     environment:
       - "PMM_DEBUG=1"
     ports:
