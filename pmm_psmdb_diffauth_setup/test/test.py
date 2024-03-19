@@ -40,6 +40,7 @@ def run_test(add_db_command):
     except AssertionError:
         pytest.fail(f"Connection to {url} failed")
 
+
 def test_simple_auth_wo_tls():
     run_test('pmm-admin add mongodb psmdb-server --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" ''--host '
              'psmdb-server --port 27017')
@@ -78,22 +79,20 @@ def test_ldap_auth_tls():
     any(not os.environ.get(var) for var in env_vars) or os.environ.get('SKIP_AWS_TESTS') == 'true',
     reason=f"One or more of AWS env var isn't defined or SKIP_AWS_TESTS is set to true")
 def test_aws_auth_wo_tls():
-    run_test('pmm-admin add mongodb psmdb-server --username=' + os.environ.get('AWS_ACCESS_KEY_ID') + ' ' \
-                                                                                                      '--password=' + os.environ.get(
-        'AWS_SECRET_ACCESS_KEY') + ' ' \
-                                   '--host=psmdb-server --port 27017 ' \
-                                   '--authentication-mechanism=MONGODB-AWS --authentication-database=\'$external\' ' \
-                                   '--cluster=mycluster')
+    run_test(f'pmm-admin add mongodb psmdb-server --username={os.environ.get("AWS_ACCESS_KEY_ID")}'
+             f'--password={os.environ.get("AWS_SECRET_ACCESS_KEY")}'
+             '--host=psmdb-server --port 27017 '
+             '--authentication-mechanism=MONGODB-AWS --authentication-database=\'$external\' '
+             '--cluster=mycluster')
 
 
 @pytest.mark.skipif(
     any(not os.environ.get(var) for var in env_vars) or os.environ.get('SKIP_AWS_TESTS') == 'true',
     reason=f"One or more of AWS env var isn't defined or SKIP_AWS_TESTS is set to true")
 def test_aws_auth_tls():
-    run_test('pmm-admin add mongodb psmdb-server --username=' + os.environ.get('AWS_ACCESS_KEY_ID') + ' ' \
-                                                                                                      '--password=' + os.environ.get(
-        'AWS_SECRET_ACCESS_KEY') + ' ' \
-                                   '--host=psmdb-server --port 27017 ' \
-                                   '--authentication-mechanism=MONGODB-AWS --authentication-database=\'$external\' ' \
-                                   '--tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem ' \
-                                   '--cluster=mycluster')
+    run_test(f'pmm-admin add mongodb psmdb-server --username={os.environ.get("AWS_ACCESS_KEY_ID")}'
+             f'--password={os.environ.get("AWS_SECRET_ACCESS_KEY")}'
+             '--host=psmdb-server --port 27017 '
+             '--authentication-mechanism=MONGODB-AWS --authentication-database=\'$external\' '
+             '--tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem '
+             '--cluster=mycluster')
