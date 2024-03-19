@@ -254,6 +254,8 @@ services:
     build:
       dockerfile: ./Dockerfile-testinfra
       context: .
+    environment:
+      PMM_SERVER_CONTAINER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
     volumes:
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock:ro
