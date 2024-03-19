@@ -7,10 +7,10 @@ services:
       context: .
       args:
         - REPO=${REPO:-testing}
-        - PMM_REPO=${PMM_REPO:-release}
+        - PMM_REPO=${PMM_REPO:-experimental}
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
-        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-latest}
+        - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-3-dev-latest}
     command: /bin/bash
 
   rs101:
@@ -24,7 +24,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -44,7 +44,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -64,7 +64,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -84,7 +84,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -104,7 +104,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -124,7 +124,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -144,7 +144,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -164,7 +164,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -184,7 +184,7 @@ services:
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
-      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:443"
+      - "PMM_AGENT_SERVER_ADDRESS=pmm-server:8443"
       - "PMM_AGENT_SERVER_USERNAME=admin"
       - "PMM_AGENT_SERVER_PASSWORD=password"
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
@@ -237,14 +237,14 @@ services:
       /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
   pmm-server:
-    image: ${PMM_IMAGE:-perconalab/pmm-server:dev-latest}
+    image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
     container_name: pmm-server
     environment:
       - "PMM_DEBUG=1"
       - "ENABLE_BACKUP_MANAGEMENT=1"
     ports:
-      - "443:443"
-      - "8081:80"
+      - "443:8443"
+      - "8081:8080"
     networks:
       - test-network
     volumes:
@@ -254,6 +254,8 @@ services:
     build:
       dockerfile: ./Dockerfile-testinfra
       context: .
+    environment:
+      PMM_SERVER_CONTAINER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
     volumes:
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock:ro
