@@ -20,7 +20,7 @@ fi
 # For PG community distribution please use 'PGDG'
 if [ -z "$distribution" ]
 then
-      export distribution=PPG
+      export distribution=PGDG
 fi
 
 # Need to add a user postgres either here or in Dockerfile
@@ -42,7 +42,7 @@ then
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
       sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
       apt update
-      apt -y install postgresql-${pgsql_version} postgresql-server-dev-${pgsql_version}
+      apt -y install postgresql-${pgsql_version} postgresql-server-dev-${pgsql_version} postgresql-contrib-${pgsql_version}
 else
       wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
       dpkg -i percona-release_latest.generic_all.deb
@@ -76,6 +76,7 @@ service postgresql stop
 echo "shared_preload_libraries = 'pg_stat_statements'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "track_io_timing=ON"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
+echo "pg_stat_statements.track=all" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 
 # Create init.sql file required by PMM
 echo "CREATE DATABASE sbtest1;" >> /home/postgres/init.sql

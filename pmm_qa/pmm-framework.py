@@ -20,12 +20,12 @@ database_configs = {
     },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
-        "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
+        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
-    }
+    },
 }
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
@@ -98,13 +98,15 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Gather Version details
+    ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
     # Define environment variables for playbook
     env_vars = {
         'PS_NODES': '1',
-        'PS_VERSION':  os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1],
+        'PS_VERSION': ps_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PS_CONTAINER': 'pdmysql_pmm_' + os.getenv('PS_VERSION') if os.environ.get(
-            'PS_VERSION') else 'pdmysql_pmm_' + db_version or 'pdmysql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PS_CONTAINER': 'pdmysql_pmm_' + str(ps_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
@@ -125,14 +127,16 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running.., Exiting")
         exit()
 
+    # Gather Version details
+    ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
     # Define environment variables for playbook
     env_vars = {
         'GROUP_REPLICATION': get_value('GROUP_REPLICATION', db_type, args, db_config),
         'MS_NODES': '3' if get_value('GROUP_REPLICATION', db_type, args, db_config) else '1',
-        'MS_VERSION': os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1],
+        'MS_VERSION': ms_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'MS_CONTAINER': 'mysql_pmm_' + os.getenv('MS_VERSION') if os.environ.get(
-            'MS_VERSION') else 'mysql_pmm_' + db_version or 'mysql_pmm_' + database_configs[db_type]["versions"][-1],
+        'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args,  db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
@@ -153,13 +157,15 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Gather Version details
+    pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
     # Define environment variables for playbook
     env_vars = {
         'PGSTAT_MONITOR_BRANCH': 'main',
-        'PDPGSQL_VERSION': os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
+        'PDPGSQL_VERSION': pdpgsql_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pmm_' + os.getenv('PDPGSQL_VERSION') if os.environ.get(
-            'PDPGSQL_VERSION') else 'pdpgsql_pmm_' + db_version or 'pdpgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
@@ -178,20 +184,21 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Gather Version details
+    pgsql_version = os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
     # Define environment variables for playbook
     env_vars = {
-        'PGSTAT_MONITOR_BRANCH': 'main',
-        'PGSQL_VERSION': os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1],
+        'PGSQL_VERSION': pgsql_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSM_CONTAINER': 'pgsql_pmm_' + os.getenv('PGSQL_VERSION') if os.environ.get(
-            'PGSQL_VERSION') else 'pgsql_pmm_' + db_version or 'pgsql_pmm_' + database_configs[db_type]["versions"][-1],
+        'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
     }
 
     # Ansible playbook filename
-    playbook_filename = 'pgsql_pgsm_setup.yml'
+    playbook_filename = 'pgsql_pgss_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
