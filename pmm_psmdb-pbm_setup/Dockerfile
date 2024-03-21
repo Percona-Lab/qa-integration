@@ -68,6 +68,7 @@ RUN if [[ $PMM_CLIENT_VERSION == http* ]]; then \
     else \
         yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
+    sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
     systemctl enable pmm-agent && \

@@ -44,7 +44,7 @@ services:
     volumes:
       - ./conf:/etc/mongod
       - ./certs:/mongodb_certs
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - 'psmdb-server-data:/data/db'
     privileged: true
     ports:
