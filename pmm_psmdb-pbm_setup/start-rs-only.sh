@@ -18,7 +18,7 @@ echo
 echo "waiting 30 seconds for replica set members to start"
 sleep 30
 echo
-bash -x ./configure-replset.sh
+bash -x ./configure-psa.sh
 bash -x ./configure-agents.sh
 
 if [ $profile = "extra" ]; then
