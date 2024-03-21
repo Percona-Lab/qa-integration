@@ -67,6 +67,7 @@ RUN set -ex; \
     else \
         yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
+    sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
     systemctl enable pmm-agent && \
