@@ -8,7 +8,7 @@ import sys
 database_configs = {
     "PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
-        "configurations": {"CLIENT_VERSION": "dev-latest", "SETUP": "replica", "COMPOSE_PROFILES": "classic", "TARBALL": ""}
+        "configurations": {"CLIENT_VERSION": "dev-latest", "SETUP_TYPE": "replica", "COMPOSE_PROFILES": "classic", "TARBALL": ""}
     },
     "MYSQL": {
         "versions": ["8.0"],
@@ -309,13 +309,15 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Compose files
     execute_docker_compose(compose_filename, commands, env_vars, args)
 
-    # Shell script names
-    shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
+    shell_scripts = []
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "replica":
+        # Shell script names
+        shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
 
-    # If profile is extra, include shell scripts
-    if get_value('COMPOSE_PROFILES', db_type, args, db_config) == "extra" or "EXTRA":
-        shell_scripts.append('configure-extra-replset.sh')
-        shell_scripts.append('configure-extra-agents.sh')
+        # If profile is extra, include additional shell scripts
+        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
+            shell_scripts.append('configure-extra-replset.sh')
+            shell_scripts.append('configure-extra-agents.sh')
 
     # Execute shell scripts
     execute_shell_scripts(shell_scripts)
@@ -382,8 +384,6 @@ if __name__ == "__main__":
 
                     # Convert all str arguments to uppercase
                     key = key.upper()
-                    # if value is not None:
-                    #    value = value.upper()
 
                     try:
                         if key in database_configs:
