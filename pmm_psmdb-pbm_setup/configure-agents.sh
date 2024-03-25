@@ -15,6 +15,11 @@ do
     docker-compose -f docker-compose-rs.yaml exec -T $node bash -c "echo \"PBM_MONGODB_URI=mongodb://${pbm_user}:${pbm_pass}@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
     echo "restarting pbm agent on $node"
     docker-compose -f docker-compose-rs.yaml exec -T $node systemctl restart pbm-agent
+
+    echo "stop pbm agent for arbiter node"
+    if [[ $node == "rs103" ]]; then
+    docker-compose -f docker-compose-rs.yaml exec -T $node systemctl stop pbm-agent
+    fi
 done
 echo
 echo "configuring pmm agents"
@@ -23,7 +28,11 @@ for node in $nodes
 do
     echo "congiguring pmm agent on $node"
     docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup
-    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} $node 127.0.0.1:27017
+    if [[ $node == "rs103" ]]; then
+      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs $node 127.0.0.1:27017
+    else
+      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} $node 127.0.0.1:27017
+    fi
 done
 echo
 echo "adding some data"

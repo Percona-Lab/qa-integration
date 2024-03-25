@@ -64,8 +64,9 @@ RUN set -ex; \
         percona-release enable original testing && \
         yum update --refresh -y && \
         yum -y install pmm2-client ; \
+ 
     else \
-        yum -y install pmm2-client-${PMM_CLIENT_VERSION}-6.el9 ; \
+        yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
