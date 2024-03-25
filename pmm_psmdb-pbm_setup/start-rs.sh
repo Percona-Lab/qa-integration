@@ -3,6 +3,7 @@ set -e
 
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 profile=${COMPOSE_PROFILES:-classic}
+mongo_setup_type=${}MONGO_SETUP_TYPE:-pss}
 
 docker network create qa-integration || true
 docker network create pmm-qa || true
@@ -11,6 +12,7 @@ docker network create pmm2-upgrade-tests_pmm-network || true
 docker network create pmm2-ui-tests_pmm-network || true
 
 export COMPOSE_PROFILES=${profile}
+export MONGO_SETUP_TYPE=${mongo_setup_type}
 
 docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
 docker-compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml build
@@ -24,7 +26,11 @@ echo "restarting pmm-server"
 docker-compose -f docker-compose-pmm.yaml restart pmm-server
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
-bash -e ./configure-replset.sh
+if [ $mongo_setup_type == "pss" ]; then
+  bash -e ./configure-replset.sh
+else
+  bash -e ./configure-psa.sh
+fi
 bash -e ./configure-agents.sh
 tests=${TESTS:-yes}
 if [ $tests != "no" ]; then
