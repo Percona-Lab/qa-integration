@@ -8,24 +8,24 @@ import sys
 database_configs = {
     "PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
-        "configurations": {"CLIENT_VERSION": "dev-latest", "SETUP_TYPE": "replica", "COMPOSE_PROFILES": "classic", "TARBALL": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic", "TARBALL": ""}
     },
     "MYSQL": {
         "versions": ["8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "GROUP_REPLICATION": "", "CLIENT_VERSION": "dev-latest",
+        "configurations": {"QUERY_SOURCE": "perfschema", "GROUP_REPLICATION": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
     "PDMYSQL": {
         "versions": ["5.7", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "dev-latest", "TARBALL": ""}
+        "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "3-dev-latest", "TARBALL": ""}
     },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
-        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
+        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
-        "configurations": {"CLIENT_VERSION": "dev-latest", "USE_SOCKET": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
 }
 
@@ -91,7 +91,7 @@ def get_value(key, db_type, args, db_config):
 
     # Only for client_version we accept global command line argument
     if key == "CLIENT_VERSION" and args.client_version is not None:
-        return args.client_version.upper()
+        return args.client_version
 
     # Check if the variable exists in the args config
     config_value = db_config.get(key)
@@ -121,7 +121,8 @@ def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'PMM7-Framework'
     }
 
     # Ansible playbook filename
@@ -151,7 +152,8 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'PMM7-Framework'
     }
 
     # Ansible playbook filename
@@ -179,7 +181,8 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'PMM7-Framework'
     }
 
     # Ansible playbook filename
@@ -206,7 +209,8 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'PMM7-Framework'
     }
 
     # Ansible playbook filename
@@ -294,7 +298,8 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-        'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config)
+        'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
+        'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
     }
 
     # Docker Compose filename
@@ -310,7 +315,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     execute_docker_compose(compose_filename, commands, env_vars, args)
 
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "replica":
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss":
         # Shell script names
         shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
 
@@ -318,6 +323,11 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
             shell_scripts.append('configure-extra-replset.sh')
             shell_scripts.append('configure-extra-agents.sh')
+    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "psa":
+        # Shell script names
+        shell_scripts = ['configure-psa.sh', 'configure-agents.sh']
+    else:
+        print("Todo Sharding")
 
     # Execute shell scripts
     execute_shell_scripts(shell_scripts)
@@ -358,8 +368,9 @@ if __name__ == "__main__":
     parser.add_argument("--database", action='append', nargs=1,
                         metavar='db_name[,=version][,option1=value1,option2=value2,...]',
                         help="(e.g: "
-                             "--database mysql=5.7,QUERY_SOURCE=perfschema,CLIENT_VERSION=dev-latest "
-                             "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=2.41.1)")
+                             "--database mysql=5.7,QUERY_SOURCE=perfschema,CLIENT_VERSION=3-dev-latest "
+                             "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=3.0.0 "
+                             "--database psmdb=latest,SETUP_TYPE=psa,CLIENT_VERSION=3.0.0)")
     parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect', default='pmm-server')
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
