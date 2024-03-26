@@ -29,7 +29,7 @@ for node in $nodes
 do
     echo "configuring pmm agent on $node"
     docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup
-    if [[ $mongo_setup_type == "psa" ]]; then
+    if [[ $mongo_setup_type == "psa" && $node == "rs203"  ]]; then
       docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs1 $node 127.0.0.1:27017
     else
       docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs1 --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} $node 127.0.0.1:27017
