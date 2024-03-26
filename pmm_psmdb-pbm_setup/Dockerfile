@@ -52,7 +52,7 @@ RUN set -ex; \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
-    fi
+    fi 
 
 RUN if [[ $PMM_CLIENT_VERSION == http* ]]; then \
         yum -y install pmm-client && \

@@ -1,0 +1,81 @@
+---
+# This playbook does following:
+#   enables Percona testing repository
+
+- hosts: all
+  become: true
+  become_method: sudo
+  vars:
+    pdpgsql_version: "{{ lookup('vars', 'extra_pdpgsql_version', default=lookup('env','PDPGSQL_VERSION') | default('14', true) ) }}"
+    pdpgsql_pgsm_container: "{{ lookup('vars', 'extra_pdpgsql_pgsm_container', default=lookup('env','PDPGSQL_PGSM_CONTAINER') | default('pdpgsql_pgsm', true) ) }}"
+    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('dev-latest', true) ) }}"
+    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
+    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
+    pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('1.1.1', true) ) }}"
+    pgstat_monitor_repo: "{{ lookup('vars', 'extra_pgstat_monitor_repo', default=lookup('env','PGSTAT_MONITOR_REPO') | default('percona/pg_stat_monitor', true) ) }}"
+    use_socket: "{{ lookup('vars', 'extra_pdpgsql_version', default=lookup('env','USE_SOCKET') | default('', true) ) }}"
+
+  tasks:
+  - name: cleanup container for client and DB setup
+    shell: >
+      docker ps -a --filter "name={{ pdpgsql_pgsm_container }}" | grep -q . && docker stop {{ pdpgsql_pgsm_container }} && docker rm -fv {{ pdpgsql_pgsm_container }}
+    ignore_errors: true
+    tags:
+      - cleanup
+
+  - name: Create pmm-qa network if not exist
+    shell: docker network create pmm-qa
+    ignore_errors: true
+
+  - name: Prepare Container for PostgreSQL
+    shell: >
+      sudo docker run -d --name={{ pdpgsql_pgsm_container }}
+      -p 5447:5432
+      phusion/baseimage:focal-1.2.0
+  
+  - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} mkdir -p artifacts
+      - docker cp ./pg_stat_monitor_setup.sh {{ pdpgsql_pgsm_container }}:/
+      - docker cp ./pgsm_run_queries.sh {{ pdpgsql_pgsm_container }}:/
+
+  - name: Execute Setup script inside the pdpgsql pdpgsql_pgsm_container
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution PPG --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_pdpgsql_pgsm_{{ pdpgsql_version }}.log
+
+  - name: Install pmm2-client on the pdpgsql_pgsm_container
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} wget https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{ pmm_qa_branch }}/pmm_qa/pmm3-client-setup.sh
+      - docker network connect pmm-qa {{ pdpgsql_pgsm_container }}
+      - docker exec {{ pdpgsql_pgsm_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
+
+  - name: Set Random Number Fact
+    set_fact:
+      random_number: "{{ (10000 | random) | int }}"
+
+  - name: Remove pdpgsql service if already added previously
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} bash -c 'source ~/.bash_profile || true; pmm-admin remove postgresql {{ pdpgsql_pgsm_container }}_service__{{ random_number }}'
+    ignore_errors: true 
+
+  - name: Add pdpgsql_pgsm for monitoring
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} bash -c 'source ~/.bash_profile || true; pmm-admin list'
+      - docker exec {{ pdpgsql_pgsm_container }} bash -c 'source ~/.bash_profile || true; pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor {{ pdpgsql_pgsm_container }}_service_{{ random_number }}'
+
+  - name: Add pdpgsql_pgsm for monitoring
+    shell: "{{ item }}"
+    with_items:
+      - docker exec {{ pdpgsql_pgsm_container }} bash -c 'source ~/.bash_profile || true; pmm-admin list'
+      - docker exec {{ pdpgsql_pgsm_container }} bash -c 'source ~/.bash_profile || true; pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor --socket=/var/run/postgresql socket_{{ pdpgsql_pgsm_container }}_service_{{ random_number }}'
+
+  - name: Run queries for generating data
+    shell: "{{ item }}"
+    with_items:
+        - docker exec {{ pdpgsql_pgsm_container }} bash ./pgsm_run_queries.sh &
