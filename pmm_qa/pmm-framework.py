@@ -8,14 +8,15 @@ import sys
 database_configs = {
     "PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic", "TARBALL": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
+                           "TARBALL": ""}
     },
     "MYSQL": {
         "versions": ["8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "GROUP_REPLICATION": "", "CLIENT_VERSION": "3-dev-latest",
+        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
-    "PDMYSQL": {
+    "PS": {
         "versions": ["5.7", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "3-dev-latest", "TARBALL": ""}
     },
@@ -28,7 +29,6 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
 }
-
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Install Ansible
@@ -102,7 +102,7 @@ def get_value(key, db_type, args, db_config):
     return database_configs[db_type]["configurations"].get(key, '')
 
 
-def setup_pdmysql(db_type, db_version=None, db_config=None, args=None):
+def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
     if container_name is None and args.pmm_server_ip is None:
@@ -142,10 +142,15 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
+    # Check Setup Types
+    setup_type = ''
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
+        setup_type = 1
+
     # Define environment variables for playbook
     env_vars = {
-        'GROUP_REPLICATION': get_value('GROUP_REPLICATION', db_type, args, db_config),
-        'MS_NODES': '3' if get_value('GROUP_REPLICATION', db_type, args, db_config) else '1',
+        'GROUP_REPLICATION': f'{setup_type}',
+        'MS_NODES': '3' if setup_type else '1',
         'MS_VERSION': ms_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
@@ -257,7 +262,7 @@ def execute_docker_compose(compose_filename, commands, env_vars, args):
             exit(1)
 
 
-def execute_shell_scripts(shell_scripts):
+def execute_shell_scripts(shell_scripts, env_vars, args):
     # Get script directory
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
@@ -265,6 +270,14 @@ def execute_shell_scripts(shell_scripts):
 
     # Get the original working directory
     original_dir = os.getcwd()
+
+    if args.verbose:
+        print(f'Options set after considering defaults: {env_vars}')
+
+    # Set environment variables if provided
+    if env_vars:
+        for key, value in env_vars.items():
+            os.environ[key] = value
 
     # Execute each shell script
     for script in shell_scripts:
@@ -281,6 +294,47 @@ def execute_shell_scripts(shell_scripts):
             os.chdir(original_dir)
 
 
+# Temporary method for Sharding Setup.
+def mongo_sharding_setup(script_filename, args):
+    # Get script directory
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
+    scripts_path = script_dir + "/../pmm_psmdb-pbm_setup/"
+
+    # Temporary shell script filename
+    shell_file_path = scripts_path + script_filename
+
+    # Temporary docker compose filename
+    compose_filename = f'docker-compose-sharded-no-server.yaml'
+    compose_file_path = scripts_path + compose_filename
+
+    no_server = True
+    # Add workaround (copy files) till sharding only support is ready.
+    try:
+        if no_server:
+            # Search & Replace content in the temporary compose files
+            subprocess.run(
+                ['cp', f'{scripts_path}docker-compose-sharded.yaml', f'{compose_file_path}'])
+            admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+            subprocess.run(['sed', '-i', f's/password/{admin_password}/g', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', '/- test-network/a\\      - pmm-qa', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', '/driver: bridge/a\\  pmm-qa:\\n    name: pmm-qa\\n    external: true',
+                            f'{compose_file_path}'])
+            subprocess.run(
+                ['sed', '-i', '/^  pmm-server:/,/^$/{/^  test:/!d}', f'{compose_file_path}'])
+            with open(f'{compose_file_path}', 'a') as f:
+                subprocess.run(['echo', '   backups: null'], stdout=f, text=True, check=True)
+
+            # Search replace content in the temporary shell files
+            subprocess.run(['cp', f'{scripts_path}start-sharded.sh', f'{shell_file_path}'])
+            subprocess.run(['sed', '-i', '/echo "configuring pmm-server/,/sleep 30/d',
+                            f'{shell_file_path}'])
+            subprocess.run(['sed', '-i', f's/docker-compose-sharded.yaml/{compose_filename}/g',
+                            f'{shell_file_path}'])
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+
+
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -294,28 +348,21 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
-        'PMM_SERVER_CONTAINER_ADDRESS': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:8443' or f'{container_name}:8443' or '127.0.0.1:8443',
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
         'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
+        'TESTS': 'no',
+        'CLEANUP': 'no'
     }
 
-    # Docker Compose filename
-    compose_filename = 'docker-compose-rs.yaml'
-
-    # Define commands for compose file
-    commands = {
-        'down': ['-v', '--remove-orphans'],  # Cleanup containers
-        'build': ['--no-cache'],  # Build containers
-        'up': ['-d'],  # Start containers
-    }
-    # Call the function to run the Compose files
-    execute_docker_compose(compose_filename, commands, env_vars, args)
-
+    compose_filename = ''
     shell_scripts = []
     if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss":
+        # Docker Compose filename
+        compose_filename = 'docker-compose-rs.yaml'
         # Shell script names
         shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
 
@@ -324,13 +371,33 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
             shell_scripts.append('configure-extra-replset.sh')
             shell_scripts.append('configure-extra-agents.sh')
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "psa":
+        # Docker Compose filename
+        compose_filename = 'docker-compose-rs.yaml'
         # Shell script names
         shell_scripts = ['configure-psa.sh', 'configure-agents.sh']
-    else:
-        print("Todo Sharding")
+
+        # If profile is extra, include additional shell scripts
+        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
+            shell_scripts.append('configure-extra-psa.sh')
+            shell_scripts.append('configure-extra-agents.sh')
+    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
+        # Shell script names
+        shell_scripts = [f'start-sharded-no-server.sh']
+        mongo_sharding_setup(shell_scripts[0], args)
+
+    # Define commands for compose file setup
+    commands = {
+        'down': ['-v', '--remove-orphans'],  # Cleanup containers
+        'build': ['--no-cache'],  # Build containers
+        'up': ['-d'],  # Start containers
+    }
+    # Call the function to run the Compose files
+    if not compose_filename == '':
+        execute_docker_compose(compose_filename, commands, env_vars, args)
 
     # Execute shell scripts
-    execute_shell_scripts(shell_scripts)
+    if not shell_scripts == []:
+        execute_shell_scripts(shell_scripts, env_vars, args)
 
 
 # Function to set up a databases based on choice
@@ -348,8 +415,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
     if db_type == 'MYSQL':
         setup_mysql(db_type, db_version, db_config, args)
-    elif db_type == 'PDMYSQL':
-        setup_pdmysql(db_type, db_version, db_config, args)
+    elif db_type == 'PS':
+        setup_ps(db_type, db_version, db_config, args)
     elif db_type == 'PGSQL':
         setup_pgsql(db_type, db_version, db_config, args)
     elif db_type == 'PDPGSQL':
@@ -368,7 +435,7 @@ if __name__ == "__main__":
     parser.add_argument("--database", action='append', nargs=1,
                         metavar='db_name[,=version][,option1=value1,option2=value2,...]',
                         help="(e.g: "
-                             "--database mysql=5.7,QUERY_SOURCE=perfschema,CLIENT_VERSION=3-dev-latest "
+                             "--database mysql=5.7,QUERY_SOURCE=perfschema,SETUP_TYPE=gr,CLIENT_VERSION=3-dev-latest "
                              "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=3.0.0 "
                              "--database psmdb=latest,SETUP_TYPE=psa,CLIENT_VERSION=3.0.0)")
     parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect', default='pmm-server')
@@ -393,7 +460,7 @@ if __name__ == "__main__":
                     else:
                         key, value = config, None
 
-                    # Convert all str arguments to uppercase
+                    # Convert all arguments/options only to uppercase
                     key = key.upper()
 
                     try:
