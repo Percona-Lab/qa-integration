@@ -41,7 +41,7 @@ if [ ! -z "$upgrade" ]; then
 fi
 
 port=8443
-if [[ "$pmm_server_ip" == "127.0.0.1" ]]; then
+if [[ ! "$pmm_server_ip" =~ ^"pmm-server"$ ]]; then
   port=443
 fi
 
@@ -72,7 +72,7 @@ if [[ "$client_version" == "pmm3-latest" ]]; then
 fi
 
 ## Only supported for debian based systems for now
-if [[ "$client_version" == 3* ]]; then
+if [[ "$client_version" =~ ^"3." ]]; then
   ## Note: only experimental packages are present atm.
   wget -O pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/experimental/p/pmm-client/pmm-client_${client_version}-6.$(lsb_release -sc)_amd64.deb
   dpkg -i pmm-client.deb

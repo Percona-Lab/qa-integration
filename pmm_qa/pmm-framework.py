@@ -117,7 +117,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'PS_NODES': '1',
         'PS_VERSION': ps_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PS_CONTAINER': 'pdmysql_pmm_' + str(ps_version),
+        'PS_CONTAINER': 'ps_pmm_' + str(ps_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
