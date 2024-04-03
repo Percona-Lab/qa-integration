@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python3 -E
 import subprocess
 import argparse
 import os
