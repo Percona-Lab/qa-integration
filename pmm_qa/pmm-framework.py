@@ -348,7 +348,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
-        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:8443' or f'{container_name}:8443' or '127.0.0.1:443',
+        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:443' or f'{container_name}:8443' or '127.0.0.1:443',
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
