@@ -438,7 +438,7 @@ if __name__ == "__main__":
                              "--database mysql=5.7,QUERY_SOURCE=perfschema,SETUP_TYPE=gr,CLIENT_VERSION=3-dev-latest "
                              "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=3.0.0 "
                              "--database psmdb=latest,SETUP_TYPE=psa,CLIENT_VERSION=3.0.0)")
-    parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect', default='pmm-server')
+    parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect')
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
