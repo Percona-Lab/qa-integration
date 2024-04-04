@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python3 -E
 import subprocess
 import argparse
 import os
@@ -117,7 +117,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'PS_NODES': '1',
         'PS_VERSION': ps_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PS_CONTAINER': 'pdmysql_pmm_' + str(ps_version),
+        'PS_CONTAINER': 'ps_pmm_' + str(ps_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
@@ -348,7 +348,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
-        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:8443' or f'{container_name}:8443' or '127.0.0.1:443',
+        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:443' or f'{container_name}:8443' or '127.0.0.1:443',
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -438,7 +438,7 @@ if __name__ == "__main__":
                              "--database mysql=5.7,QUERY_SOURCE=perfschema,SETUP_TYPE=gr,CLIENT_VERSION=3-dev-latest "
                              "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=3.0.0 "
                              "--database psmdb=latest,SETUP_TYPE=psa,CLIENT_VERSION=3.0.0)")
-    parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect', default='pmm-server')
+    parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect')
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')

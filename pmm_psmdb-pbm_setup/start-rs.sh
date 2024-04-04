@@ -3,7 +3,7 @@ set -e
 
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 profile=${COMPOSE_PROFILES:-classic}
-mongo_setup_type=${}MONGO_SETUP_TYPE:-pss}
+mongo_setup_type=${MONGO_SETUP_TYPE:-pss}
 
 docker network create qa-integration || true
 docker network create pmm-qa || true
