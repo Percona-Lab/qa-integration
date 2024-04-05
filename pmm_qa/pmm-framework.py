@@ -38,8 +38,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
 
-    print(script_dir)
-    print(playbook_filename)
+    if args.verbose:
+        print(f'Options set after considering defaults: {env_vars}')
 
     r = ansible_runner.run(
         private_data_dir=script_dir,
@@ -48,7 +48,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars
     )
-    print("{} playbook execution {}".format(playbook_filename, r.status))
+    print(f'{playbook_filename} playbook execution {r.status}')
 
 
 def get_running_container_name():
