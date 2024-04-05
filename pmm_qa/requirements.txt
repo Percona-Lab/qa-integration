@@ -1,0 +1,10 @@
+ansible-runner==2.3.6
+docutils==0.20.1
+lockfile==0.12.2
+packaging==24.0
+pexpect==4.9.0
+ptyprocess==0.7.0
+python-daemon==3.0.1
+PyYAML==6.0.1
+setuptools==69.2.0
+six==1.16.0

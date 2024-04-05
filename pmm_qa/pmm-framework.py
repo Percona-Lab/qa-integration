@@ -3,6 +3,7 @@ import subprocess
 import argparse
 import os
 import sys
+import ansible_runner
 
 # Database configurations
 database_configs = {
@@ -30,31 +31,24 @@ database_configs = {
     },
 }
 
-def run_ansible_playbook(playbook_filename, env_vars, args):
-    # Install Ansible
-    try:
-        subprocess.run(['sudo', 'yum', 'install', 'ansible', '-y'])
-    except Exception as e:
-        print(f"Error installing Ansible: {e}")
-        exit(1)
 
+def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
 
-    # Build the commands to execute the playbook
-    command = ["ansible-playbook", f"{playbook_path}", f'-e os_type=linux', f'--connection=local',
-               f'-l localhost', f'-i localhost,']
+    print(script_dir)
+    print(playbook_filename)
 
-    if args.verbose:
-        print(f'Options set after considering defaults: {env_vars}')
-
-    try:
-        subprocess.run(command, env=env_vars, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing Ansible {command}: {e}")
-        exit(1)
+    r = ansible_runner.run(
+        private_data_dir=script_dir,
+        playbook=playbook_path,
+        inventory='127.0.0.1',
+        cmdline='-l localhost, --connection=local',
+        envvars=env_vars
+    )
+    print("{} playbook execution {}".format(playbook_filename, r.status))
 
 
 def get_running_container_name():
