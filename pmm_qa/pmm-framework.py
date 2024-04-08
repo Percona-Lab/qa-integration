@@ -40,12 +40,6 @@ database_configs = {
 
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
-    # Install Ansible
-    try:
-        subprocess.run(['sudo', 'yum', 'install', 'ansible', '-y'])
-    except Exception as e:
-        print(f"Error installing Ansible: {e}")
-        exit(1)
 
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])
