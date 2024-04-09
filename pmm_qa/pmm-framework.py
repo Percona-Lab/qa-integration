@@ -346,6 +346,7 @@ def mongo_sharding_setup(script_filename, args):
 
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
+    global server_address
     container_name = get_running_container_name()
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running...Exiting")
@@ -354,10 +355,19 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     psmdb_version = os.getenv('PSMDB_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
+    # Handle port address for external or internal address
+    port = 8443
+    if args.pmm_server_ip:
+        port = 443
+        server_address = args.pmm_server_ip
+    else:
+        server_address = container_name
+    server_address = f'{server_address}:{port}'
+
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
-        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:443' or f'{container_name}:8443' or '127.0.0.1:443',
+        'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
