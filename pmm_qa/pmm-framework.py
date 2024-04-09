@@ -346,7 +346,6 @@ def mongo_sharding_setup(script_filename, args):
 
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
-    global server_address
     container_name = get_running_container_name()
     if container_name is None and args.pmm_server_ip is None:
         print(f"Check if PMM Server is Up and Running...Exiting")
