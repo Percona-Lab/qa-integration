@@ -131,7 +131,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -167,7 +167,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -196,7 +196,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -224,7 +224,7 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -432,7 +432,7 @@ def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
