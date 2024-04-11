@@ -47,7 +47,11 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars
     )
+
     print(f'{playbook_filename} playbook execution {r.status}')
+
+    if r.rc != 0:
+        exit(1)
 
 
 def get_running_container_name():
@@ -361,49 +365,17 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'CLEANUP': 'no'
     }
 
-    compose_filename = ''
-    shell_scripts = ['start-rs-only.sh']
+    shell_scripts = []
 
-    execute_shell_scripts(shell_scripts, env_vars, args)
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("pss" or "psa"):
+        shell_scripts = ['start-rs-only.sh']
+    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
+        shell_scripts = [f'start-sharded-no-server.sh']
+        mongo_sharding_setup(shell_scripts[0], args)
 
-    # if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss":
-    #     # Docker Compose filename
-    #     compose_filename = 'docker-compose-rs.yaml'
-    #     # Shell script names
-    #     shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
-    #
-    #     # If profile is extra, include additional shell scripts
-    #     if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-    #         shell_scripts.append('configure-extra-replset.sh')
-    #         shell_scripts.append('configure-extra-agents.sh')
-    # elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "psa":
-    #     # Docker Compose filename
-    #     compose_filename = 'docker-compose-rs.yaml'
-    #     # Shell script names
-    #     shell_scripts = ['configure-psa.sh', 'configure-agents.sh']
-    #
-    #     # If profile is extra, include additional shell scripts
-    #     if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-    #         shell_scripts.append('configure-extra-psa.sh')
-    #         shell_scripts.append('configure-extra-agents.sh')
-    # elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
-    #     # Shell script names
-    #     shell_scripts = [f'start-sharded-no-server.sh']
-    #     mongo_sharding_setup(shell_scripts[0], args)
-    #
-    # # Define commands for compose file setup
-    # commands = {
-    #     'down': ['-v', '--remove-orphans'],  # Cleanup containers
-    #     'build': ['--no-cache'],  # Build containers
-    #     'up': ['-d'],  # Start containers
-    # }
-    # # Call the function to run the Compose files
-    # if not compose_filename == '':
-    #     execute_docker_compose(compose_filename, commands, env_vars, args)
-    #
-    # # Execute shell scripts
-    # if not shell_scripts == []:
-    #     execute_shell_scripts(shell_scripts, env_vars, args)
+    # Execute shell scripts
+    if not shell_scripts == []:
+        execute_shell_scripts(shell_scripts, env_vars, args)
 
 
 # Function to set up a databases based on choice
