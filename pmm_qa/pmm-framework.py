@@ -234,43 +234,6 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
-def execute_docker_compose(compose_filename, commands, env_vars, args):
-    # Setup n/w used by compose setup
-    subprocess.run(['docker', 'network', 'create', 'qa-integration'])
-    subprocess.run(['docker', 'network', 'create', 'pmm-ui-tests_pmm-network'])
-    subprocess.run(['docker', 'network', 'create', 'pmm2-upgrade-tests_pmm-network'])
-    subprocess.run(['docker', 'network', 'create', 'pmm2-ui-tests_pmm-network'])
-
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    compose_path = script_dir + "/../pmm_psmdb-pbm_setup/" + compose_filename
-
-    # Set environment variables if provided
-    if env_vars:
-        for key, value in env_vars.items():
-            os.environ[key] = value
-
-    if args.verbose:
-        print(f'Options set after considering defaults: {env_vars}')
-
-    for command, options in commands.items():
-        # Build the Docker Compose command
-        docker_compose_cmd = ['docker-compose', '-f', compose_path, command]
-
-        # Add options if provided
-        if options:
-            docker_compose_cmd.extend(options)
-
-        # Execute Docker Compose
-        try:
-            subprocess.run(docker_compose_cmd, check=True)
-            print(f"Docker Compose {command} executed successfully!")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing Docker Compose {command}: {e}")
-            exit(1)
-
-
 def execute_shell_scripts(shell_scripts, env_vars, args):
     # Get script directory
     script_path = os.path.abspath(sys.argv[0])
@@ -355,13 +318,11 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     psmdb_version = os.getenv('PSMDB_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
+    server_hostname = container_name
     port = 8443
     if args.pmm_server_ip:
         port = 443
-        server_address = args.pmm_server_ip
-    else:
-        server_address = container_name
-    server_address = f'{server_address}:{port}'
+    server_address = f'{server_hostname}:{port}'
 
     # Define environment variables for playbook
     env_vars = {
@@ -376,42 +337,14 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'CLEANUP': 'no'
     }
 
-    compose_filename = ''
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss":
-        # Docker Compose filename
-        compose_filename = 'docker-compose-rs.yaml'
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("pss" or "psa"):
         # Shell script names
-        shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
-
-        # If profile is extra, include additional shell scripts
-        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-            shell_scripts.append('configure-extra-replset.sh')
-            shell_scripts.append('configure-extra-agents.sh')
-    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "psa":
-        # Docker Compose filename
-        compose_filename = 'docker-compose-rs.yaml'
-        # Shell script names
-        shell_scripts = ['configure-psa.sh', 'configure-agents.sh']
-
-        # If profile is extra, include additional shell scripts
-        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-            shell_scripts.append('configure-extra-psa.sh')
-            shell_scripts.append('configure-extra-agents.sh')
+        shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
         # Shell script names
         shell_scripts = [f'start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
-
-    # Define commands for compose file setup
-    commands = {
-        'down': ['-v', '--remove-orphans'],  # Cleanup containers
-        'build': ['--no-cache'],  # Build containers
-        'up': ['-d'],  # Start containers
-    }
-    # Call the function to run the Compose files
-    if not compose_filename == '':
-        execute_docker_compose(compose_filename, commands, env_vars, args)
 
     # Execute shell scripts
     if not shell_scripts == []:
