@@ -280,6 +280,9 @@ def mongo_sharding_setup(script_filename, args):
     compose_filename = f'docker-compose-sharded-no-server.yaml'
     compose_file_path = scripts_path + compose_filename
 
+    # Create pmm-qa n/w used in workaround
+    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+
     no_server = True
     # Add workaround (copy files) till sharding only support is ready.
     try:
