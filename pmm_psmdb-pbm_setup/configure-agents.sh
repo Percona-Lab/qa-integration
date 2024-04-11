@@ -24,15 +24,16 @@ if [[ $mongo_setup_type == "psa" ]]; then
 fi
 echo
 echo "configuring pmm agents"
+random_number=$RANDOM
 nodes="rs101 rs102 rs103"
 for node in $nodes
 do
     echo "congiguring pmm agent on $node"
-    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup
+    docker-compose -f docker-compose-rs.yaml exec -T $node pmm-agent setup --node-name=${node}_${random_number}
     if [[ $mongo_setup_type == "psa" && $node == "rs103" ]]; then
-      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs $node 127.0.0.1:27017
+      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs ${node}_${random_number} 127.0.0.1:27017
     else
-      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} $node 127.0.0.1:27017
+      docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} ${node}_${random_number} 127.0.0.1:27017
     fi
 done
 echo
