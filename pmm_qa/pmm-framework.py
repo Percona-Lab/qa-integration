@@ -322,6 +322,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     port = 8443
     if args.pmm_server_ip:
         port = 443
+        server_hostname = args.pmm_server_ip
     server_address = f'{server_hostname}:{port}'
 
     # Define environment variables for playbook
