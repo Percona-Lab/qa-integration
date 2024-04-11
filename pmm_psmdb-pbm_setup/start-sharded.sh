@@ -235,8 +235,8 @@ nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
 for node in $nodes
 do
     echo "congiguring pmm agent on $node"
-    export PMM_AGENT_SETUP_NODE_NAME=${node}_${random_number}
     rs=$(echo $node | awk -F "0" '{print $1}')
+    docker-compose -f docker-compose-sharded.yaml exec -T $node export PMM_AGENT_SETUP_NODE_NAME=${node}_${random_number}
     docker-compose -f docker-compose-sharded.yaml exec -T $node pmm-agent setup
     docker-compose -f docker-compose-sharded.yaml exec -T $node pmm-admin add mongodb --cluster=sharded --username=${pmm_user} --password=${pmm_pass} ${node}_${random_number} 127.0.0.1:27017
 done
