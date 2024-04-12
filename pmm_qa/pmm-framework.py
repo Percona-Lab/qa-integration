@@ -3,6 +3,7 @@ import subprocess
 import argparse
 import os
 import sys
+import time
 
 # Database configurations
 database_configs = {
@@ -256,11 +257,27 @@ def execute_shell_scripts(shell_scripts, env_vars, args):
         try:
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
-            subprocess.run(['bash', script], check=True)
-            print(f"Shell script '{script}' executed successfully!")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing shell script '{script} at path {shell_scripts_path}': {e}")
-            exit(1)
+            process = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Read output streams asynchronously
+            while process.poll() is None:  # Check if the subprocess is still running
+                # Read from stdout
+                for stdout_line in process.stdout:
+                    if stdout_line:
+                        print(stdout_line.decode('utf-8').strip())
+
+                # Read from stderr
+                for stderr_line in process.stderr:
+                    if stderr_line:
+                        print(stderr_line.decode('utf-8').strip())
+
+            # Get the return code of the process
+            return_code = process.returncode
+            if return_code == 0:
+                print(f"Shell script '{script}' executed successfully.")
+            else:
+                print(f"Shell script '{script}' failed with return code: {return_code}!")
+        except Exception as e:
+            print("Unexpected error occurred:", e)
         finally:
             # Return to the original working directory
             os.chdir(original_dir)
