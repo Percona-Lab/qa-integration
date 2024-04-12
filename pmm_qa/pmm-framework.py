@@ -3,7 +3,6 @@ import subprocess
 import argparse
 import os
 import sys
-import time
 
 # Database configurations
 database_configs = {
