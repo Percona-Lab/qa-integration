@@ -18,7 +18,7 @@ database_configs = {
     },
     "PS": {
         "versions": ["5.7", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "CLIENT_VERSION": "3-dev-latest", "TARBALL": ""}
+        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest", "TARBALL": ""}
     },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
@@ -28,6 +28,14 @@ database_configs = {
         "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
+    "PXC": {
+        "versions": ["7", "8"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "QUERY_SOURCE": "perfschema", "TARBALL": ""}
+    },
+    "PROXYSQL": {
+        "versions": ["2"],
+        "configurations": {"PACKAGE": ""}
+    },  
     "HAPROXY": {
         "versions": [""],
         "configurations": {"CLIENT_VERSION": "3-dev-latest"}
@@ -36,12 +44,6 @@ database_configs = {
 
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
-    # Install Ansible
-    try:
-        subprocess.run(['sudo', 'yum', 'install', 'ansible', '-y'])
-    except Exception as e:
-        print(f"Error installing Ansible: {e}")
-        exit(1)
 
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])
@@ -114,12 +116,18 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
+    # Check Setup Types
+    setup_type = ''
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+        setup_type = '1'
+
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
-        'PS_NODES': '1',
+        'GROUP_REPLICATION': f'{setup_type}',
+        'PS_NODES': '1' if isinstance(setup_type, str) and len(setup_type) == 0 else '3',
         'PS_VERSION': ps_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PS_CONTAINER': 'ps_pmm_' + str(ps_version),
@@ -127,7 +135,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -149,13 +157,13 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
-        setup_type = 1
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+        setup_type = '1'
 
     # Define environment variables for playbook
     env_vars = {
         'GROUP_REPLICATION': f'{setup_type}',
-        'MS_NODES': '3' if setup_type else '1',
+        'MS_NODES': '1' if isinstance(setup_type, str) and len(setup_type) == 0 else '3',
         'MS_VERSION': ms_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
@@ -163,7 +171,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -192,7 +200,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -220,7 +228,7 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -253,43 +261,6 @@ def setup_haproxy(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
-def execute_docker_compose(compose_filename, commands, env_vars, args):
-    # Setup n/w used by compose setup
-    subprocess.run(['docker', 'network', 'create', 'qa-integration'])
-    subprocess.run(['docker', 'network', 'create', 'pmm-ui-tests_pmm-network'])
-    subprocess.run(['docker', 'network', 'create', 'pmm2-upgrade-tests_pmm-network'])
-    subprocess.run(['docker', 'network', 'create', 'pmm2-ui-tests_pmm-network'])
-
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    compose_path = script_dir + "/../pmm_psmdb-pbm_setup/" + compose_filename
-
-    # Set environment variables if provided
-    if env_vars:
-        for key, value in env_vars.items():
-            os.environ[key] = value
-
-    if args.verbose:
-        print(f'Options set after considering defaults: {env_vars}')
-
-    for command, options in commands.items():
-        # Build the Docker Compose command
-        docker_compose_cmd = ['docker-compose', '-f', compose_path, command]
-
-        # Add options if provided
-        if options:
-            docker_compose_cmd.extend(options)
-
-        # Execute Docker Compose
-        try:
-            subprocess.run(docker_compose_cmd, check=True)
-            print(f"Docker Compose {command} executed successfully!")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing Docker Compose {command}: {e}")
-            exit(1)
-
-
 def execute_shell_scripts(shell_scripts, env_vars, args):
     # Get script directory
     script_path = os.path.abspath(sys.argv[0])
@@ -312,11 +283,27 @@ def execute_shell_scripts(shell_scripts, env_vars, args):
         try:
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
-            subprocess.run(['bash', script], check=True)
-            print(f"Shell script '{script}' executed successfully!")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing shell script '{script} at path {shell_scripts_path}': {e}")
-            exit(1)
+            process = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Read output streams asynchronously
+            while process.poll() is None:  # Check if the subprocess is still running
+                # Read from stdout
+                for stdout_line in process.stdout:
+                    if stdout_line:
+                        print(stdout_line.decode('utf-8').strip())
+
+                # Read from stderr
+                for stderr_line in process.stderr:
+                    if stderr_line:
+                        print(stderr_line.decode('utf-8').strip())
+
+            # Get the return code of the process
+            return_code = process.returncode
+            if return_code == 0:
+                print(f"Shell script '{script}' executed successfully.")
+            else:
+                print(f"Shell script '{script}' failed with return code: {return_code}!")
+        except Exception as e:
+            print("Unexpected error occurred:", e)
         finally:
             # Return to the original working directory
             os.chdir(original_dir)
@@ -335,6 +322,9 @@ def mongo_sharding_setup(script_filename, args):
     # Temporary docker compose filename
     compose_filename = f'docker-compose-sharded-no-server.yaml'
     compose_file_path = scripts_path + compose_filename
+
+    # Create pmm-qa n/w used in workaround
+    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
 
     no_server = True
     # Add workaround (copy files) till sharding only support is ready.
@@ -373,10 +363,18 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     psmdb_version = os.getenv('PSMDB_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
+    # Handle port address for external or internal address
+    server_hostname = container_name
+    port = 8443
+    if args.pmm_server_ip:
+        port = 443
+        server_hostname = args.pmm_server_ip
+    server_address = f'{server_hostname}:{port}'
+
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
-        'PMM_SERVER_CONTAINER_ADDRESS': f'{args.pmm_server_ip}:443' or f'{container_name}:8443' or '127.0.0.1:443',
+        'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -386,49 +384,54 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'CLEANUP': 'no'
     }
 
-    compose_filename = ''
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss":
-        # Docker Compose filename
-        compose_filename = 'docker-compose-rs.yaml'
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("pss" or "psa"):
         # Shell script names
-        shell_scripts = ['configure-replset.sh', 'configure-agents.sh']
-
-        # If profile is extra, include additional shell scripts
-        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-            shell_scripts.append('configure-extra-replset.sh')
-            shell_scripts.append('configure-extra-agents.sh')
-    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "psa":
-        # Docker Compose filename
-        compose_filename = 'docker-compose-rs.yaml'
-        # Shell script names
-        shell_scripts = ['configure-psa.sh', 'configure-agents.sh']
-
-        # If profile is extra, include additional shell scripts
-        if get_value('COMPOSE_PROFILES', db_type, args, db_config).lower() == "extra":
-            shell_scripts.append('configure-extra-psa.sh')
-            shell_scripts.append('configure-extra-agents.sh')
+        shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
         # Shell script names
         shell_scripts = [f'start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
-
-    # Define commands for compose file setup
-    commands = {
-        'down': ['-v', '--remove-orphans'],  # Cleanup containers
-        'build': ['--no-cache'],  # Build containers
-        'up': ['-d'],  # Start containers
-    }
-    # Call the function to run the Compose files
-    if not compose_filename == '':
-        execute_docker_compose(compose_filename, commands, env_vars, args)
 
     # Execute shell scripts
     if not shell_scripts == []:
         execute_shell_scripts(shell_scripts, env_vars, args)
 
 
-# Function to set up a databases based on choice
+def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    pxc_version = os.getenv('PXC_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    proxysql_version = os.getenv('PROXYSQL_VERSION') or db_version or database_configs["PROXYSQL"]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PXC_NODES': '3',
+        'PXC_VERSION': pxc_version,
+        'PROXYSQL_VERSION': proxysql_version,
+        'PXC_TARBALL': get_value('TARBALL', db_type, args, db_config),
+        'PROXYSQL_PACKAGE': get_value('PACKAGE', 'PROXYSQL', args, db_config),
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PXC_CONTAINER': 'pxc_proxysql_pmm_' + str(pxc_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'pxc_proxysql_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+# Set up databases based on arguments received
 def setup_database(db_type, db_version=None, db_config=None, args=None):
     if args.verbose:
         if db_version:
@@ -451,6 +454,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_pdpgsql(db_type, db_version, db_config, args)
     elif db_type == 'PSMDB':
         setup_psmdb(db_type, db_version, db_config, args)
+    elif db_type == 'PXC':
+        setup_pxc_proxysql(db_type, db_version, db_config, args)
     elif db_type == 'HAPROXY':
         setup_haproxy(db_type, db_version, db_config, args)
     else:
