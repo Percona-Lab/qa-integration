@@ -127,7 +127,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
         setup_type = '1'
 
     # Gather Version details
@@ -166,7 +166,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
         setup_type = '1'
 
     # Define environment variables for playbook
@@ -423,7 +423,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("pss" or "psa"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss" or "psa":
         # Shell script names
         shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
