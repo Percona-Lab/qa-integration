@@ -1,8 +1,8 @@
-#! /usr/bin/python3 -E
 import subprocess
 import argparse
 import os
 import sys
+import ansible_runner
 
 # Database configurations
 database_configs = {
@@ -53,23 +53,27 @@ database_configs = {
 }
 
 
+
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
 
-    # Build the commands to execute the playbook
-    command = ["ansible-playbook", f"{playbook_path}", f'-e os_type=linux', f'--connection=local',
-               f'-l localhost', f'-i localhost,']
-
     if args.verbose:
         print(f'Options set after considering defaults: {env_vars}')
 
-    try:
-        subprocess.run(command, env=env_vars, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing Ansible {command}: {e}")
+    r = ansible_runner.run(
+        private_data_dir=script_dir,
+        playbook=playbook_path,
+        inventory='127.0.0.1',
+        cmdline='-l localhost, --connection=local',
+        envvars=env_vars
+    )
+
+    print(f'{playbook_filename} playbook execution {r.status}')
+
+    if r.rc != 0:
         exit(1)
 
 
@@ -404,9 +408,11 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Handle port address for external or internal address
     server_hostname = container_name
     port = 8443
+
     if args.pmm_server_ip:
         port = 443
         server_hostname = args.pmm_server_ip
+
     server_address = f'{server_hostname}:{port}'
 
     # Define environment variables for playbook
@@ -427,7 +433,6 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         # Shell script names
         shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
-        # Shell script names
         shell_scripts = [f'start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
 
