@@ -18,7 +18,8 @@ database_configs = {
     },
     "PS": {
         "versions": ["5.7", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest", "TARBALL": ""}
+        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
+                           "TARBALL": ""}
     },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
@@ -35,6 +36,19 @@ database_configs = {
     "PROXYSQL": {
         "versions": ["2"],
         "configurations": {"PACKAGE": ""}
+    },
+    "HAPROXY": {
+        "versions": [""],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest"}
+    },
+    "EXTERNAL": {
+        "REDIS": {
+            "versions": ["1.14.0", "1.58.0"],
+        },
+        "NODEPROCESS": {
+            "versions": ["0.7.5", "0.7.10"],
+        },
+        "configurations": {"CLIENT_VERSION": "3-dev-latest"}
     },
 }
 
@@ -117,7 +131,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
         setup_type = '1'
 
     # Gather Version details
@@ -156,7 +170,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("group_repilication" or "gr"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
         setup_type = '1'
 
     # Define environment variables for playbook
@@ -232,6 +246,58 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Ansible playbook filename
     playbook_filename = 'pgsql_pgss_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+def setup_haproxy(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'HAPROXY_CONTAINER': 'haproxy_pmm',
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'haproxy_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+def setup_external(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    redis_version = os.getenv('REDIS_VERSION') or db_version or database_configs["EXTERNAL"]["REDIS"]["versions"][-1]
+    nodeprocess_version = os.getenv('NODE_PROCESS_VERSION') or db_version or database_configs["EXTERNAL"]["NODEPROCESS"]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'REDIS_EXPORTER_VERSION': redis_version,
+        'NODE_PROCESS_EXPORTER_VERSION': nodeprocess_version,
+        'EXTERNAL_CONTAINER': 'external_pmm',
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'external_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
@@ -363,8 +429,8 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
-
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == ("pss" or "psa"):
+    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss" or "psa":
+        # Shell script names
         shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
         shell_scripts = [f'start-sharded-no-server.sh']
@@ -433,6 +499,10 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_psmdb(db_type, db_version, db_config, args)
     elif db_type == 'PXC':
         setup_pxc_proxysql(db_type, db_version, db_config, args)
+    elif db_type == 'HAPROXY':
+        setup_haproxy(db_type, db_version, db_config, args)
+    elif db_type == 'EXTERNAL':
+        setup_external(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
@@ -476,20 +546,21 @@ if __name__ == "__main__":
                     try:
                         if key in database_configs:
                             db_type = key
-                            if value in database_configs[db_type]["versions"]:
-                                db_version = value
-                            else:
-                                if args.verbose:
-                                    print(
-                                        f"Value {value} is not recognised for Option {key}, will be using default value")
+                            if "versions" in database_configs[db_type]:
+                                if value in database_configs[db_type]["versions"]:
+                                    db_version = value
+                                else:
+                                    if args.verbose:
+                                        print(
+                                            f"Value {value} is not recognised for Option {key}, will be using default value")
                         elif key in database_configs[db_type]["configurations"]:
                             db_config[key] = value
                         else:
                             if args.verbose:
                                 print(f"Option {key} is not recognised, will be using default option")
                                 continue
-                    except KeyError:
-                        print(f"Option {key} is not recognised, Please check and try again")
+                    except KeyError as e:
+                        print(f"Option {key} is not recognised with error {e}, Please check and try again")
                         parser.print_help()
                         exit(1)
                 # Set up the specified databases
