@@ -129,13 +129,14 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         exit()
 
     # Check Setup Types
-    setup_type = None
+    setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
     if setup_type_value in ("group_replication", "gr"):
         setup_type = 1
+        no_of_nodes = 1
     elif setup_type_value in ("replication", "replica"):
-        setup_type = None
+        setup_type = ''
         no_of_nodes = 2
 
     # Gather Version details
@@ -172,14 +173,14 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
     # Check Setup Types
-    # Check Setup Types
-    setup_type = None
+    setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
     if setup_type_value in ("group_replication", "gr"):
         setup_type = 1
+        no_of_nodes = 1
     elif setup_type_value in ("replication", "replica"):
-        setup_type = None
+        setup_type = ''
         no_of_nodes = 2
 
     # Define environment variables for playbook
