@@ -274,7 +274,7 @@ def setup_haproxy(db_type, db_version=None, db_config=None, args=None):
         'HAPROXY_CONTAINER': 'haproxy_pmm',
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -304,7 +304,7 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
         'EXTERNAL_CONTAINER': 'external_pmm',
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
