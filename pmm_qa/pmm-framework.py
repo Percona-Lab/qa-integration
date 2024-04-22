@@ -53,7 +53,6 @@ database_configs = {
 }
 
 
-
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])
@@ -131,16 +130,21 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
-        setup_type = '1'
+    no_of_nodes = 1
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+    if setup_type_value in ("group_replication", "gr"):
+        setup_type = 1
+        no_of_nodes = 1
+    elif setup_type_value in ("replication", "replica"):
+        setup_type = ''
+        no_of_nodes = 2
 
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-
     # Define environment variables for playbook
     env_vars = {
-        'GROUP_REPLICATION': f'{setup_type}',
-        'PS_NODES': '1' if isinstance(setup_type, str) and len(setup_type) == 0 else '3',
+        'GROUP_REPLICATION': setup_type,
+        'PS_NODES': no_of_nodes,
         'PS_VERSION': ps_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PS_CONTAINER': 'ps_pmm_' + str(ps_version),
@@ -170,13 +174,19 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Check Setup Types
     setup_type = ''
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "group_repilication" or "gr":
-        setup_type = '1'
+    no_of_nodes = 1
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+    if setup_type_value in ("group_replication", "gr"):
+        setup_type = 1
+        no_of_nodes = 1
+    elif setup_type_value in ("replication", "replica"):
+        setup_type = ''
+        no_of_nodes = 2
 
     # Define environment variables for playbook
     env_vars = {
-        'GROUP_REPLICATION': f'{setup_type}',
-        'MS_NODES': '1' if isinstance(setup_type, str) and len(setup_type) == 0 else '3',
+        'GROUP_REPLICATION': setup_type,
+        'MS_NODES': no_of_nodes,
         'MS_VERSION': ms_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
@@ -283,7 +293,8 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     redis_version = os.getenv('REDIS_VERSION') or db_version or database_configs["EXTERNAL"]["REDIS"]["versions"][-1]
-    nodeprocess_version = os.getenv('NODE_PROCESS_VERSION') or db_version or database_configs["EXTERNAL"]["NODEPROCESS"]["versions"][-1]
+    nodeprocess_version = os.getenv('NODE_PROCESS_VERSION') or db_version or \
+                          database_configs["EXTERNAL"]["NODEPROCESS"]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
@@ -344,6 +355,7 @@ def execute_shell_scripts(shell_scripts, env_vars, args):
                 print(f"Shell script '{script}' executed successfully.")
             else:
                 print(f"Shell script '{script}' failed with return code: {return_code}!")
+                exit(return_code)
         except Exception as e:
             print("Unexpected error occurred:", e)
         finally:

@@ -15,7 +15,7 @@
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
     number_of_nodes: "{{ lookup('vars', 'extra_number_of_nodes', default=lookup('env','MS_NODES') | default('1', true) ) }}"
-    group_replication: "{{ lookup('vars', 'extra_group_replication', default=lookup('env','GROUP_REPLICATION')) }}"
+    group_replication: "{{ lookup('vars', 'extra_group_replication', default=lookup('env','GROUP_REPLICATION') | default('', true) ) }}"
 
   tasks:
   - name: cleanup container for client and DB setup

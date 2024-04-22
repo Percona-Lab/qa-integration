@@ -48,7 +48,7 @@ dbdeployer unpack ${tar_ball_name} --sandbox-binary=~/ms${ms_version} --overwrit
 export db_version_sandbox=$(ls ~/ms${ms_version})
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
-if [[ $number_of_nodes == 1 ]];then
+if [[ "$number_of_nodes" == 1 ]];then
    if [[ ! -z $group_replication ]]; then
       dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ms${ms_version} --remote-access=% --bind-address=0.0.0.0 --force
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')

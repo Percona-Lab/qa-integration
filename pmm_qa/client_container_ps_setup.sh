@@ -54,7 +54,7 @@ dbdeployer deploy single ${db_version_sandbox} --port=${PS_PORT} --sandbox-binar
 export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
-if [[ $number_of_nodes == 1 ]];then
+if [[ "$number_of_nodes" == 1 ]];then
    if [[ ! -z $group_replication ]]; then
       dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
@@ -72,6 +72,7 @@ if [[ $number_of_nodes == 1 ]];then
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_admin_statements=ON;"
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
       else
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL userstat=1;"
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
               if echo "$ps_version" | grep '5.7'; then
@@ -92,8 +93,9 @@ if [[ $number_of_nodes == 1 ]];then
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_admin_statements=ON;"
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
         else
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL userstat=1;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
               if echo "$ps_version" | grep '5.7'; then
                   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
                   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
@@ -124,8 +126,9 @@ else
       	   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_admin_statements=ON;"
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
         else
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL userstat=1;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
               if echo "$ps_version" | grep '5.7'; then
                   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
                   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
