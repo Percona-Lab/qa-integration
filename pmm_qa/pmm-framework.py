@@ -202,6 +202,36 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
 
+def setup_ssl_mysql(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Check Setup Types
+    setup_type = None
+    no_of_nodes = 1
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+
+    # Gather Version details
+    ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    # Define environment variables for playbook
+    env_vars = {
+        'MYSQL_VERSION': ms_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'MYSQL_SSL_CONTAINER': 'mysql_ssl_' + str(ms_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'tls-ssl-setup/mysql_tls_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
 
 def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -311,7 +341,6 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
-
 
 def execute_shell_scripts(shell_scripts, env_vars, args):
     # Get script directory
@@ -513,6 +542,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_haproxy(db_type, db_version, db_config, args)
     elif db_type == 'EXTERNAL':
         setup_external(db_type, db_version, db_config, args)
+    elif db_type == 'SSL_MYSQL':
+        setup_ssl_mysql(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
