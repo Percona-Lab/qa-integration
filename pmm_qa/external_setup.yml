@@ -28,7 +28,7 @@
 
   - name: Prepare Container for External Exporters
     shell: >
-      sudo docker run -d -p 42100:42100 --name={{ external_container }}
+      sudo docker run -d -p 43100:43100 --name={{ external_container }}
       phusion/baseimage:focal-1.1.0
 
   - name: Copy all required Artifacts to the docker external_container
