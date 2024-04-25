@@ -10,7 +10,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-docker stop alert-manager && docker rm -fv alert-manager
+docker stop alertmanager && docker rm -fv alertmanager
 sleep 10
-docker run -d -p 9093:9093 --name alert-manager prom/alertmanager:latest
+docker run -d -p 9093:9093 --name alertmanager prom/alertmanager:latest
 sleep 20
+docker network connect pmm-qa alertmanager
