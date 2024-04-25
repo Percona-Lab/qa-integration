@@ -3,6 +3,7 @@ import argparse
 import os
 import sys
 import ansible_runner
+import re
 
 # Database configurations
 database_configs = {
@@ -50,6 +51,7 @@ database_configs = {
         },
         "configurations": {"CLIENT_VERSION": "3-dev-latest"}
     },
+    "ALERTMANAGER": {}
 }
 
 
@@ -314,11 +316,37 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
-def execute_shell_scripts(shell_scripts, env_vars, args):
+def setup_alertmanager(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Define environment variables for shell script
+    env_vars = {}
+
+    # Check if instance is localhost for PMM Server
+    if args.pmm_server_ip:
+        # Check if format is IP
+        ip_pattern = r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$'
+        if re.match(ip_pattern, args.pmm_server_ip):
+            print(f"Alert Manager setup only works on PMM Server localhost")
+            exit()
+
+    # Shell script filename
+    shell_scripts = ['alertmanager.sh']
+    shell_scripts_path = ''
+
+    # Call the function to run the Ansible playbook
+    execute_shell_scripts(shell_scripts, shell_scripts_path, env_vars, args)
+
+
+def execute_shell_scripts(shell_scripts, scripts_path, env_vars, args):
     # Get script directory
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
-    shell_scripts_path = script_dir + "/../pmm_psmdb-pbm_setup/"
+    shell_scripts_path = script_dir + scripts_path
 
     # Get the original working directory
     original_dir = os.getcwd()
@@ -420,11 +448,9 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Handle port address for external or internal address
     server_hostname = container_name
     port = 8443
-
     if args.pmm_server_ip:
         port = 443
         server_hostname = args.pmm_server_ip
-
     server_address = f'{server_hostname}:{port}'
 
     # Define environment variables for playbook
@@ -441,16 +467,18 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
+    scripts_path = "/../pmm_psmdb-pbm_setup/"
+
     if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss" or "psa":
         # Shell script names
         shell_scripts = ['start-rs-only.sh']
     elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
-        shell_scripts = [f'start-sharded-no-server.sh']
+        shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
 
     # Execute shell scripts
     if not shell_scripts == []:
-        execute_shell_scripts(shell_scripts, env_vars, args)
+        execute_shell_scripts(shell_scripts, scripts_path, env_vars, args)
 
 
 def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
@@ -515,6 +543,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_haproxy(db_type, db_version, db_config, args)
     elif db_type == 'EXTERNAL':
         setup_external(db_type, db_version, db_config, args)
+    elif db_type == 'ALERTMANAGER':
+        setup_alertmanager(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
