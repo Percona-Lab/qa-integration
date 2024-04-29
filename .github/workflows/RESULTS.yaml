@@ -1,0 +1,30 @@
+name: qa-integration-results
+on:
+  workflow_dispatch:
+    inputs:
+      job_name:
+        description: "Name of the Job for generating summary"
+        required: true
+        type: string
+
+jobs:
+  qa-integration-results:
+    name: "Generate Integration Job execution results"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PK_GITHUB_TOKEN: ${{ secrets.PK_GITHUB_TOKEN }}
+
+    steps:
+      - name: Setup tools
+        run: |
+          chmod +x qa_integration_results.py
+          python ./qa_integration_results.py
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: ${{ steps.artifact_name.outputs.result }}
+          path: |
+            results/workflow_runs_{{ job_name }}.csv
