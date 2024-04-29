@@ -14,16 +14,19 @@ jobs:
     timeout-minutes: 10
     env:
       PK_GITHUB_TOKEN: ${{ secrets.PK_GITHUB_TOKEN }}
+      JOB_NAME: ${{ inputs.job_name || 'PMM_PS' }}
 
     steps:
+      - uses: actions/checkout@v2
       - name: Setup tools
         run: |
+          ls -la
           chmod +x qa_integration_results.py
           python ./qa_integration_results.py
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: ${{ steps.artifact_name.outputs.result }}
+          name: Attach Results output
           path: |
-            results/workflow_runs_{{ job_name }}.csv
+            results/workflow_runs_{{ JOB_NAME }}.csv
