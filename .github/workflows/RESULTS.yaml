@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PK_GITHUB_TOKEN: ${{ secrets.PK_GITHUB_TOKEN }}
 
     steps:
