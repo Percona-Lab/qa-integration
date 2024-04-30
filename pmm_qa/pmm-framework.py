@@ -50,6 +50,8 @@ database_configs = {
         },
         "configurations": {"CLIENT_VERSION": "3-dev-latest"}
     },
+    "DOCKERCLIENTS": {
+    },
 }
 
 
@@ -314,11 +316,11 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
-def execute_shell_scripts(shell_scripts, env_vars, args):
+def execute_shell_scripts(shell_scripts, scripts_path, env_vars, args):
     # Get script directory
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
-    shell_scripts_path = script_dir + "/../pmm_psmdb-pbm_setup/"
+    shell_scripts_path = script_dir + scripts_path
 
     # Get the original working directory
     original_dir = os.getcwd()
@@ -441,16 +443,18 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss" or "psa":
-        # Shell script names
+    scripts_path = "/../pmm_psmdb-pbm_setup/"
+    setup_type = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+
+    if setup_type in ("pss", "psa"):
         shell_scripts = ['start-rs-only.sh']
-    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
-        shell_scripts = [f'start-sharded-no-server.sh']
+    elif setup_type in ("shards", "sharding"):
+        shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
 
     # Execute shell scripts
     if not shell_scripts == []:
-        execute_shell_scripts(shell_scripts, env_vars, args)
+        execute_shell_scripts(shell_scripts, scripts_path, env_vars, args)
 
 
 def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
@@ -486,6 +490,18 @@ def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
+def setup_dockerclients(db_type, db_version=None, db_config=None, args=None):
+    # Define environment variables for shell script
+    env_vars = {}
+
+    # Shell script filename
+    shell_scripts = ['setup_docker_client_images.sh']
+    shell_scripts_path = ''
+
+    # Call the function to run the Ansible playbook
+    execute_shell_scripts(shell_scripts, shell_scripts_path, env_vars, args)
+
+
 # Set up databases based on arguments received
 def setup_database(db_type, db_version=None, db_config=None, args=None):
     if args.verbose:
@@ -515,6 +531,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_haproxy(db_type, db_version, db_config, args)
     elif db_type == 'EXTERNAL':
         setup_external(db_type, db_version, db_config, args)
+    elif db_type == 'DOCKERCLIENTS':
+        setup_dockerclients(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)

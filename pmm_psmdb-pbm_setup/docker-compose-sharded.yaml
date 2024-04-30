@@ -21,6 +21,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs1:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /tmp/mongodb:/tmp
     privileged: true
     environment:
       - "PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017"
@@ -30,6 +31,8 @@ services:
       - "PMM_AGENT_SERVER_INSECURE_TLS=1"
     container_name: rs101
     hostname: rs101
+    ports:
+      - "27027:27017"
     networks:
       - test-network
 
