@@ -30,7 +30,7 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PXC": {
-        "versions": ["7", "8"],
+        "versions": ["5.7", "8.0"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "QUERY_SOURCE": "perfschema", "TARBALL": ""}
     },
     "PROXYSQL": {
