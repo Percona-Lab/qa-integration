@@ -354,7 +354,7 @@ def execute_shell_scripts(shell_scripts, env_vars, args):
             if return_code == 0:
                 print(f"Shell script '{script}' executed successfully.")
             else:
-                print(f"Shell script '{script}' failed with return code: {return_code}!")
+                print(f"Shell script '{script}' failed with return code: {return_code}! \n {process.stderr}")
                 exit(return_code)
         except Exception as e:
             print("Unexpected error occurred:", e)
