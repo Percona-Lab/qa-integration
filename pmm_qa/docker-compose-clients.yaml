@@ -54,7 +54,7 @@ services:
       - docker-client-check
 
   postgres:
-    container_name: postgres-1
+    container_name: pdpgsql-1
     image: postgres:16
     environment:
       - POSTGRES_USER=pmm
