@@ -38,7 +38,7 @@ services:
       - MYSQL_PASSWORD=pmm-pass
       - PMM_AGENT_SERVER_ADDRESS=pmm-server:8443
     ports:
-      - "3309:3306"
+      - "3319:3306"
     networks:
       - docker-client-check
 
