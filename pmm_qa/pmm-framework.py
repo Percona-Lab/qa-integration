@@ -93,18 +93,16 @@ def get_running_container_name():
             # Check if the container is in the list of running containers
             # and establish N/W connection with it.
             if container_name in image_info:
-                # Check if pmm-qa n/w exists.
+                # Check if pmm-qa n/w exists and already connected to pmm-qa n/w.
                 result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True, text=True)
-                if not result:
+                if result.returncode != 0:
                     subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
-                # Check if container is already connected to pmm-qa n/w.
-                if result.returncode == 0:
-                    networks = result.stdout
-                    if container_name in networks:
-                        return container_name
-                else:
                     subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
-                    return container_name
+                else:
+                    networks = result.stdout
+                    if container_name not in networks:
+                        subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
+                return container_name
 
     except subprocess.CalledProcessError:
         # Handle the case where the 'docker ps' command fails
