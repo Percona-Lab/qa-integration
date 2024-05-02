@@ -88,14 +88,23 @@ def get_running_container_name():
         # Check each line for the docker image name
         for line in containers:
             # Extract the image name
-            image_info = line.split('\t')[0]
-            info_parts = image_info.split()[2:]
+            info_parts = line.split('\t')[0]
+            image_info = info_parts.split()[2:]
             # Check if the container is in the list of running containers
             # and establish N/W connection with it.
-            if container_name in info_parts:
-                subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
-                subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
-                return container_name
+            if container_name in image_info:
+                # Check if pmm-qa n/w exists.
+                result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True, text=True)
+                if not result:
+                    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+                # Check if container is already connected to pmm-qa n/w.
+                if result.returncode == 0:
+                    networks = result.stdout
+                    if container_name in networks:
+                        return container_name
+                else:
+                    subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
+                    return container_name
 
     except subprocess.CalledProcessError:
         # Handle the case where the 'docker ps' command fails
@@ -380,7 +389,9 @@ def mongo_sharding_setup(script_filename, args):
     compose_file_path = scripts_path + compose_filename
 
     # Create pmm-qa n/w used in workaround
-    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+    result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True)
+    if not result:
+        subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
 
     no_server = True
     # Add workaround (copy files) till sharding only support is ready.
@@ -466,7 +477,7 @@ def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     pxc_version = os.getenv('PXC_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-    proxysql_version = os.getenv('PROXYSQL_VERSION') or db_version or database_configs["PROXYSQL"]["versions"][-1]
+    proxysql_version = os.getenv('PROXYSQL_VERSION') or database_configs["PROXYSQL"]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
