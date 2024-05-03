@@ -3,6 +3,8 @@ import argparse
 import os
 import sys
 import ansible_runner
+import requests
+import re
 
 # Database configurations
 database_configs = {
@@ -93,7 +95,7 @@ def get_running_container_name():
             # Check if the container is in the list of running containers
             # and establish N/W connection with it.
             if container_name in image_info:
-                # Check if pmm-qa n/w exists and already connected to pmm-qa n/w.
+                # Check if pmm-qa n/w exists and already connected to pmm-server n/w.
                 result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True, text=True)
                 if result.returncode != 0:
                     subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
@@ -418,6 +420,33 @@ def mongo_sharding_setup(script_filename, args):
         print(f"Error occurred: {e}")
 
 
+def get_latest_psmdb_version(psmdb_version):
+    if psmdb_version == "latest":
+        return psmdb_version
+    # Define the data to be sent in the POST request
+    data = {
+        'version': f'percona-server-mongodb-{psmdb_version}'
+    }
+
+    # Make the POST request
+    response = requests.post('https://www.percona.com/products-api.php', data=data)
+
+    # Extract the version number using regular expression
+    version_number = re.findall(r'value="([^"]*)"', response.text)
+
+    if version_number:
+        # Sort the version numbers and extract the latest one
+        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
+
+        # Extract the full version number
+        major_version = latest_version.split('-')[3].strip()  # Trim spaces
+        minor_version = latest_version.split('-')[4].strip()  # Trim spaces
+
+        return f'{major_version}-{minor_version}'
+    else:
+        return None
+
+
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -426,7 +455,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
     server_hostname = container_name
