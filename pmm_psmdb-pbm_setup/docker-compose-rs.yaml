@@ -32,7 +32,7 @@ services:
       - ./conf/mongod-rs:/etc/mongod
       - ./conf/datagen:/etc/datagen:ro
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
       - /tmp/mongodb:/tmp
     privileged: true
     environment:
@@ -59,7 +59,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -85,7 +85,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -113,7 +113,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -139,7 +139,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
@@ -165,7 +165,7 @@ services:
       - ./conf/pbm:/etc/pbm
       - ./conf/mongod-rs:/etc/mongod
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - /tmp/backup_data:/tmp/backup_data
+      - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017

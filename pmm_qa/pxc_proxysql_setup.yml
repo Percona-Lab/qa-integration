@@ -42,6 +42,7 @@
       - docker exec {{ pxc_container }} mkdir -p artifacts
       - docker cp ./client_container_pxc_setup.sh {{ pxc_container }}:/
       - docker cp ./client_container_proxysql_setup.sh {{ pxc_container }}:/
+      - docker cp ./pmm3-client-setup.sh {{ pxc_container }}:/
 
   - name: Get PXC Product tarball URL based on the version
     shell: cat product_version_download_helper | grep pxc | grep "\-{{ pxc_version }}" | head -1 | awk -F'# ' '{print $3}'
@@ -79,7 +80,6 @@
   - name: Install pmm2-client on the pxc_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ pxc_container }} wget https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{ pmm_qa_branch }}/pmm_qa/pmm3-client-setup.sh
       - docker network connect pmm-qa {{ pxc_container }}
       - docker exec {{ pxc_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
       - docker exec {{ pxc_container }} usermod -aG pmm-agent pxc
