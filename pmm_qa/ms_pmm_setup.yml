@@ -32,6 +32,8 @@
   - name: Prepare Container for MySQL
     shell: >
       docker run -d --name={{ ms_container }}
+      -p 3318:3308
+      -v /tmp:/tmp
       phusion/baseimage:focal-1.2.0
   
   - name: Copy all required Artifacts to the docker ms_container

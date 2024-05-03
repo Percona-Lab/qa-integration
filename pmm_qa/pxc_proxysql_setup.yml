@@ -5,7 +5,7 @@
   become: true
   become_method: sudo
   vars:
-    pxc_version: "{{ lookup('vars', 'extra_pxc_version', default=lookup('env','PXC_VERSION') | default('8', true) ) }}"
+    pxc_version: "{{ lookup('vars', 'extra_pxc_version', default=lookup('env','PXC_VERSION') | default('8.0', true) ) }}"
     pxc_tarball: "{{ lookup('vars', 'extra_pxc_tarball', default=lookup('env','PXC_TARBALL') | default('', true) ) }}"
     proxysql_version: "{{ lookup('vars', 'extra_proxysql_version', default=lookup('env','PROXYSQL_VERSION') | default('2', true) ) }}"
     proxysql_package: "{{ lookup('vars', 'extra_proxysql_package', default=lookup('env','PROXYSQL_PACKAGE') | default('', true) ) }}"
@@ -33,6 +33,7 @@
   - name: Prepare Container for PXC and Proxysql
     shell: >
       docker run -d --name={{ pxc_container }}
+      -p 6033:6033
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker pxc_container
@@ -97,6 +98,10 @@
       - docker exec {{ pxc_container }} chmod 1777 /tmp
       - docker exec --user pxc {{ pxc_container }} bash -xe ./client_container_pxc_setup.sh --pxc_version {{ pxc_version }} --pxc_tarball {{ pxc_tarball }} --number_of_nodes {{ number_of_nodes }} --pxc_dev_cluster {{ pxc_dev_cluster }} --query_source {{query_source}} > setup_pxc_{{ pxc_version }}.log
 
+  - name: Set Random Number Fact
+    set_fact:
+      random_number: "{{ (10000 | random) | int }}"
+
   - name: Start ProxySQL inside the PXC extra_pxc_container
     shell: "{{ item }}"
     with_items:
@@ -106,7 +111,7 @@
       - docker exec {{ pxc_container }} bash -c 'sed -i s#3306#'"\$(grep 'port' /home/pxc/PXC/node1.cnf | cut -d= -f2)"'# /etc/proxysql-admin.cnf'
       - docker exec {{ pxc_container }} proxysql-admin --config-file=/etc/proxysql-admin.cnf --enable
       - docker exec {{ pxc_container }} sleep 20
-      - docker exec {{ pxc_container }} pmm-admin add proxysql --username=admin --password=admin --service-name=my-new-proxysql_{{ pxc_container }} --host=127.0.0.1 --port=6032
+      - docker exec {{ pxc_container }} pmm-admin add proxysql --username=proxysql_user --password=passw0rd --service-name=my-new-proxysql_{{ pxc_container }}_{{ random_number }} --host=127.0.0.1 --port=6033
 
   - name: Execute Service, Sysbench Script inside the PXC pxc_container
     shell: "{{ item }}"
