@@ -30,7 +30,7 @@
     shell: >
       sudo docker run -d --name={{ pgsql_pgss_container }}
       -p {{ pgsql_pgss_port }}:5432
-      phusion/baseimage:focal-1.2.0
+      phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker pgsql_pgss_container
     shell: "{{ item }}"

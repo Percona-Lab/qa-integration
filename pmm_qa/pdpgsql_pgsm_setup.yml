@@ -32,7 +32,7 @@
     shell: >
       sudo docker run -d --name={{ pdpgsql_pgsm_container }}
       -p 5447:5432
-      phusion/baseimage:focal-1.2.0
+      phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
     shell: "{{ item }}"

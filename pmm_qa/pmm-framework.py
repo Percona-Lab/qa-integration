@@ -64,7 +64,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     playbook_path = script_dir + "/" + playbook_filename
 
     if args.verbose:
-        print(f'Options set after considering defaults: {env_vars}')
+        print(f'Options set after considering Defaults: {env_vars}')
 
     r = ansible_runner.run(
         private_data_dir=script_dir,
@@ -81,7 +81,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
 
 
 def get_running_container_name():
-    container_name = "pmm-server"
+    container_image_name = "pmm-server"
+    container_name = ''
     try:
         # Run 'docker ps' to get a list of running containers
         output = subprocess.check_output(['docker', 'ps', '--format', 'table {{.ID}}\t{{.Image}}\t{{.Names}}'])
@@ -91,11 +92,13 @@ def get_running_container_name():
         for line in containers:
             # Extract the image name
             info_parts = line.split('\t')[0]
-            image_info = info_parts.split()[2:]
+            image_info = info_parts.split()[1]
             # Check if the container is in the list of running containers
             # and establish N/W connection with it.
-            if container_name in image_info:
-                # Check if pmm-qa n/w exists and already connected to pmm-server n/w.
+            if container_image_name in image_info:
+                container_name = info_parts.split()[2]
+                # Check if pmm-qa n/w exists and already connected to running container n/w
+                # if not connect it.
                 result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True, text=True)
                 if result.returncode != 0:
                     subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
@@ -620,7 +623,7 @@ if __name__ == "__main__":
                                 else:
                                     if args.verbose:
                                         print(
-                                            f"Value {value} is not recognised for Option {key}, will be using default value")
+                                            f"Value {value} is not recognised for Option {key}, will be using Default value")
                         elif key in database_configs[db_type]["configurations"]:
                             db_config[key] = value
                         else:

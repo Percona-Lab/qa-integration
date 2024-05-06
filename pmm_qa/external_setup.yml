@@ -29,12 +29,13 @@
   - name: Prepare Container for External Exporters
     shell: >
       sudo docker run -d -p 43100:43100 --name={{ external_container }}
-      phusion/baseimage:focal-1.1.0
+      phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker external_container
     shell: "{{ item }}"
     with_items:
       - docker cp ./external_setup.sh {{ external_container }}:/
+      - docker cp ./pmm3-client-setup.sh {{ external_container }}:/
       - docker exec {{ external_container }} apt-get update
       - docker exec {{ external_container }} apt-get -y install wget curl git gnupg2 lsb-release
 
@@ -52,7 +53,6 @@
   - name: Install pmm2-client on the external_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ external_container }} wget https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{ pmm_qa_branch }}/pmm_qa/pmm3-client-setup.sh
       - docker network connect pmm-qa {{ external_container }}
       - docker exec {{ external_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 
