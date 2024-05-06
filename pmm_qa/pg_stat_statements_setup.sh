@@ -33,7 +33,7 @@ cd postgres
 # Install the dependencies
 apt-get update
 apt-get -y install wget curl git gnupg2 lsb-release
-apt-get -y install libreadline6-dev systemtap-sdt-dev zlib1g-dev libssl-dev libpam0g-dev python-dev bison make flex libipc-run-perl wget
+apt-get -y install libreadline6-dev systemtap-sdt-dev zlib1g-dev libssl-dev libpam0g-dev bison make flex libipc-run-perl wget
 sleep 10
 
 # Install the PG server from selected distribution

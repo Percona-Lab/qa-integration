@@ -45,7 +45,7 @@ cd postgres
 # Install the dependencies
 apt-get update
 apt-get -y install wget curl git gnupg2 lsb-release
-apt-get -y install libreadline6-dev systemtap-sdt-dev zlib1g-dev libssl-dev libpam0g-dev python-dev bison make flex libipc-run-perl wget
+apt-get -y install libreadline6-dev systemtap-sdt-dev zlib1g-dev libssl-dev libpam0g-dev bison make flex libipc-run-perl wget
 sleep 10
 
 # Install the PG server from selected distribution
@@ -101,6 +101,7 @@ echo "shared_preload_libraries = 'pg_stat_monitor'" >> /etc/postgresql/${pgsql_v
 echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "track_io_timing=ON"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "max_connections=1000"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
+echo "listen_addresses = '*'"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 
 # Create init.sql file required by PMM
 echo "CREATE DATABASE sbtest1;" >> /home/postgres/init.sql
