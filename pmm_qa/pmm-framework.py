@@ -328,11 +328,10 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
-def execute_shell_scripts(shell_scripts, scripts_path, env_vars, args):
+def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars, args):
     # Get script directory
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    shell_scripts_path = script_dir + scripts_path
+    current_directory = os.getcwd()
+    shell_scripts_path = os.path.abspath(os.path.join(current_directory, os.pardir, project_relative_scripts_dir))
 
     # Get the original working directory
     original_dir = os.getcwd()
@@ -348,28 +347,17 @@ def execute_shell_scripts(shell_scripts, scripts_path, env_vars, args):
     # Execute each shell script
     for script in shell_scripts:
         try:
+            print(f'running script {script}')
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
-            process = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # Read output streams asynchronously
-            while process.poll() is None:  # Check if the subprocess is still running
-                # Read from stdout
-                for stdout_line in process.stdout:
-                    if stdout_line:
-                        print(stdout_line.decode('utf-8').strip())
+            print(f'changed directory {os.getcwd()}')
+            result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
+            print("Output:")
+            print(result.stdout)
 
-                # Read from stderr
-                for stderr_line in process.stderr:
-                    if stderr_line:
-                        print(stderr_line.decode('utf-8').strip())
-
-            # Get the return code of the process
-            return_code = process.returncode
-            if return_code == 0:
-                print(f"Shell script '{script}' executed successfully.")
-            else:
-                print(f"Shell script '{script}' failed with return code: {return_code}! \n {process.stderr}")
-                exit(return_code)
+        except subprocess.CalledProcessError as e:
+            print("Error:")
+            print(e.stderr)
         except Exception as e:
             print("Unexpected error occurred:", e)
         finally:
@@ -484,7 +472,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
-    scripts_path = "/../pmm_psmdb-pbm_setup/"
+    scripts_folder = "pmm_psmdb-pbm_setup"
     setup_type = get_value('SETUP_TYPE', db_type, args, db_config).lower()
 
     if setup_type in ("pss", "psa"):
@@ -495,7 +483,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Execute shell scripts
     if not shell_scripts == []:
-        execute_shell_scripts(shell_scripts, scripts_path, env_vars, args)
+        execute_shell_scripts(shell_scripts, scripts_folder, env_vars, args)
 
 
 def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
@@ -537,9 +525,9 @@ def setup_dockerclients(db_type, db_version=None, db_config=None, args=None):
 
     # Shell script filename
     shell_scripts = ['setup_docker_client_images.sh']
-    shell_scripts_path = ''
+    shell_scripts_path = 'pmm_qa'
 
-    # Call the function to run the Ansible playbook
+    # Call the function to run the setup_docker_client_images script
     execute_shell_scripts(shell_scripts, shell_scripts_path, env_vars, args)
 
 
