@@ -356,11 +356,11 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             print("Output:")
             print(result.stdout)
             print(f"Shell script '{script}' executed successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Shell script '{script}' failed with an error! \n {e.stderr}")
-            exit(1)
-        except Exception as e:
-            print("Unexpected error occurred:", e)
+        # except subprocess.CalledProcessError as e:
+        #     print(f"Shell script '{script}' failed with an error! \n {e.stderr}")
+        #     exit(1)
+        # except Exception as e:
+        #     print("Unexpected error occurred:", e)
         finally:
             # Return to the original working directory
             os.chdir(original_dir)
