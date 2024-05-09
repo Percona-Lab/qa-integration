@@ -353,8 +353,6 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             os.chdir(shell_scripts_path)
             print(f'changed directory {os.getcwd()}')
             result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
-            print("Output:")
-            print(result.stdout)
             print(f"Shell script '{script}' executed successfully.")
         # except subprocess.CalledProcessError as e:
         #     print(f"Shell script '{script}' failed with an error! \n {e.stderr}")
@@ -362,6 +360,9 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
         # except Exception as e:
         #     print("Unexpected error occurred:", e)
         finally:
+            print("Output:")
+            print(result.stdout)
+
             # Return to the original working directory
             os.chdir(original_dir)
 
