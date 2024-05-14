@@ -48,20 +48,20 @@ RUN set -ex; \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el9 \
                           percona-server-mongodb-mongos-${PSMDB_VERSION}.el9 ; \
     fi && \
-    if [ $PBM_VERSION == "latest" ]; then \
+    if [ "$PBM_VERSION" == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
     fi 
 
-RUN if [[ $PMM_CLIENT_VERSION == http* ]]; then \
+RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         yum -y install pmm-client && \
         curl -Lf -o /tmp/pmm-client.tar.gz $PMM_CLIENT_VERSION && \
         cd /tmp && tar -xvf pmm-client.tar.gz --transform 's,^/*[^/]*,/pmm-client,S' && \
         cd /tmp/pmm-client && ./install_tarball && cd ../ && rm -rf pmm* ;\
     elif [[ "$PMM_CLIENT_VERSION" =~ 3-dev-latest|latest ]]; then \
         yum -y install pmm-client ; \
-    elif [[ $PMM_CLIENT_VERSION =~ pmm3-rc ]]; then \
+    elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
         percona-release enable original testing \
         yum update --refresh -y \
         yum -y install pmm-client ; \
