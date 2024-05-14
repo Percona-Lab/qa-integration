@@ -358,6 +358,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             print(f"Shell script '{script}' executed successfully.")
         except subprocess.CalledProcessError as e:
             print(f"Shell script '{script}' failed with return code: {e.returncode}! \n {e.stderr}")
+            exit(e.returncode)
         except Exception as e:
             print("Unexpected error occurred:", e)
         finally:
