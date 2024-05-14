@@ -346,7 +346,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
 
     # Execute each shell script
     for script in shell_scripts:
-        result = ''
+        result: subprocess.CompletedProcess
         try:
             print(f'running script {script}')
             # Change directory to where the script is located
@@ -355,20 +355,13 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
             print("Output:")
             print(result.stdout)
+            print(f"Shell script '{script}' executed successfully.")
         except subprocess.CalledProcessError as e:
-            print("Error:")
-            print(e.stderr)
+            print(f"Shell script '{script}' failed with return code: {e.returncode}! \n {e.stderr} \n Output: \n {e.stdout} ")
+            exit(e.returncode)
         except Exception as e:
             print("Unexpected error occurred:", e)
         finally:
-            # Get the return code of the process
-            return_code = result.returncode
-            if return_code == 0:
-                print(f"Shell script '{script}' executed successfully.")
-            else:
-                print(f"Shell script '{script}' failed with return code: {return_code}! \n {result.stderr}")
-                exit(return_code)
-
             # Return to the original working directory
             os.chdir(original_dir)
 
