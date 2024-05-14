@@ -64,7 +64,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
         percona-release enable original testing \
         yum update --refresh -y \
-        yum -y install pmm-client ; \
+        yum -y install pmm3-client ; \
     else \
         yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
