@@ -64,14 +64,13 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
         percona-release enable original testing \
         yum update --refresh -y \
-        yum -y install pmm3-client ; \
+        yum -y install pmm-client ; \
     else \
         yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
     fi && \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
-    systemctl enable pmm-agent && \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
     yum clean all; \
