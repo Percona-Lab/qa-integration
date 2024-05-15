@@ -117,6 +117,7 @@
       - docker exec {{ pxc_container }} proxysql-admin --config-file=/etc/proxysql-admin.cnf --enable
       - docker exec {{ pxc_container }} sleep 20
       - docker exec {{ pxc_container }} pmm-admin add proxysql --username=admin --password=admin --service-name=my-new-proxysql_{{ pxc_container }}_{{ random_number }} --host=127.0.0.1 --port=6032
+      
   - name: Execute Service, Sysbench Script inside the PXC pxc_container
     shell: "{{ item }}"
     with_items:
