@@ -102,6 +102,7 @@ echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/
 echo "track_io_timing=ON"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "max_connections=1000"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "listen_addresses = '*'"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
+echo "pg_stat_monitor.pgsm_enable_query_plan = 'yes'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 
 # Create init.sql file required by PMM
 echo "CREATE DATABASE sbtest1;" >> /home/postgres/init.sql
