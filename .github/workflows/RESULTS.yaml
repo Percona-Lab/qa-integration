@@ -1,12 +1,6 @@
 name: qa-integration-results
 on:
   workflow_dispatch:
-    inputs:
-      job_name:
-        description: "Name of the Job for generating summary"
-        required: true
-        type: string
-
 jobs:
   qa-integration-results:
     name: "Generate Integration Job execution results"
@@ -14,7 +8,6 @@ jobs:
     timeout-minutes: 10
     env:
       PK_GITHUB_TOKEN: ${{ secrets.PK_GITHUB_TOKEN }}
-      JOB_NAME: ${{ inputs.job_name || 'PMM_PS' }}
 
     steps:
       - uses: actions/checkout@v2
@@ -29,4 +22,4 @@ jobs:
         with:
           name: Attach Results output
           path: |
-            results/workflow_runs_${{ env.JOB_NAME }}.csv
+            results/*.csv
