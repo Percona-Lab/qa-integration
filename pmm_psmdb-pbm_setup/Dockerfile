@@ -71,6 +71,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
+    sed -i '/ExecStart/a StandardError=file:/var/log/pmm-agent.log' /usr/lib/systemd/system/pmm-agent.service && \
     systemctl enable pmm-agent && \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
