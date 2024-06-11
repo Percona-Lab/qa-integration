@@ -55,13 +55,13 @@ export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
 if [[ "$number_of_nodes" == 1 ]];then
    if [[ ! -z $group_replication ]]; then
-      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force --custom-role-extra='WITH GRANT OPTION'
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'group-single-primary' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
    else
-      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --port=${PS_PORT} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --port=${PS_PORT} --remote-access=% --bind-address=0.0.0.0 --force --custom-role-extra='WITH GRANT OPTION'
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep  ${db_version_sandbox} | grep 'single' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
