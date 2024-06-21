@@ -48,22 +48,22 @@ RUN set -ex; \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el9 \
                           percona-server-mongodb-mongos-${PSMDB_VERSION}.el9 ; \
     fi && \
-    if [ $PBM_VERSION == "latest" ]; then \
+    if [ "$PBM_VERSION" == "latest" ]; then \
         yum -y install percona-backup-mongodb ; \
     else \
         yum -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
     fi 
 
-RUN if [[ $PMM_CLIENT_VERSION == http* ]]; then \
+RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         yum -y install pmm-client && \
         curl -Lf -o /tmp/pmm-client.tar.gz $PMM_CLIENT_VERSION && \
         cd /tmp && tar -xvf pmm-client.tar.gz --transform 's,^/*[^/]*,/pmm-client,S' && \
         cd /tmp/pmm-client && ./install_tarball && cd ../ && rm -rf pmm* ;\
     elif [[ "$PMM_CLIENT_VERSION" =~ 3-dev-latest|latest ]]; then \
         yum -y install pmm-client ; \
-    elif [[ $PMM_CLIENT_VERSION =~ pmm3-rc ]]; then \
-        percona-release enable original testing \
-        yum update --refresh -y \
+    elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
+        percona-release enable original testing  && \
+        yum update --refresh -y && \
         yum -y install pmm-client ; \
     else \
         yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
@@ -71,6 +71,7 @@ RUN if [[ $PMM_CLIENT_VERSION == http* ]]; then \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
+    sed -i '/ExecStart/a StandardError=file:/var/log/pmm-agent.log' /usr/lib/systemd/system/pmm-agent.service && \
     systemctl enable pmm-agent && \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \

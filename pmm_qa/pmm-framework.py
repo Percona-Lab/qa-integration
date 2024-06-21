@@ -3,6 +3,8 @@ import argparse
 import os
 import sys
 import ansible_runner
+import requests
+import re
 
 # Database configurations
 database_configs = {
@@ -30,7 +32,7 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PXC": {
-        "versions": ["7", "8"],
+        "versions": ["5.7", "8.0"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "QUERY_SOURCE": "perfschema", "TARBALL": ""}
     },
     "PROXYSQL": {
@@ -50,6 +52,8 @@ database_configs = {
         },
         "configurations": {"CLIENT_VERSION": "3-dev-latest"}
     },
+    "DOCKERCLIENTS": {
+    },
 }
 
 
@@ -60,7 +64,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     playbook_path = script_dir + "/" + playbook_filename
 
     if args.verbose:
-        print(f'Options set after considering defaults: {env_vars}')
+        print(f'Options set after considering Defaults: {env_vars}')
 
     r = ansible_runner.run(
         private_data_dir=script_dir,
@@ -77,7 +81,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
 
 
 def get_running_container_name():
-    container_name = "pmm-server"
+    container_image_name = "pmm-server"
+    container_name = ''
     try:
         # Run 'docker ps' to get a list of running containers
         output = subprocess.check_output(['docker', 'ps', '--format', 'table {{.ID}}\t{{.Image}}\t{{.Names}}'])
@@ -86,13 +91,22 @@ def get_running_container_name():
         # Check each line for the docker image name
         for line in containers:
             # Extract the image name
-            image_info = line.split('\t')[0]
-            info_parts = image_info.split()[2:]
+            info_parts = line.split('\t')[0]
+            image_info = info_parts.split()[1]
             # Check if the container is in the list of running containers
             # and establish N/W connection with it.
-            if container_name in info_parts:
-                subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
-                subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
+            if container_image_name in image_info:
+                container_name = info_parts.split()[2]
+                # Check if pmm-qa n/w exists and already connected to running container n/w
+                # if not connect it.
+                result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True, text=True)
+                if result.returncode != 0:
+                    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+                    subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
+                else:
+                    networks = result.stdout
+                    if container_name not in networks:
+                        subprocess.run(['docker', 'network', 'connect', 'pmm-qa', container_name])
                 return container_name
 
     except subprocess.CalledProcessError:
@@ -129,13 +143,14 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         exit()
 
     # Check Setup Types
-    setup_type = None
+    setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
     if setup_type_value in ("group_replication", "gr"):
         setup_type = 1
+        no_of_nodes = 1
     elif setup_type_value in ("replication", "replica"):
-        setup_type = None
+        setup_type = ''
         no_of_nodes = 2
 
     # Gather Version details
@@ -172,14 +187,14 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
     # Check Setup Types
-    # Check Setup Types
-    setup_type = None
+    setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
     if setup_type_value in ("group_replication", "gr"):
         setup_type = 1
+        no_of_nodes = 1
     elif setup_type_value in ("replication", "replica"):
-        setup_type = None
+        setup_type = ''
         no_of_nodes = 2
 
     # Define environment variables for playbook
@@ -303,7 +318,7 @@ def setup_haproxy(db_type, db_version=None, db_config=None, args=None):
         'HAPROXY_CONTAINER': 'haproxy_pmm',
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -333,7 +348,7 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
         'EXTERNAL_CONTAINER': 'external_pmm',
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('ADMIN_PASSWORD') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
@@ -342,11 +357,11 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
 
-def execute_shell_scripts(shell_scripts, env_vars, args):
+
+def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars, args):
     # Get script directory
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    shell_scripts_path = script_dir + "/../pmm_psmdb-pbm_setup/"
+    current_directory = os.getcwd()
+    shell_scripts_path = os.path.abspath(os.path.join(current_directory, os.pardir, project_relative_scripts_dir))
 
     # Get the original working directory
     original_dir = os.getcwd()
@@ -361,28 +376,19 @@ def execute_shell_scripts(shell_scripts, env_vars, args):
 
     # Execute each shell script
     for script in shell_scripts:
+        result: subprocess.CompletedProcess
         try:
+            print(f'running script {script}')
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
-            process = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # Read output streams asynchronously
-            while process.poll() is None:  # Check if the subprocess is still running
-                # Read from stdout
-                for stdout_line in process.stdout:
-                    if stdout_line:
-                        print(stdout_line.decode('utf-8').strip())
-
-                # Read from stderr
-                for stderr_line in process.stderr:
-                    if stderr_line:
-                        print(stderr_line.decode('utf-8').strip())
-
-            # Get the return code of the process
-            return_code = process.returncode
-            if return_code == 0:
-                print(f"Shell script '{script}' executed successfully.")
-            else:
-                print(f"Shell script '{script}' failed with return code: {return_code}!")
+            print(f'changed directory {os.getcwd()}')
+            result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
+            print("Output:")
+            print(result.stdout)
+            print(f"Shell script '{script}' executed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Shell script '{script}' failed with return code: {e.returncode}! \n {e.stderr} \n Output: \n {e.stdout} ")
+            exit(e.returncode)
         except Exception as e:
             print("Unexpected error occurred:", e)
         finally:
@@ -405,7 +411,9 @@ def mongo_sharding_setup(script_filename, args):
     compose_file_path = scripts_path + compose_filename
 
     # Create pmm-qa n/w used in workaround
-    subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+    result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True)
+    if not result:
+        subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
 
     no_server = True
     # Add workaround (copy files) till sharding only support is ready.
@@ -434,6 +442,33 @@ def mongo_sharding_setup(script_filename, args):
         print(f"Error occurred: {e}")
 
 
+def get_latest_psmdb_version(psmdb_version):
+    if psmdb_version == "latest":
+        return psmdb_version
+    # Define the data to be sent in the POST request
+    data = {
+        'version': f'percona-server-mongodb-{psmdb_version}'
+    }
+
+    # Make the POST request
+    response = requests.post('https://www.percona.com/products-api.php', data=data)
+
+    # Extract the version number using regular expression
+    version_number = re.findall(r'value="([^"]*)"', response.text)
+
+    if version_number:
+        # Sort the version numbers and extract the latest one
+        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
+
+        # Extract the full version number
+        major_version = latest_version.split('-')[3].strip()  # Trim spaces
+        minor_version = latest_version.split('-')[4].strip()  # Trim spaces
+
+        return f'{major_version}-{minor_version}'
+    else:
+        return None
+
+
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -442,7 +477,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
     server_hostname = container_name
@@ -468,16 +503,18 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     }
 
     shell_scripts = []
-    if get_value('SETUP_TYPE', db_type, args, db_config).lower() == "pss" or "psa":
-        # Shell script names
+    scripts_folder = "pmm_psmdb-pbm_setup"
+    setup_type = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+
+    if setup_type in ("pss", "psa"):
         shell_scripts = ['start-rs-only.sh']
-    elif get_value('SETUP_TYPE', db_type, args, db_config).lower() == "shards":
-        shell_scripts = [f'start-sharded-no-server.sh']
+    elif setup_type in ("shards", "sharding"):
+        shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
 
     # Execute shell scripts
     if not shell_scripts == []:
-        execute_shell_scripts(shell_scripts, env_vars, args)
+        execute_shell_scripts(shell_scripts, scripts_folder, env_vars, args)
 
 
 def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
@@ -489,7 +526,7 @@ def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     pxc_version = os.getenv('PXC_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-    proxysql_version = os.getenv('PROXYSQL_VERSION') or db_version or database_configs["PROXYSQL"]["versions"][-1]
+    proxysql_version = os.getenv('PROXYSQL_VERSION') or database_configs["PROXYSQL"]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
@@ -511,6 +548,18 @@ def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+def setup_dockerclients(db_type, db_version=None, db_config=None, args=None):
+    # Define environment variables for shell script
+    env_vars = {}
+
+    # Shell script filename
+    shell_scripts = ['setup_docker_client_images.sh']
+    shell_scripts_path = 'pmm_qa'
+
+    # Call the function to run the setup_docker_client_images script
+    execute_shell_scripts(shell_scripts, shell_scripts_path, env_vars, args)
 
 
 # Set up databases based on arguments received
@@ -542,6 +591,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_haproxy(db_type, db_version, db_config, args)
     elif db_type == 'EXTERNAL':
         setup_external(db_type, db_version, db_config, args)
+    elif db_type == 'DOCKERCLIENTS':
+        setup_dockerclients(db_type, db_version, db_config, args)
     elif db_type == 'SSL_MYSQL':
         setup_ssl_mysql(db_type, db_version, db_config, args)
     else:
@@ -593,7 +644,7 @@ if __name__ == "__main__":
                                 else:
                                     if args.verbose:
                                         print(
-                                            f"Value {value} is not recognised for Option {key}, will be using default value")
+                                            f"Value {value} is not recognised for Option {key}, will be using Default value")
                         elif key in database_configs[db_type]["configurations"]:
                             db_config[key] = value
                         else:

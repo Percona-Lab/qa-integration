@@ -22,5 +22,5 @@ ps # 5.7.43 # https://downloads.percona.com/downloads/Percona-Server-5.7/Percona
 
 ms # 8.0.33 # https://dev.mysql.com/get/Downloads/MySQL-8/mysql-8.0.33-linux-glibc2.28-x86_64.tar.gz
 
-proxysql # 2.5.3 # https://downloads.percona.com/downloads/proxysql2/proxysql2-2.5.3/binary/debian/focal/x86_64/proxysql2_2.5.3-1.1.focal_amd64.deb
+proxysql # 2.6.2 # https://downloads.percona.com/downloads/proxysql2/proxysql2-2.6.2/binary/debian/jammy/x86_64/proxysql2_2.6.2-1.1.jammy_amd64.deb
 

@@ -32,6 +32,7 @@
   - name: Prepare Container for ps and Proxysql
     shell: >
       docker run -d --name={{ ps_container }}
+      -p 3317:3307
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker ps_container
@@ -39,6 +40,7 @@
     with_items:
       - docker exec {{ ps_container }} mkdir -p artifacts
       - docker cp ./client_container_ps_setup.sh {{ ps_container }}:/
+      - docker cp ./pmm3-client-setup.sh {{ ps_container }}:/
 
   - name: Get Product tarball URL based on the version
     shell: cat product_version_download_helper | grep -v pxc | grep ps | grep "\-{{ ps_version }}" | head -1 | awk -F'# ' '{print $3}'
@@ -60,7 +62,6 @@
   - name: Install pmm2-client on the ps_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ ps_container }} wget https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{ pmm_qa_branch }}/pmm_qa/pmm3-client-setup.sh
       - docker network connect pmm-qa {{ ps_container }}
       - docker exec {{ ps_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 

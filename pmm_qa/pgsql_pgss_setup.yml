@@ -30,7 +30,7 @@
     shell: >
       sudo docker run -d --name={{ pgsql_pgss_container }}
       -p {{ pgsql_pgss_port }}:5432
-      phusion/baseimage:focal-1.2.0
+      phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker pgsql_pgss_container
     shell: "{{ item }}"
@@ -38,6 +38,7 @@
       - docker exec {{ pgsql_pgss_container }} mkdir -p artifacts
       - docker cp ./pg_stat_statements_setup.sh {{ pgsql_pgss_container }}:/
       - docker cp ./pgsm_run_queries.sh {{ pgsql_pgss_container }}:/
+      - docker cp ./pmm3-client-setup.sh {{ pgsql_pgss_container }}:/
 
   - name: Execute Setup script inside the pgsql pgsql_pgss_container
     shell: "{{ item }}"
@@ -47,7 +48,6 @@
   - name: Install pmm2-client on the pgsql_pgss_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ pgsql_pgss_container }} wget https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{ pmm_qa_branch }}/pmm_qa/pmm3-client-setup.sh
       - docker network connect pmm-qa {{ pgsql_pgss_container }}
       - docker exec {{ pgsql_pgss_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 

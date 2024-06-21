@@ -43,6 +43,7 @@ mkdir /tmp || true
 chmod 1777 /tmp || true
 
 ## Deploy DB deployer
+export MS_PORT=3308
 export tar_ball_name=$(ls mysql-*)
 dbdeployer unpack ${tar_ball_name} --sandbox-binary=~/ms${ms_version} --overwrite
 export db_version_sandbox=$(ls ~/ms${ms_version})
@@ -54,11 +55,17 @@ if [[ "$number_of_nodes" == 1 ]];then
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'group-single-primary' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
    else
-      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --port=$MS_PORT --remote-access=% --bind-address=0.0.0.0 --force
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep  ${db_version_sandbox} | grep 'single' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
       if [[ "${query_source}" == "slowlog" ]]; then
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL slow_query_log='ON';"
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL long_query_time=0;"
@@ -87,8 +94,11 @@ else
      dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0
      export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
      node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
      for j in `seq 1  $number_of_nodes`; do
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
         if [[ "${query_source}" == "slowlog" ]]; then
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL slow_query_log='ON';"
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL long_query_time=0;"
