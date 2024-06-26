@@ -24,7 +24,7 @@ sleep 10
 if [ "$mysql_version" == "8.0" ]; then
     percona-release setup ps80
     sleep 10
-    DEBIAN_FRONTEND=noninteractive apt-get -y install percona-server-server sysbench sysbench-tpcc bc screen 
+    DEBIAN_FRONTEND=noninteractive apt-get -y install percona-server-server sysbench bc screen
 cat > /etc/mysql/my.cnf << EOF
 [mysqld]
 innodb_buffer_pool_size=256M
