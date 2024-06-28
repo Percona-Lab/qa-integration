@@ -13,6 +13,11 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
+    "SSL_PSMDB": {
+        "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
+                           "TARBALL": ""}
+    },
     "MYSQL": {
         "versions": ["8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
@@ -23,11 +28,20 @@ database_configs = {
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
+    "SSL_MYSQL": {
+        "versions": ["5.7", "8.0"],
+        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
+                           "TARBALL": ""}
+    },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
+        "versions": ["11", "12", "13", "14", "15", "16"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
+    },
+    "SSL_PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
@@ -218,6 +232,37 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
+def setup_ssl_mysql(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Check Setup Types
+    setup_type = None
+    no_of_nodes = 1
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+
+    # Gather Version details
+    ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    # Define environment variables for playbook
+    env_vars = {
+        'MYSQL_VERSION': ms_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'MYSQL_SSL_CONTAINER': 'mysql_ssl_' + str(ms_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'tls-ssl-setup/mysql_tls_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
 def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -242,6 +287,35 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Ansible playbook filename
     playbook_filename = 'pdpgsql_pgsm_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+def setup_ssl_pdpgsql(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PGSTAT_MONITOR_BRANCH': 'main',
+        'PGSQL_VERSION': pdpgsql_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PGSQL_SSL_CONTAINER': 'pdpgsql_pgsm_ssl_' + str(pdpgsql_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'tls-ssl-setup/postgresql_tls_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
@@ -357,7 +431,8 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             print(result.stdout)
             print(f"Shell script '{script}' executed successfully.")
         except subprocess.CalledProcessError as e:
-            print(f"Shell script '{script}' failed with return code: {e.returncode}! \n {e.stderr} \n Output: \n {e.stdout} ")
+            print(
+                f"Shell script '{script}' failed with return code: {e.returncode}! \n {e.stderr} \n Output: \n {e.stdout} ")
             exit(e.returncode)
         except Exception as e:
             print("Unexpected error occurred:", e)
@@ -447,7 +522,8 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or database_configs[db_type]["versions"][-1]
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+                    database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
     server_hostname = container_name
@@ -481,6 +557,95 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     elif setup_type in ("shards", "sharding"):
         shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
+
+    # Execute shell scripts
+    if not shell_scripts == []:
+        execute_shell_scripts(shell_scripts, scripts_folder, env_vars, args)
+
+
+# Temporary method for Mongo SSL Setup.
+def mongo_ssl_setup(script_filename, args):
+    # Get script directory
+    script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(script_path)
+    scripts_path = script_dir + "/../pmm_psmdb_diffauth_setup/"
+
+    # Temporary shell script filename
+    shellscript_file_path = scripts_path + script_filename
+
+    # Temporary docker compose filename
+    compose_filename = f'docker-compose-psmdb.yml'
+    compose_file_path = scripts_path + compose_filename
+
+    # Create pmm-qa n/w used in workaround
+    result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True)
+    if not result:
+        subprocess.run(['docker', 'network', 'create', 'pmm-qa'])
+
+    no_server = True
+    # Add workaround (copy files) till sharding only support is ready.
+    try:
+        if no_server:
+            # Search & Replace content in the temporary compose files
+            subprocess.run(
+                ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
+            admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+            subprocess.run(['sed', '-i', f's/password/{admin_password}/g', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
+                            f'{compose_file_path}'])
+            subprocess.run(['sed', '-i',
+                            '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
+                            f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
+
+            # Search replace content in-line in shell file
+            subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
+                            f'{shellscript_file_path}'])
+            subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
+                            f'{shellscript_file_path}'])
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+
+
+def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running...Exiting")
+        exit(1)
+
+    # Gather Version details
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+                    database_configs[db_type]["versions"][-1]
+
+    # Handle port address for external or internal address
+    server_hostname = container_name
+    port = 8443
+
+    if args.pmm_server_ip:
+        port = 443
+        server_hostname = args.pmm_server_ip
+
+    server_address = f'{server_hostname}:{port}'
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PSMDB_VERSION': psmdb_version,
+        'PMM_SERVER_CONTAINER_ADDRESS': server_address,
+        'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
+        'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
+        'TESTS': 'no',
+        'CLEANUP': 'no'
+    }
+
+    scripts_folder = "pmm_psmdb_diffauth_setup"
+
+    shell_scripts = ['test-auth.sh']
+    mongo_ssl_setup(shell_scripts[0], args)
 
     # Execute shell scripts
     if not shell_scripts == []:
@@ -563,6 +728,12 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_external(db_type, db_version, db_config, args)
     elif db_type == 'DOCKERCLIENTS':
         setup_dockerclients(db_type, db_version, db_config, args)
+    elif db_type == 'SSL_MYSQL':
+        setup_ssl_mysql(db_type, db_version, db_config, args)
+    elif db_type == 'SSL_PDPGSQL':
+        setup_ssl_pdpgsql(db_type, db_version, db_config, args)
+    elif db_type == 'SSL_PSMDB':
+        setup_ssl_psmdb(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
