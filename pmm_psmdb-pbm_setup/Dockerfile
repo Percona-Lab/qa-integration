@@ -34,7 +34,7 @@ RUN set -ex; \
     rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
-    percona-release enable original ${PMM_REPO} && \
+    percona-release enable pmm2-client ${PMM_REPO} && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     yum update --refresh -y && \
     if [ $PSMDB_VERSION == "latest" ]; then \
@@ -61,7 +61,7 @@ RUN set -ex; \
     elif [[ "$PMM_CLIENT_VERSION" =~ latest|dev-latest ]]; then \
         yum -y install pmm2-client ; \
     elif [ $PMM_CLIENT_VERSION == "pmm2-rc" ]; then \
-        percona-release enable original testing && \
+        percona-release enable pmm2-client testing && \
         yum update --refresh -y && \
         yum -y install pmm2-client ; \
     else \
