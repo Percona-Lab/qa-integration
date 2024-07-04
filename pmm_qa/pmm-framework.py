@@ -67,6 +67,7 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest"}
     },
     "DOCKERCLIENTS": {
+        "configurations": {}  # Empty dictionary for consistency
     },
 }
 
@@ -741,14 +742,20 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
 # Main
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='PMM Framework Script to setup Multiple Databases')
+    parser = argparse.ArgumentParser(description='PMM Framework Script to setup Multiple Databases',
+                                     usage=argparse.SUPPRESS)
+    # Add subparsers for database types
+    subparsers = parser.add_subparsers(dest='database_type', help='Choose database type above')
+
+    # Add subparser for each database type dynamically
+    for db_type, options in database_configs.items():
+        db_parser = subparsers.add_parser(db_type.lower())
+        for config, value in options['configurations'].items():
+            db_parser.add_argument(f'{config}',metavar='', help=f'{config} for {db_type} (default: {value})')
+
     # Add arguments
     parser.add_argument("--database", action='append', nargs=1,
-                        metavar='db_name[,=version][,option1=value1,option2=value2,...]',
-                        help="(e.g: "
-                             "--database mysql=5.7,QUERY_SOURCE=perfschema,SETUP_TYPE=gr,CLIENT_VERSION=3-dev-latest "
-                             "--database pdpgsql=16,USE_SOCKET=1,CLIENT_VERSION=3.0.0 "
-                             "--database psmdb=latest,SETUP_TYPE=psa,CLIENT_VERSION=3.0.0)")
+                        metavar='db_name[,=version][,option1=value1,option2=value2,...]')
     parser.add_argument("--pmm-server-ip", nargs='?', help='PMM Server IP to connect')
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
