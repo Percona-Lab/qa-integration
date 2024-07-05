@@ -54,13 +54,13 @@ export PMM_AGENT_SETUP_NODE_NAME=client_container_$(echo $((1 + $RANDOM % 9999))
 mv -v /artifacts/* .
 
 if [[ "$client_version" == "3-dev-latest" ]]; then
-    percona-release enable-only original experimental
+    percona-release enable-only pmm-client experimental
     apt-get update
     apt-get -y install pmm-client
 fi
 
 if [[ "$client_version" == "pmm3-rc" ]]; then
-    percona-release enable-only original testing
+    percona-release enable-only pmm-client testing
     apt-get update
     apt-get -y install pmm-client
 fi
@@ -68,7 +68,7 @@ fi
 if [[ "$client_version" == "pmm3-latest" ]]; then
     apt-get -y install pmm-client
     apt-get -y update
-    percona-release enable-only original experimental
+    percona-release enable-only pmm-client experimental
 fi
 
 ## Only supported for debian based systems for now
@@ -120,8 +120,8 @@ else
    pid=`ps -ef | grep pmm-agent | grep -v grep | awk -F ' ' '{print $2}'`
    if [[ ! -z "$pid" ]]; then
        kill -9 $pid
-       echo "killed old agent, restarting agent...."
-       pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > pmm-agent.log 2>&1 &
+       echo "Killing and restarting pmm agent...."
+       pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml >> pmm-agent.log 2>&1 &
        sleep 10
    fi
 fi
