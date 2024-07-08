@@ -54,13 +54,13 @@ export PMM_AGENT_SETUP_NODE_NAME=client_container_$(echo $((1 + $RANDOM % 9999))
 mv -v /artifacts/* .
 
 if [[ "$client_version" == "3-dev-latest" ]]; then
-    percona-release enable-only pmm-client experimental
+    percona-release enable-only pmm3-client experimental
     apt-get update
     apt-get -y install pmm-client
 fi
 
 if [[ "$client_version" == "pmm3-rc" ]]; then
-    percona-release enable-only pmm-client testing
+    percona-release enable-only pmm3-client testing
     apt-get update
     apt-get -y install pmm-client
 fi
@@ -68,7 +68,7 @@ fi
 if [[ "$client_version" == "pmm3-latest" ]]; then
     apt-get -y install pmm-client
     apt-get -y update
-    percona-release enable-only pmm-client experimental
+    percona-release enable-only pmm3-client experimental
 fi
 
 ## Only supported for debian based systems for now
