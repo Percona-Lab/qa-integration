@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       pdpgsql_version:
-        description: "PDPGSQL Docker hub example perconalab/percona-distribution-postgresql:16.0 latest available Image"
+        description: "PDPGSQL Version available Image versions on github, example: 14, 15, 16"
         required: true
         type: string
       pmm_qa_branch:
@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 20
     env:
       ADMIN_PASSWORD: 'admin'
-      PDPGSQL_VERSION: ${{ github.event.inputs.pdpgsql_version || 'perconalab/percona-distribution-postgresql:16.0' }}
+      PDPGSQL_VERSION: ${{ github.event.inputs.pdpgsql_version || '16' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_server_image || 'perconalab/pmm-server:3-dev-latest' }}
       PMM_QA_BRANCH: ${{ github.event.inputs.pmm_qa_branch || 'v3' }}
       PMM_UI_BRANCH: ${{ github.event.inputs.pmm_ui_tests_branch || 'v3' }}
