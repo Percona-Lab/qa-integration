@@ -82,7 +82,7 @@ jobs:
         path: ./pmm-ui-tests
 
     - name: Install npx dependencies
-      run: sudo npm ci && sudo npx playwright install-deps && sudo npx playwright install && npx codeceptjs def pr.codecept.js
+      run: npm ci && npx playwright install --with-deps && npx codeceptjs def pr.codecept.js
       working-directory: pmm-ui-tests
       
     - name: Run the Integration tests of pdpgsql
