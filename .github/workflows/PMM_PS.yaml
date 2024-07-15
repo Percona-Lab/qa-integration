@@ -3,10 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       ps_version:
-        description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
+        description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS"
+        default: 'https://github.com/Percona-QA/package-testing/blob/master/VERSIONS'
         required: true
       ps_glibc:
         description: "ps glibc version, example: 2.28"
+        default: '2.28'
         required: false
       pmm_qa_branch:
         description: "Branch for qa-integration to checkout"
@@ -17,7 +19,8 @@ on:
         required: false
         type: string
       pmm_server_image:
-        description: "pmm_image, example: perconalab/pmm-server:dev-latest"
+        description: "pmm_image, example: perconalab/pmm-server:3-dev-latest"
+        default: 'perconalab/pmm-server:3-dev-latest'
         required: false
       pmm_client_version:
         description: 'PMM Client version (3-dev-latest|pmm3-rc|x.xx.x|https...)'
