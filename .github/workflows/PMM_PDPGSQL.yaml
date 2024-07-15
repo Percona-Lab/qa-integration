@@ -62,10 +62,6 @@ jobs:
       working-directory: qa-integration
       run: echo "PATH_TO_PMM_QA=$(pwd)" >> $GITHUB_ENV
 
-    - name: Setup PMM-Client
-      working-directory: qa-integration/pmm_qa
-      run: sudo bash -x pmm3-client-setup.sh --pmm_server_ip 127.0.0.1 --client_version ${{ env.PMM_CLIENT_VERSION }} --admin_password ${{ env.ADMIN_PASSWORD }} --use_metrics_mode no
-
     - name: Run Setup for E2E Tests
       working-directory: qa-integration/pmm_qa
       run: |
@@ -90,5 +86,4 @@ jobs:
     - name: Run the Integration tests of pdpgsql
       working-directory: pmm-ui-tests
       run: | 
-        export PMM_UI_URL="https://127.0.0.1/"
         npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js --steps --debug
