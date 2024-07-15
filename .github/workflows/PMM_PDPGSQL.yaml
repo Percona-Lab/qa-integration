@@ -90,5 +90,5 @@ jobs:
     - name: Run the Integration tests of pdpgsql
       working-directory: pmm-ui-tests
       run: | 
-        export PMM_UI_URL="http://127.0.0.1/"
+        export PMM_UI_URL="https://127.0.0.1/"
         npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js --steps --debug
