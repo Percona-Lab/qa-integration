@@ -8,7 +8,7 @@ pbm_pass=${PBM_PASS:-pbmpass}
 
 echo
 echo "configuring pbm agents"
-nodes="rs101 rs102 rs103"
+nodes="rs101 rs102 rs103 rs104 rs105"
 for node in $nodes
 do
     echo "congiguring pbm agent on $node"
@@ -18,7 +18,7 @@ do
 done
 echo
 echo "configuring pmm agents"
-nodes="rs101 rs102 rs103"
+nodes="rs101 rs102 rs103 rs104 rs105"
 for node in $nodes
 do
     echo "congiguring pmm agent on $node"
