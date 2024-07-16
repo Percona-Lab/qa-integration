@@ -31,15 +31,16 @@ def run_test(add_db_command):
          agent_port = agent['port']
          break
 
-    url = f'http://psmdb-server:{agent_port}/metrics'
+    agent_id_parts = agent_id.split('/')
+    agent_pass = f"%2F{agent_id_parts[1]}%2F{agent_id_parts[2]}"
+
     try:
-        response = requests.get(url, auth=('pmm', agent_id), timeout=5)
-        assert response.status_code == 200, f"Request for metrics failed with status code {response.status_code}"
-        pattern = r'mongodb_up (\d+)'
-        result = re.search(pattern, response.text)
-        assert result is not None, "MongoDB related data isn't exported"
-    except requests.exceptions.ConnectionError:
-        pytest.fail(f"Connection to {url} failed")
+      command = f"curl http://pmm:{agent_pass}@127.0.0.1:{agent_port}/metrics"
+      metrics = docker_pmm_client.run(command, timeout=30)
+    except Exception as e:
+      pytest.fail(f"Fail to get metrics from exporter")
+    if "mongodb_up" not in metrics.stdout:
+      pytest.fail("MongoDB related data isn't exported")
 
 def test_simple_auth_wo_tls():
      run_test('pmm-admin add mongodb psmdb-server --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" '\
