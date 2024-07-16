@@ -55,7 +55,7 @@ jobs:
 
     - name: PXC_VERSION ENV Setup
       run: |
-        if [[ "${{ github.event.inputs.pxc_version }}" != http* }}" ]]; then
+        if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
           PXC_VERSION="${{ github.event.inputs.pxc_version }}"
           PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
           PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
