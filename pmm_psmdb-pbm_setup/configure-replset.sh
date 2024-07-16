@@ -27,6 +27,16 @@ docker-compose -f docker-compose-rs.yaml exec -T rs101 mongo --quiet << EOF
             "host" : "rs103:27017",
             "priority": 1
         }
+        {
+            "_id" : 3,
+            "host" : "rs104:27017",
+            "priority": 1
+        }
+        {
+            "_id" : 4,
+            "host" : "rs105:27017",
+            "priority": 1
+        }
       ]
       };
       rs.initiate(config);

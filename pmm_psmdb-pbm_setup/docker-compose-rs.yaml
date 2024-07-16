@@ -94,6 +94,58 @@ services:
       PMM_AGENT_SERVER_INSECURE_TLS: 1
     container_name: rs103
     hostname: rs103
+  
+  rs104:
+    depends_on:
+      - build_member
+    image: replica_member/local
+    profiles: ["classic", "extra"]
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests2
+      - pmm-ui-tests3
+    volumes:
+      - ./conf/pbm:/etc/pbm
+      - ./conf/mongod-rs:/etc/mongod
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /tmp/backup_data:/tmp/backup_data:rw
+    privileged: true
+    environment:
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
+    container_name: rs104
+    hostname: rs104
+
+  rs105:
+    depends_on:
+      - build_member
+    image: replica_member/local
+    profiles: ["classic", "extra"]
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests2
+      - pmm-ui-tests3
+    volumes:
+      - ./conf/pbm:/etc/pbm
+      - ./conf/mongod-rs:/etc/mongod
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /tmp/backup_data:/tmp/backup_data:rw
+    privileged: true
+    environment:
+      PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
+      PMM_AGENT_SERVER_USERNAME: admin
+      PMM_AGENT_SERVER_PASSWORD: ${ADMIN_PASSWORD:-password}
+      PMM_AGENT_SERVER_INSECURE_TLS: 1
+    container_name: rs105
+    hostname: rs105
 
   rs201:
     depends_on:
