@@ -35,6 +35,8 @@ services:
       - PMM_AGENT_SERVER_USERNAME=admin
       - PMM_AGENT_SERVER_PASSWORD=admin
       - PMM_AGENT_SERVER_ADDRESS=pmm-server:8443
+      - PMM_AGENT_PORTS_MIN=43000
+      - PMM_AGENT_PORTS_MAX=43020
     entrypoint:
       - bash
       - -c
@@ -48,7 +50,7 @@ services:
       - 'psmdb-server-data:/data/db'
     privileged: true
     ports:
-      - "42000-42020:42000-42020"
+      - "43000-43020:43000-43020"
     healthcheck:
       test: |
        test $$(mongo --quiet --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
