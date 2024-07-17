@@ -48,7 +48,7 @@ services:
       - 'psmdb-server-data:/data/db'
     privileged: true
     ports:
-      - "42000-42020:42000-42020"
+      - "42002-42022:42000-42020"
     healthcheck:
       test: |
        test $$(mongo --quiet --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
