@@ -1,4 +1,4 @@
-var db = connect("mongodb://dba:secret@localhost:27017/admin");
+var db = connect("mongodb://root:root@localhost:27017/admin");
 db.getSiblingDB("admin").createRole({
     "role": "pbmAnyAction",
     "privileges": [{

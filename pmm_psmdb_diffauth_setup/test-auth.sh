@@ -68,7 +68,7 @@ done
 tests=${TESTS:-yes}
 if [ $tests = "yes" ]; then
     echo "running tests"
-    docker-compose -f docker-compose-pmm-psmdb.yml run test pytest -s -x --verbose test.py
+    output=$(docker-compose -f docker-compose-pmm-psmdb.yml run test pytest -s -x --verbose test.py)
     else
     echo "skipping tests"
 fi
@@ -82,4 +82,9 @@ if [ $cleanup = "yes" ]; then
     fi
     else
     echo "skipping cleanup"
+fi
+
+echo "$output"
+if echo "$output" | grep -q "\bFAILED\b"; then
+    exit 1
 fi
