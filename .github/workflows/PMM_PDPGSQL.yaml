@@ -48,7 +48,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Run the pmm container in backgrounds
+    - name: Run the PMM Server container
       run: docker run --detach --restart always -p 443:8443 -p 8081:8080 --name pmm-server ${{ env.PMM_IMAGE }}
 
     - name: Checkout qa-integration repo
@@ -70,7 +70,7 @@ jobs:
         . virtenv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        python pmm-framework.py --pmm-server-password=${{ env.ADMIN_PASSWORD }} --verbose --database PDPGSQL=16
+        python pmm-framework.py --pmm-server-password=${{ env.ADMIN_PASSWORD }} --verbose --database PDPGSQL=${{ env.PDPGSQL_VERSION }}
 
     - name: Checkout PMM UI tests
       uses: actions/checkout@v4

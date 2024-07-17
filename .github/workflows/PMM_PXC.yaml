@@ -117,7 +117,7 @@ jobs:
       run: npm ci && npx playwright install --with-deps && npx codeceptjs def pr.codecept.js
       working-directory: pmm-ui-tests
 
-    - name: Run the Integration tests of PS
+    - name: Run the Integration tests of PXC
       run: |
         export PMM_UI_URL="http://127.0.0.1:8081/" 
         npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pxc_integration_test.js --steps --debug
