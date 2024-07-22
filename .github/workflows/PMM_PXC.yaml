@@ -101,9 +101,9 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
         if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
-          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client_version=${{ env.PMM_CLIENT_VERSION }} --database PXC=${{ env.PXC_VERSION }}
+          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PXC=${{ env.PXC_VERSION }}
         else
-          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client_version=${{ env.PMM_CLIENT_VERSION }} --database PXC,TARBALL=${{ env.PXC_TARBALL_PATH }}
+          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PXC,TARBALL=${{ env.PXC_TARBALL_PATH }}
         fi
 
     - name: Checkout PMM UI tests
