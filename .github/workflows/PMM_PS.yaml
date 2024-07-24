@@ -92,7 +92,7 @@ jobs:
       run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
 
     - name: Install npx dependencies
-      run: sudo npx playwright install-deps && npx codeceptjs def pr.codecept.js
+      run: sudo npx playwright install --with-deps && npx codeceptjs def pr.codecept.js
       working-directory: pmm-ui-tests
       
     - name: Run the Integration tests of PS
