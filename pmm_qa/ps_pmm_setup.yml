@@ -7,6 +7,7 @@
   become_method: sudo
   vars:
     ps_version: "{{ lookup('vars', 'extra_ps_version', default=lookup('env','PS_VERSION') | default('8.0', true) ) }}"
+    ps_port: "{{ lookup('vars', 'extra_ps_port', default=lookup('env','PS_PORT') | default('3317', true) ) }}"
     ps_tarball: "{{ lookup('vars', 'extra_ps_tarball', default=lookup('env','PS_TARBALL') | default('', true) ) }}"
     ps_container: "{{ lookup('vars', 'extra_ps_container', default=lookup('env','PS_CONTAINER') | default('ps_container', true) ) }}"
     query_source: "{{ lookup('vars', 'extra_query_source', default=lookup('env','QUERY_SOURCE') | default('slowlog', true) ) }}"
@@ -32,7 +33,7 @@
   - name: Prepare Container for ps and Proxysql
     shell: >
       docker run -d --name={{ ps_container }}
-      -p 3317:3307
+      -p {{ ps_port}}:3307
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker ps_container

@@ -29,7 +29,7 @@ nodes="rs101 rs102 rs103"
 for node in $nodes
 do
     echo "congiguring pmm agent on $node"
-    docker-compose -f docker-compose-rs.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}._${random_number} $node pmm-agent setup
+    docker-compose -f docker-compose-rs.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}_${random_number} $node pmm-agent setup
     if [[ $mongo_setup_type == "psa" && $node == "rs103" ]]; then
       docker-compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --cluster=replicaset --replication-set=rs ${node}_${random_number} 127.0.0.1:27017
     else
@@ -38,8 +38,8 @@ do
 done
 echo
 echo "adding some data"
-docker-compose -f docker-compose-rs.yaml exec -T rs101 mgodatagen -f /etc/datagen/replicaset.json --uri=mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@127.0.0.1:27017/?replicaSet=rs
-docker-compose -f docker-compose-rs.yaml exec -T rs101 mongo "mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@localhost/?replicaSet=rs" --quiet << EOF
+docker-compose -f docker-compose-rs.yaml exec -T rs102 mgodatagen -f /etc/datagen/replicaset.json --uri=mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@127.0.0.1:27017/?replicaSet=rs
+docker-compose -f docker-compose-rs.yaml exec -T rs102 mongo "mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@localhost/?replicaSet=rs" --quiet << EOF
 use students;
 db.students.insertMany([
   {

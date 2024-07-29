@@ -71,6 +71,10 @@ database_configs = {
     },
 }
 
+# Database ports
+ports = {
+}
+
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
@@ -86,7 +90,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         playbook=playbook_path,
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
-        envvars=env_vars
+        envvars=env_vars,
+        suppress_env_files=True,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -150,6 +155,18 @@ def get_value(key, db_type, args, db_config):
     return database_configs[db_type]["configurations"].get(key, '')
 
 
+def set_or_increment_port(ports_dict, key_pattern, default_port, increment_by):
+    matching_keys = [key for key in ports_dict if key_pattern in key]
+
+    if not matching_keys:
+        # No matching keys, set the default port
+        ports_dict[key_pattern] = default_port
+    else:
+        # Find the highest port number used for the matching pattern
+        highest_port = max(ports_dict[key] for key in matching_keys)
+        ports_dict[key_pattern] = highest_port + increment_by
+
+
 def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -170,11 +187,16 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
+    # Set Port details
+    set_or_increment_port(ports, 'ps', 3317, 1)
+
     # Define environment variables for playbook
     env_vars = {
         'GROUP_REPLICATION': setup_type,
         'PS_NODES': no_of_nodes,
         'PS_VERSION': ps_version,
+        'PS_PORT': ports['ps'],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PS_CONTAINER': 'ps_pmm_' + str(ps_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -274,10 +296,14 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
 
+    # Set Port details
+    set_or_increment_port(ports, 'pdpgsql', 5447, 1)
+
     # Define environment variables for playbook
     env_vars = {
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PDPGSQL_VERSION': pdpgsql_version,
+        'PDPGSQL_PORT': ports['pdpgsql'],
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -417,7 +443,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
     # Set environment variables if provided
     if env_vars:
         for key, value in env_vars.items():
-            os.environ[key] = value
+            os.environ[key] = str(value)
 
     # Execute each shell script
     for script in shell_scripts:
@@ -515,6 +541,10 @@ def get_latest_psmdb_version(psmdb_version):
         return None
 
 
+def get_first_character(s):
+    return s[0] if s else None
+
+
 def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -523,7 +553,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+    psmdb_version = get_latest_psmdb_version(db_version) or os.getenv('PSMDB_VERSION') or \
                     database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
@@ -536,9 +566,13 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     server_address = f'{server_hostname}:{port}'
 
+    # Set Port details
+    set_or_increment_port(ports, 'psmdb', 27027, 10)
     # Define environment variables for playbook
     env_vars = {
         'PSMDB_VERSION': psmdb_version,
+        'PSMDB_PORT': ports['psmdb'],
+        'COMPOSE_PROJECT_NAME': 'psmdb-' + get_first_character(str(psmdb_version)),
         'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
@@ -751,7 +785,7 @@ if __name__ == "__main__":
     for db_type, options in database_configs.items():
         db_parser = subparsers.add_parser(db_type.lower())
         for config, value in options['configurations'].items():
-            db_parser.add_argument(f'{config}',metavar='', help=f'{config} for {db_type} (default: {value})')
+            db_parser.add_argument(f'{config}', metavar='', help=f'{config} for {db_type} (default: {value})')
 
     # Add arguments
     parser.add_argument("--database", action='append', nargs=1,

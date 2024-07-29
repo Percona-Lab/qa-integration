@@ -13,7 +13,7 @@ docker network create pmm2-ui-tests_pmm-network || true
 export COMPOSE_PROFILES=${profile}
 export MONGO_SETUP_TYPE=${mongo_setup_type}
 
-docker-compose -f docker-compose-rs.yaml down -v --remove-orphans
+docker-compose -f docker-compose-rs.yaml down
 docker-compose -f docker-compose-rs.yaml build --no-cache
 docker-compose -f docker-compose-rs.yaml up -d
 echo

@@ -7,6 +7,7 @@
   become_method: sudo
   vars:
     pdpgsql_version: "{{ lookup('vars', 'extra_pdpgsql_version', default=lookup('env','PDPGSQL_VERSION') | default('14', true) ) }}"
+    pdpgsql_port: "{{ lookup('vars', 'extra_pdpgsql_port', default=lookup('env','PDPGSQL_PORT') | default('5447', true) ) }}"
     pdpgsql_pgsm_container: "{{ lookup('vars', 'extra_pdpgsql_pgsm_container', default=lookup('env','PDPGSQL_PGSM_CONTAINER') | default('pdpgsql_pgsm', true) ) }}"
     pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('dev-latest', true) ) }}"
@@ -31,7 +32,7 @@
   - name: Prepare Container for PostgreSQL
     shell: >
       sudo docker run -d --name={{ pdpgsql_pgsm_container }}
-      -p 5447:5432
+      -p {{ pdpgsql_port }}:5432
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
