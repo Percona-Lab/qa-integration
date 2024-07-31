@@ -1,4 +1,4 @@
-name: PMM_PXC
+name: PMM_PXC_PROXYSQL
 on:
   workflow_dispatch:
     inputs:
