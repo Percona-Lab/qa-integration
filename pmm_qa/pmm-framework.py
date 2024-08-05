@@ -13,6 +13,10 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
+    "MLAUNCH": {
+        "versions": ["4.4", "5.0", "6.0", "7.0"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
+    },
     "SSL_PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
@@ -86,7 +90,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         playbook=playbook_path,
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
-        envvars=env_vars
+        envvars=env_vars,
+        suppress_env_files=True,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -398,6 +403,35 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
 
     # Ansible playbook filename
     playbook_filename = 'external_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
+def setup_mlaunch(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+                    database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PSMDB_VERSION': psmdb_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
+        'PSMDB_SETUP': get_value('SETUP_TYPE', db_type, args, db_config),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'mlaunch_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
@@ -735,6 +769,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_ssl_pdpgsql(db_type, db_version, db_config, args)
     elif db_type == 'SSL_PSMDB':
         setup_ssl_psmdb(db_type, db_version, db_config, args)
+    elif db_type == 'MLAUNCH':
+        setup_mlaunch(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
@@ -751,7 +787,7 @@ if __name__ == "__main__":
     for db_type, options in database_configs.items():
         db_parser = subparsers.add_parser(db_type.lower())
         for config, value in options['configurations'].items():
-            db_parser.add_argument(f'{config}',metavar='', help=f'{config} for {db_type} (default: {value})')
+            db_parser.add_argument(f'{config}', metavar='', help=f'{config} for {db_type} (default: {value})')
 
     # Add arguments
     parser.add_argument("--database", action='append', nargs=1,
