@@ -20,8 +20,8 @@ psmdb_tarball=$(wget -q --post-data "version_files=percona-server-mongodb-${mong
 echo "Downloading ${mongodb_version} ..."
 wget -O percona_server_mongodb.tar.gz ${psmdb_tarball}
 tar -xvf percona_server_mongodb.tar.gz
-rm percona_server_mongodb.tar.gz*
 mv percona-server-mongodb-${mongodb_version}.* psmdb_${mongodb_version}
+rm percona_server_mongodb.tar.gz*
 
 # TODO: refactor if to match range of versions 6.0+
 if [[ "$mongodb_version" == "6.0" || "$mongodb_version" == "7.0" ]]; then
