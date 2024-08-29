@@ -47,6 +47,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - 'psmdb-server-data:/data/db'
     privileged: true
+    cgroup: host
     ports:
       - "42000-42020:42000-42020"
     healthcheck:
