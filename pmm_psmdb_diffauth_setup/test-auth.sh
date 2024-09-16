@@ -37,25 +37,25 @@ cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
 
 #Start setup
-docker-compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
-docker-compose -f docker-compose-pmm-psmdb.yml build
-docker-compose -f docker-compose-pmm-psmdb.yml up -d
+docker compose -f docker compose-pmm-psmdb.yml down -v --remove-orphans
+docker compose -f docker compose-pmm-psmdb.yml build
+docker compose -f docker compose-pmm-psmdb.yml up -d
 
 #Add users
-docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
+docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
-docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet "mongodb://root:root@localhost/?replicaSet=rs0" < init/setup_psmdb.js
+docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet "mongodb://root:root@localhost/?replicaSet=rs0" < init/setup_psmdb.js
 
 #Configure PBM
-docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "echo \"PBM_MONGODB_URI=mongodb://pbm:pbmpass@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
-docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
+docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server bash -c "echo \"PBM_MONGODB_URI=mongodb://pbm:pbmpass@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
+docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
 #Configure PMM
 set +e
 i=1
 while [ $i -le 3 ]; do
-    output=$(docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
+    output=$(docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
     exit_code=$?
 
     if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
@@ -68,12 +68,12 @@ done
 
 #Add Mongo Service
 random_number=$RANDOM
-docker-compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
+docker compose -f docker compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
 
 tests=${TESTS:-yes}
 if [ $tests = "yes" ]; then
     echo "running tests"
-    docker-compose -f docker-compose-pmm-psmdb.yml run test pytest -s -x --verbose test.py
+    docker compose -f docker compose-pmm-psmdb.yml run test pytest -s -x --verbose test.py
     else
     echo "skipping tests"
 fi
@@ -81,7 +81,7 @@ fi
 cleanup=${CLEANUP:-yes}
 if [ $cleanup = "yes" ]; then
     echo "cleanup"
-    docker-compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
+    docker compose -f docker compose-pmm-psmdb.yml down -v --remove-orphans
     if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2"* ]]; then
        sed -i 's/MONGODB-X509/MONGODB-X509,MONGODB-AWS/' conf/mongod.conf
     fi

@@ -32,7 +32,7 @@ on:
 
 jobs:
   test_replica_set:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
@@ -47,7 +47,7 @@ jobs:
       working-directory: ./pmm_psmdb-pbm_setup
 
   test_sharded_cluster:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
@@ -62,7 +62,7 @@ jobs:
       working-directory: ./pmm_psmdb-pbm_setup
 
   test_diff_auth:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       PSMDB_VERSION: ${{ inputs.psmdb_version || 'latest' }}
