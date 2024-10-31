@@ -39,8 +39,17 @@ def run_test(add_db_command):
       metrics = docker_pmm_client.run(command, timeout=30)
     except Exception as e:
       pytest.fail(f"Fail to get metrics from exporter")
-    if "mongodb_up" not in metrics.stdout:
-      pytest.fail("MongoDB related data isn't exported")
+
+    try:
+        with open("expected_metrics.txt", "r") as f:
+            expected_metrics = {line.strip() for line in f if line.strip()}
+    except FileNotFoundError:
+        pytest.fail("Expected metrics file not found")
+
+    for metric in expected_metrics:
+        if metric not in metrics.stdout:
+            pytest.fail(f"Metric '{metric}' is missing from the exporter output")
+
 
 def test_simple_auth_wo_tls():
      run_test('pmm-admin add mongodb psmdb-server --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" '\
