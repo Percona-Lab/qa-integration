@@ -493,7 +493,7 @@ def get_latest_psmdb_version(psmdb_version):
     if psmdb_version == "latest":
         return psmdb_version
     # workaround till 8.0 is released.
-    elif psmdb_version == "8.0" or "8.0.1" or "8.0.1-1":
+    elif psmdb_version in ("8.0", "8.0.1", "8.0.1-1"):
         return "8.0.1-1"
 
     # Define the data to be sent in the POST request
