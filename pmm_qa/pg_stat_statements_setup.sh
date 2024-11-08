@@ -13,7 +13,7 @@ done
 # If postgres server version is not provided then it will default to version 14.
 if [ -z "$pgsql_version" ]
 then
-      export pgsql_version=14
+      export pgsql_version=15
 fi
 
 # If distribution is not provided then it will default to percona distribution 'PPG'
