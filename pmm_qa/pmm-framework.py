@@ -9,12 +9,12 @@ import re
 # Database configurations
 database_configs = {
     "PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
     "SSL_PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
@@ -34,15 +34,15 @@ database_configs = {
                            "TARBALL": ""}
     },
     "PGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "SSL_PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PXC": {
@@ -492,6 +492,10 @@ def mongo_sharding_setup(script_filename, args):
 def get_latest_psmdb_version(psmdb_version):
     if psmdb_version == "latest":
         return psmdb_version
+    # workaround till 8.0 is released.
+    elif psmdb_version in ("8.0", "8.0.1", "8.0.1-1"):
+        return "8.0.1-1"
+
     # Define the data to be sent in the POST request
     data = {
         'version': f'percona-server-mongodb-{psmdb_version}'
@@ -640,7 +644,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
         'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
-        'TESTS': 'no',
+        '`TESTS`': 'no',
         'CLEANUP': 'no'
     }
 
@@ -752,7 +756,7 @@ if __name__ == "__main__":
     for db_type, options in database_configs.items():
         db_parser = subparsers.add_parser(db_type.lower())
         for config, value in options['configurations'].items():
-            db_parser.add_argument(f'{config}',metavar='', help=f'{config} for {db_type} (default: {value})')
+            db_parser.add_argument(f'{config}', metavar='', help=f'{config} for {db_type} (default: {value})')
 
     # Add arguments
     parser.add_argument("--database", action='append', nargs=1,
