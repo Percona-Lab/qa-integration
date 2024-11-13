@@ -22,7 +22,7 @@ RUN set -ex; \
     export GNUPGHOME="$(mktemp -d)"; \
     export PERCONA_TELEMETRY_URL="https://check-dev.percona.com/v1/telemetry/GenericReport"; \
     yum install -y gnupg2; \
-    if [ $PSMDB_VERSION != "latest" ]; then export PSMDB_REPO="$(echo "${PSMDB_VERSION}" | awk -F '.' '{print "psmdb-"$1$2}')" ; else export PSMDB_REPO=psmdb-60 ; fi ; \
+    if [ $PSMDB_VERSION != "latest" ]; then export PSMDB_REPO="$(echo "${PSMDB_VERSION}" | awk -F '.' '{print "psmdb-"$1$2}')" ; else export PSMDB_REPO=psmdb-80 ; fi ; \
     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 4D1BB29D63D98E422B2113B19334A25F8507EFA5 99DB70FAE1D7CE227FB6488205B555B38483C65D 94E279EB8D8F25B21810ADF121EA45AB2F86D6A1; \
     gpg --batch --export --armor 4D1BB29D63D98E422B2113B19334A25F8507EFA5 > ${GNUPGHOME}/PERCONA-PACKAGING-KEY; \
     gpg --batch --export --armor 99DB70FAE1D7CE227FB6488205B555B38483C65D > ${GNUPGHOME}/RPM-GPG-KEY-centosofficial; \
@@ -38,7 +38,7 @@ RUN set -ex; \
     percona-release enable pmm3-client ${PMM_REPO} && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
     yum update --refresh -y && \
-    if [ $PSMDB_VERSION == "latest" ]; then \
+    if [[ $PSMDB_VERSION == "latest" || "$PSMDB_VERSION" =~ ^[0-9]\.[0-9]$ ]] ; then \
         yum -y install percona-server-mongodb \
                        percona-server-mongodb-tools \
                        percona-server-mongodb-server \
