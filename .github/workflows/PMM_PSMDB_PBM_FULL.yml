@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        psmdb: ["6.0", "7.0"]
+        psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        psmdb: ["6.0", "7.0"]
+        psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        psmdb: ["6.0", "7.0"]
+        psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}

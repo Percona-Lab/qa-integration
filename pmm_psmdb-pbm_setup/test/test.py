@@ -149,3 +149,31 @@ def test_pbm_restore():
             restore_complete = True
 
     assert restore_complete
+
+def test_metrics():
+    pmm_admin_list = json.loads(docker_rs101.check_output('pmm-admin list --json', timeout=30))
+    for agent in pmm_admin_list['agent']:
+      if agent['agent_type'] == 'MONGODB_EXPORTER':
+         agent_id = agent['agent_id']
+         agent_port = agent['port']
+         break
+
+    agent_id_parts = agent_id.split('/')
+    agent_pass = f"%2F{agent_id_parts[1]}%2F{agent_id_parts[2]}"
+
+    try:
+      command = f"curl http://pmm:{agent_pass}@127.0.0.1:{agent_port}/metrics"
+      metrics = docker_rs101.run(command, timeout=30)
+      assert metrics.exit_status == 0, f"Curl command failed with exit status {metrics.exit_status}"
+    except Exception as e:
+      pytest.fail(f"Fail to get metrics from exporter")
+
+    try:
+        with open("expected_metrics.txt", "r") as f:
+            expected_metrics = {line.strip() for line in f if line.strip()}
+    except FileNotFoundError:
+        pytest.fail("Expected metrics file not found")
+
+    for metric in expected_metrics:
+        if metric not in metrics.stdout:
+            pytest.fail(f"Metric '{metric}' is missing from the exporter output")
