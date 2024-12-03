@@ -6,6 +6,9 @@ on:
       pmm_version:
         description: "pmm2-client version"
         required: false
+      pmm_repo:
+        description: "pmm2-client repo"
+        required: false
       pmm_image:
         description: "pmm-server docker image"
         required: false
@@ -28,6 +31,7 @@ jobs:
         psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_REPO: ${{ github.event.inputs.pmm_repo || 'testing' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v2
@@ -45,6 +49,7 @@ jobs:
         psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_REPO: ${{ github.event.inputs.pmm_repo || 'testing' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v2
@@ -62,6 +67,7 @@ jobs:
         psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ github.event.inputs.pmm_version || 'latest' }}
+      PMM_REPO: ${{ github.event.inputs.pmm_repo || 'testing' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
     steps:
     - uses: actions/checkout@v3
