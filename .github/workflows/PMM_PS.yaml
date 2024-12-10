@@ -29,11 +29,11 @@ on:
         type: string
   push:
     branches:
-      - main
+      - v3
 
   pull_request:
     branches:
-      - main
+      - v3
 
 jobs:
   PMM_PS_TEST:
