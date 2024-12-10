@@ -7,8 +7,8 @@ on:
         default: 'https://github.com/Percona-QA/package-testing/blob/master/VERSIONS'
         required: true
       ps_glibc:
-        description: "ps glibc version, example: 2.28"
-        default: '2.28'
+        description: "ps glibc version, example: 2.35"
+        default: '2.35'
         required: false
       pmm_qa_branch:
         description: "Branch for qa-integration to checkout"
@@ -42,7 +42,7 @@ jobs:
     env:
       ADMIN_PASSWORD: 'admin'
       PS_VERSION: ${{ github.event.inputs.ps_version || '8.0' }}
-      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.35' }}
       PMM_SERVER_IMAGE: ${{ github.event.inputs.pmm_server_image || 'perconalab/pmm-server:3-dev-latest' }}
       PMM_QA_BRANCH: ${{ github.event.inputs.pmm_qa_branch || 'v3' }}
       PMM_UI_BRANCH: ${{ github.event.inputs.pmm_ui_tests_branch || 'v3' }}
