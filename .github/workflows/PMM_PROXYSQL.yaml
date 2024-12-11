@@ -48,7 +48,7 @@ jobs:
 
     - name: Concatenate values to environment file
       run: |
-        echo "PXC_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PXC_VERSION_PATH}}/Percona-XtraDB-Cluster_${{env.PXC_VERSION_TAR}}_Linux.x86_64.glibc${{env.PXC_GLIBC}}.tar.gz" >> $GITHUB_ENV
+        echo "PXC_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PXC_VERSION_TRIMED}}/Percona-XtraDB-Cluster_${{env.PXC_VERSION_TAR}}_Linux.x86_64.glibc${{env.PXC_GLIBC}}.tar.gz" >> $GITHUB_ENV
         echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
         echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
 
