@@ -42,7 +42,7 @@ jobs:
           PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
         fi
         echo "PXC_VERSION=${PXC_VERSION}"  | sed 's/"//g'  >> $GITHUB_ENV
-        echo "PXC_VERSION_TAR=${PXC_VERSION}"  | sed 's/"//g' >> $GITHUB_ENV
+        echo "PXC_VERSION_TAR=${PXC_VERSION}.1"  | sed 's/"//g' >> $GITHUB_ENV
         echo "PXC_VERSION_PATH=${PXC_VERSION_PATH}" >> $GITHUB_ENV
         echo "PXC_VERSION_TRIMED=${PXC_VERSION_TRIMED}" >> $GITHUB_ENV
 
