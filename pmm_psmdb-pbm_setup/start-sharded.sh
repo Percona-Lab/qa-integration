@@ -40,7 +40,7 @@ do
             {
                 "_id" : 2,
                 "host" : "${rs}03:27017",
-                "priority": 1
+                "arbiterOnly": true
             }
           ]
           };
