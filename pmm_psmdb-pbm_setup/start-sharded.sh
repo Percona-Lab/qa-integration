@@ -135,7 +135,7 @@ docker compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo --quiet << E
         {
             "_id" : 2,
             "host" : "rscfg03:27017",
-            "priority": 1
+            "arbiterOnly": true
         }
       ]
       };
