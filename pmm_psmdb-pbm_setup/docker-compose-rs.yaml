@@ -186,6 +186,8 @@ services:
     image: minio/minio
     profiles: ["classic", "extra"]
     container_name: minio
+    ports:
+      - "9001:9000"
     depends_on:
       - build_member
     networks:

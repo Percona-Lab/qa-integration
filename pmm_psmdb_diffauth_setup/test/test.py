@@ -25,20 +25,26 @@ def run_test(add_db_command):
 
     pmm_admin_list = json.loads(docker_pmm_client.check_output('pmm-admin list --json', timeout=30))
     for agent in pmm_admin_list['agent']:
-        if agent['agent_type'] == 'MONGODB_EXPORTER':
+        if agent['agent_type'] == 'AGENT_TYPE_MONGODB_EXPORTER':
             agent_id = agent['agent_id']
             agent_port = agent['port']
             break
-
-    url = f'http://localhost:{agent_port}/metrics'
     try:
-        response = docker_pmm_client.check_output(f"curl --request GET --url {url} --header 'Content-Type: "
-                                                  f"application/json' --user 'pmm:{agent_id}'")
-        pattern = r'mongodb_up (\d+)'
-        result = re.search(pattern, response)
-        assert result is not None, "MongoDB related data isn't exported"
-    except AssertionError:
-        pytest.fail(f"Connection to {url} failed")
+      command = f"curl -s http://pmm:{agent_id}@127.0.0.1:{agent_port}/metrics"
+      metrics = docker_pmm_client.run(command, timeout=30)
+      assert metrics.exit_status == 0, f"Curl command failed with exit status {metrics.exit_status}"
+    except Exception as e:
+      pytest.fail(f"Fail to get metrics from exporter")
+
+    try:
+        with open("expected_metrics.txt", "r") as f:
+            expected_metrics = {line.strip() for line in f if line.strip()}
+    except FileNotFoundError:
+        pytest.fail("Expected metrics file not found")
+
+    for metric in expected_metrics:
+        if metric not in metrics.stdout:
+            pytest.fail(f"Metric '{metric}' is missing from the exporter output")
 
 
 def test_simple_auth_wo_tls():

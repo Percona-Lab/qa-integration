@@ -23,13 +23,13 @@ pytest.restore_id = ''
 
 
 def test_pmm_services():
-    req = requests.post(f"https://{pmm_server_url}/v1/inventory/Services/List", json={},
+    req = requests.get(f"https://{pmm_server_url}/v1/inventory/services", json={},
                         headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nGetting all mongodb services:')
     mongodb = req.json()['mongodb']
     print(mongodb)
     assert mongodb
-    assert "service_id" in mongodb[0]['service_id']
+    assert "service_id" in mongodb[0]
     for service in mongodb:
         assert "rs" or "mongos" in service['service_name']
         if not "mongos" in service['service_name']:
@@ -49,11 +49,11 @@ def test_pmm_add_location():
             'bucket_name': 'bcp'
         }
     }
-    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Locations/Add", json=data,
+    req = requests.post(f"https://{pmm_server_url}/v1/backups/locations", json=data,
                         headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nAdding new location:')
     print(req.json())
-    assert "location_id" in req.json()['location_id']
+    assert "location_id" in req.json()
     pytest.location_id = req.json()['location_id']
 
 
@@ -64,13 +64,15 @@ def test_pmm_logical_backup():
         'name': 'test',
         'description': 'test',
         'retries': 0,
-        'data_model': 'LOGICAL'
+        'data_model': 'DATA_MODEL_LOGICAL'
     }
-    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Backups/Start", json=data,
+
+    print(data)
+    req = requests.post(f"https://{pmm_server_url}/v1/backups:start", json=data,
                         headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nCreating logical backup:')
     print(req.json())
-    assert "artifact_id" in req.json()['artifact_id']
+    assert "artifact_id" in req.json()
     pytest.artifact_id = req.json()['artifact_id']
 
 
@@ -78,7 +80,7 @@ def test_pmm_artifact():
     backup_complete = False
     for i in range(600):
         done = False
-        req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Artifacts/List", json={},
+        req = requests.get(f"https://{pmm_server_url}/v1/backups/artifacts", json={},
                             headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
         assert req.json()['artifacts']
         for artifact in req.json()['artifacts']:
@@ -118,11 +120,11 @@ def test_pmm_start_restore():
         'service_id': pytest.service_id,
         'artifact_id': pytest.artifact_id
     }
-    req = requests.post(f"https://{pmm_server_url}/v1/management/backup/Backups/Restore", json=data,
+    req = requests.post(f"https://{pmm_server_url}/v1/backups/restores:start", json=data,
                         headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
     print('\nRestoring logical backup:')
     print(req.json())
-    assert "restore_id" in req.json()['restore_id']
+    assert "restore_id" in req.json()
     pytest.restore_id = req.json()['restore_id']
 
 
@@ -132,7 +134,7 @@ def test_pmm_restore():
     restore_complete = False
     for i in range(600):
         done = False
-        req = requests.post(f"https://{pmm_server_url}/v1/management/backup/RestoreHistory/List", json={},
+        req = requests.get(f"https://{pmm_server_url}/v1/backups/restores", json={},
                             headers={"authorization": "Basic YWRtaW46cGFzc3dvcmQ="}, verify=False)
         assert req.json()['items']
         for item in req.json()['items']:
@@ -166,3 +168,27 @@ def test_pbm_restore():
             restore_complete = True
 
     assert restore_complete
+
+def test_metrics():
+    pmm_admin_list = json.loads(docker_rs101.check_output('pmm-admin list --json', timeout=30))
+    for agent in pmm_admin_list['agent']:
+        if agent['agent_type'] == 'AGENT_TYPE_MONGODB_EXPORTER':
+            agent_id = agent['agent_id']
+            agent_port = agent['port']
+            break
+    try:
+      command = f"curl -s http://pmm:{agent_id}@127.0.0.1:{agent_port}/metrics"
+      metrics = docker_rs101.run(command, timeout=30)
+      assert metrics.exit_status == 0, f"Curl command failed with exit status {metrics.exit_status}"
+    except Exception as e:
+      pytest.fail(f"Fail to get metrics from exporter")
+
+    try:
+        with open("expected_metrics.txt", "r") as f:
+            expected_metrics = {line.strip() for line in f if line.strip()}
+    except FileNotFoundError:
+        pytest.fail("Expected metrics file not found")
+
+    for metric in expected_metrics:
+        if metric not in metrics.stdout:
+            pytest.fail(f"Metric '{metric}' is missing from the exporter output")
