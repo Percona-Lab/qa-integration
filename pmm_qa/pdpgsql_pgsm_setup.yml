@@ -12,9 +12,10 @@
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
-    pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('1.1.1', true) ) }}"
+    pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('2.1.0', true) ) }}"
     pgstat_monitor_repo: "{{ lookup('vars', 'extra_pgstat_monitor_repo', default=lookup('env','PGSTAT_MONITOR_REPO') | default('percona/pg_stat_monitor', true) ) }}"
     use_socket: "{{ lookup('vars', 'extra_pdpgsql_version', default=lookup('env','USE_SOCKET') | default('', true) ) }}"
+    distribution: "{{ lookup('vars', 'extra_pdpgsql_distribution', default=lookup('env','DISTRIBUTION') | default('PPG', true) ) }}"
 
   tasks:
   - name: cleanup container for client and DB setup
@@ -45,7 +46,7 @@
   - name: Execute Setup script inside the pdpgsql pdpgsql_pgsm_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution PPG --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_pdpgsql_pgsm_{{ pdpgsql_version }}.log
+      - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution {{ distribution }} --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_pdpgsql_pgsm_{{ pdpgsql_version }}.log
 
   - name: Install pmm2-client on the pdpgsql_pgsm_container
     shell: "{{ item }}"
