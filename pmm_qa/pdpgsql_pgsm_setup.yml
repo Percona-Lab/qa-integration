@@ -15,6 +15,7 @@
     pgstat_monitor_branch: "{{ lookup('vars', 'extra_pgstat_monitor_branch', default=lookup('env','PGSTAT_MONITOR_BRANCH') | default('2.1.0', true) ) }}"
     pgstat_monitor_repo: "{{ lookup('vars', 'extra_pgstat_monitor_repo', default=lookup('env','PGSTAT_MONITOR_REPO') | default('percona/pg_stat_monitor', true) ) }}"
     use_socket: "{{ lookup('vars', 'extra_pdpgsql_version', default=lookup('env','USE_SOCKET') | default('', true) ) }}"
+    port: "{{ lookup('vars', 'extra_pdpgsql_port', default=lookup('env','PORT') | default(5447, true) ) }}"
     distribution: "{{ lookup('vars', 'extra_pdpgsql_distribution', default=lookup('env','DISTRIBUTION') | default('PPG', true) ) }}"
 
   tasks:
@@ -32,7 +33,7 @@
   - name: Prepare Container for PostgreSQL
     shell: >
       sudo docker run -d --name={{ pdpgsql_pgsm_container }}
-      -p 5447:5432
+      -p {{ port }}:5432
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
@@ -46,7 +47,7 @@
   - name: Execute Setup script inside the pdpgsql pdpgsql_pgsm_container
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution {{ distribution }} --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_pdpgsql_pgsm_{{ pdpgsql_version }}.log
+      - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution {{ distribution }} --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_{{ pdpgsql_pgsm_container }}.log
 
   - name: Install pmm2-client on the pdpgsql_pgsm_container
     shell: "{{ item }}"
