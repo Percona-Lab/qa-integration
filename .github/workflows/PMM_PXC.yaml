@@ -1,4 +1,4 @@
-name: PMM_PXC
+  name: PMM_PXC
 on:
   workflow_dispatch:
     inputs:
@@ -31,18 +31,18 @@ jobs:
 
     - name: PXC_VERSION ENV Setup
       run: |
-        if [[ -n "${{ github.event.inputs.pxc_version }}" ]]; then
+        if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
           PXC_VERSION="${{ github.event.inputs.pxc_version }}"
           PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
           PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
         else
           wget https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS
           PXC_VERSION="$(grep 'PXC80_VER' VERSIONS | cut -d = -f 2)"
-          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION.1")
+          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
           PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
         fi
         echo "PXC_VERSION=${PXC_VERSION}"  | sed 's/"//g'  >> $GITHUB_ENV
-        echo "PXC_VERSION_TAR=${PXC_VERSION}.1"  | sed 's/"//g' >> $GITHUB_ENV
+        echo "PXC_VERSION_TAR=${PXC_VERSION}"  | sed 's/"//g' >> $GITHUB_ENV
         echo "PXC_VERSION_PATH=${PXC_VERSION_PATH}" >> $GITHUB_ENV
         echo "PXC_VERSION_TRIMED=${PXC_VERSION_TRIMED}" >> $GITHUB_ENV
 

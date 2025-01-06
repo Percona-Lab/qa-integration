@@ -31,24 +31,24 @@ jobs:
 
     - name: PXC_VERSION ENV Setup
       run: |
-        if [[ -n "${{ github.event.inputs.pxc_version }}" ]]; then
+        if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
           PXC_VERSION="${{ github.event.inputs.pxc_version }}"
           PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
           PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
         else
           wget https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS
           PXC_VERSION="$(grep 'PXC80_VER' VERSIONS | cut -d = -f 2)"
-          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION.1")
-          PXC_VERSION_TRIMED=$(echo ${PXC_VERSION%-*})
+          PXC_VERSION_PATH=$(echo "pxc-$PXC_VERSION")
+          PXC_VERSION_TRIMED="pxc-$(echo "${PXC_VERSION%-*}" | cut -d'-' -f1)"
         fi
         echo "PXC_VERSION=${PXC_VERSION}"  | sed 's/"//g'  >> $GITHUB_ENV
         echo "PXC_VERSION_TAR=${PXC_VERSION}.1"  | sed 's/"//g' >> $GITHUB_ENV
         echo "PXC_VERSION_PATH=${PXC_VERSION_PATH}" >> $GITHUB_ENV
-        echo "PXC_VERSION_TRIMED=${PXC_VERSION_TRIMED}" >> $GITHUB_ENV
+        echo "PXC_VERSION_TRIMED=${PXC_VERSION_TRIMED}" | sed 's/"//g' >> $GITHUB_ENV
 
     - name: Concatenate values to environment file
       run: |
-        echo "PXC_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PXC_VERSION_PATH}}/Percona-XtraDB-Cluster_${{env.PXC_VERSION_TAR}}_Linux.x86_64.glibc${{env.PXC_GLIBC}}.tar.gz" >> $GITHUB_ENV
+        echo "PXC_TARBALL_PATH=https://downloads.percona.com/downloads/TESTING/${{env.PXC_VERSION_TRIMED}}/Percona-XtraDB-Cluster_${{env.PXC_VERSION_TAR}}_Linux.x86_64.glibc${{env.PXC_GLIBC}}.tar.gz" >> $GITHUB_ENV
         echo "PMM_QA_REPO_URL=https://github.com/percona/pmm-qa/" >> $GITHUB_ENV
         echo "PMM_QA_REPO_BRANCH=main" >> $GITHUB_ENV
 
