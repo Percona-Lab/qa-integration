@@ -45,7 +45,7 @@ jobs:
           PS_VERSION_TRIMED=$(echo ${PS_VERSION_FULL%-*})
         fi
         echo "PS_VERSION=${PS_VERSION}" | sed 's/"//g' >> $GITHUB_ENV
-        echo "PS_VERSION_PATH=${PS_VERSION_PATH} | sed 's/"//g' " >> $GITHUB_ENV
+        echo "PS_VERSION_PATH=${PS_VERSION_PATH}" | sed 's/"//g' >> $GITHUB_ENV
         echo "PS_VERSION_TRIMED=${PS_VERSION_TRIMED}" >> $GITHUB_ENV
 
 
