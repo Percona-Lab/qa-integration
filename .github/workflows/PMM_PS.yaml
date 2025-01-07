@@ -33,7 +33,6 @@ jobs:
     - name: PS_VERSION ENV Setup
       run: |
         if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
-          PS_VERSION="${{ github.event.inputs.ps_version }}"
           PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
           PS_VERSION_TRIMED=$(echo ${PS_VERSION%-*})
         else
