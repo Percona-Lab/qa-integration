@@ -26,7 +26,7 @@ jobs:
     env:
       PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.35' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
-      PS_VERSION: ${{ github.event.inputs.ps_version || '8.0.36' }}
+      PS_VERSION: ${{ github.event.inputs.ps_version || 'https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS' }}
     steps:
     - uses: actions/checkout@v2
 
