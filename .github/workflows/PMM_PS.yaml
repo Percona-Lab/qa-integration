@@ -6,7 +6,7 @@ on:
         description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
         required: true
       ps_glibc:
-        description: "ps glibc version, example: 2.28"
+        description: "ps glibc version, example: 2.35"
         required: false
       pmm_image:
         description: "pmm_image, example: perconalab/pmm-server:dev-latest"
@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.35' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
-      
+      PS_VERSION: ${{ github.event.inputs.ps_version || '8.0.33' }}
     steps:
     - uses: actions/checkout@v2
 
@@ -85,7 +85,7 @@ jobs:
       run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
 
     - name: Run for PS tests
-      run: ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=slowlog
+      run: ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=perfschema
       working-directory: pmm-qa/pmm-tests
     
     - name: Checkout the repo and install node packages
