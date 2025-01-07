@@ -32,7 +32,7 @@ jobs:
 
     - name: PS_VERSION ENV Setup
       run: |
-        if [[ $PS_VERSION != http* ]]; then
+        if [[ "$PS_VERSION" != http* ]]; then
           PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
           PS_VERSION_TRIMED=$(echo ${PS_VERSION%-*})
         else
@@ -85,7 +85,7 @@ jobs:
 
     - name: Run for PS tests
       run: |
-        if [[ $PS_VERSION != http* ]]; then
+        if [[ "${{ env.PS_VERSION }}" != http* ]]; then
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --query-source=perfschema
         else
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=perfschema
