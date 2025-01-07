@@ -9,7 +9,7 @@ import re
 # Database configurations
 database_configs = {
     "PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
@@ -23,7 +23,7 @@ database_configs = {
                            "TARBALL": ""}
     },
     "SSL_PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "latest"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
@@ -43,15 +43,15 @@ database_configs = {
                            "TARBALL": ""}
     },
     "PGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "SSL_PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16"],
+        "versions": ["11", "12", "13", "14", "15", "16", "17"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
     },
     "PXC": {
@@ -96,7 +96,6 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
-        suppress_env_files=True,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -293,6 +292,8 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PORT': 5447,
+        'DISTRIBUTION': '',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
@@ -344,17 +345,20 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Define environment variables for playbook
     env_vars = {
-        'PGSQL_VERSION': pgsql_version,
+        'PDPGSQL_VERSION': pgsql_version,
+        'PGSTAT_MONITOR_BRANCH': 'main',
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
+        'PDPGSQL_PGSM_CONTAINER': 'pgsql_pgsm_pmm_' + str(pgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PORT': 5448,
+        'DISTRIBUTION': 'PGDG',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
-    playbook_filename = 'pgsql_pgss_setup.yml'
+    playbook_filename = 'pdpgsql_pgsm_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
@@ -530,6 +534,10 @@ def mongo_sharding_setup(script_filename, args):
 def get_latest_psmdb_version(psmdb_version):
     if psmdb_version == "latest":
         return psmdb_version
+    # workaround till 8.0 is released.
+    elif psmdb_version in ("8.0", "8.0.1", "8.0.1-1"):
+        return "8.0.1-1"
+
     # Define the data to be sent in the POST request
     data = {
         'version': f'percona-server-mongodb-{psmdb_version}'
@@ -630,7 +638,7 @@ def mongo_ssl_setup(script_filename, args):
             subprocess.run(
                 ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(['sed', '-i', f's/password/{admin_password}/g', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])

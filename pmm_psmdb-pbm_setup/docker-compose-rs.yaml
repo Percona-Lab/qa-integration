@@ -35,6 +35,7 @@ services:
       - /tmp/backup_data:/tmp/backup_data:rw
       - /tmp/mongodb:/tmp
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -61,6 +62,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -87,6 +89,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -115,6 +118,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -141,6 +145,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -167,6 +172,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
     privileged: true
+    cgroup: host
     environment:
       PBM_MONGODB_URI: mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       PMM_AGENT_SERVER_ADDRESS: ${PMM_SERVER_CONTAINER_ADDRESS:-pmm-server:8443}
@@ -180,6 +186,8 @@ services:
     image: minio/minio
     profiles: ["classic", "extra"]
     container_name: minio
+    ports:
+      - "9001:9000"
     depends_on:
       - build_member
     networks:
