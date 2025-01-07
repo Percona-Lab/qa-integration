@@ -29,13 +29,13 @@ jobs:
     env:
       PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.35' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
-      PS_VERSION: ${{ github.event.inputs.ps_version || '8.0.36' }}
+      PS_VERSION: ${{ github.event.inputs.ps_version || 'https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS' }}
     steps:
     - uses: actions/checkout@v2
 
     - name: PS_VERSION ENV Setup
       run: |
-        if [[ "github.event.inputs.ps_version" != http* ]]; then
+        if [[ "$PS_VERSION" != http* ]]; then
           PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
           PS_VERSION_TRIMED=$(echo ${PS_VERSION%-*})
         else
@@ -88,7 +88,7 @@ jobs:
 
     - name: Run for PS tests
       run: |
-        if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
+        if [[ "${{ env.PS_VERSION }}" != http* ]]; then
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --query-source=perfschema
         else
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=perfschema
