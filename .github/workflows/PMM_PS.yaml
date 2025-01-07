@@ -4,12 +4,15 @@ on:
     inputs:
       ps_version:
         description: "ps version example: 8.0.34-26 , Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
+        default: 'https://github.com/Percona-QA/package-testing/blob/master/VERSIONS'
         required: true
       ps_glibc:
-        description: "ps glibc version, example: 2.28"
+        description: "ps glibc version, example: 2.35"
+        default : '2.35'
         required: false
       pmm_image:
         description: "pmm_image, example: perconalab/pmm-server:dev-latest"
+        default : 'perconalab/pmm-server:dev-latest'
         required: false
   push:
     branches:
@@ -24,16 +27,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.28' }}
+      PS_GLIBC: ${{ github.event.inputs.ps_glibc || '2.35' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
-      
+      PS_VERSION: ${{ github.event.inputs.ps_version || 'https://raw.githubusercontent.com/Percona-QA/package-testing/master/VERSIONS' }}
     steps:
     - uses: actions/checkout@v2
 
     - name: PS_VERSION ENV Setup
       run: |
-        if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
-          PS_VERSION="${{ github.event.inputs.ps_version }}"
+        if [[ "$PS_VERSION" != http* ]]; then
           PS_VERSION_PATH=$(echo "ps-$PS_VERSION")
           PS_VERSION_TRIMED=$(echo ${PS_VERSION%-*})
         else
@@ -43,7 +45,7 @@ jobs:
           PS_VERSION_TRIMED=$(echo ${PS_VERSION_FULL%-*})
         fi
         echo "PS_VERSION=${PS_VERSION}" | sed 's/"//g' >> $GITHUB_ENV
-        echo "PS_VERSION_PATH=${PS_VERSION_PATH}" >> $GITHUB_ENV
+        echo "PS_VERSION_PATH=${PS_VERSION_PATH}" | sed 's/"//g' >> $GITHUB_ENV
         echo "PS_VERSION_TRIMED=${PS_VERSION_TRIMED}" >> $GITHUB_ENV
 
 
@@ -85,7 +87,12 @@ jobs:
       run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
 
     - name: Run for PS tests
-      run: ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=slowlog
+      run: |
+        if [[ "${{ env.PS_VERSION }}" != http* ]]; then
+          ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --query-source=perfschema
+        else
+          ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=perfschema
+        fi
       working-directory: pmm-qa/pmm-tests
     
     - name: Checkout the repo and install node packages
