@@ -85,7 +85,7 @@ jobs:
 
     - name: Run for PS tests
       run: |
-        if [[ "${{ env.PS_VERSION }}" != http* ]]; then
+        if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --query-source=perfschema
         else
           ./pmm-framework.sh --ps-version ${{ env.PS_VERSION }} --setup-pmm-ps-integration --pmm2 --ps-tarball ${{ env.PS_TARBALL_PATH }} --query-source=perfschema
