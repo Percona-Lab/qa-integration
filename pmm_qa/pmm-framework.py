@@ -297,7 +297,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PORT': 5447,
+        'PDPGSQL_PGSM_PORT': 5447,
         'DISTRIBUTION': '',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
@@ -350,20 +350,18 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Define environment variables for playbook
     env_vars = {
-        'PDPGSQL_VERSION': pgsql_version,
-        'PGSTAT_MONITOR_BRANCH': 'main',
+        'PGSQL_VERSION': pgsql_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PDPGSQL_PGSM_CONTAINER': 'pgsql_pgsm_pmm_' + str(pgsql_version),
+        'PGSQL_PGSM_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PORT': 5448,
-        'DISTRIBUTION': 'PGDG',
+        'PGSQL_PGSS_PORT': 5448,
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
     # Ansible playbook filename
-    playbook_filename = 'pdpgsql_pgsm_setup.yml'
+    playbook_filename = 'pgsql_pgss_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
