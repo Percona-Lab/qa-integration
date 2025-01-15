@@ -193,8 +193,11 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     verboseLevel = os.environ.get('VERBOSE_LEVEL')
 
+
+    print(f'Env variable verbose level is: {verboseLevel}')
+
     if verboseLevel is not None:
-      args.verboseLeve = verboseLevel
+      args.verboseLevel = verboseLevel
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
