@@ -97,7 +97,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
         suppress_env_files=True,
-        verbosity=verboseLevel
+        verbosity=int(verboseLevel)
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
