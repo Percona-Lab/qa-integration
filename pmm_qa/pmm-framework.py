@@ -87,7 +87,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
-        suppress_env_files=True
+        suppress_env_files=True,
+        verbosity=5
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
