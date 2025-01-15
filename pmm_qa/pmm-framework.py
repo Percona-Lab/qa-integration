@@ -2,6 +2,8 @@ import subprocess
 import argparse
 import os
 import sys
+from tabnanny import verbose
+
 import ansible_runner
 import requests
 import re
@@ -81,7 +83,9 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
 
-    print(f'Verbose level is: {args.verboseLevel}')
+    verboseLevel = args.verboseLevel if args.verboseLevel is not None else "0"
+
+    print(f'Verbose level is: {verboseLevel}')
 
     r = ansible_runner.run(
         private_data_dir=script_dir,
@@ -90,7 +94,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
         suppress_env_files=True,
-        verbosity=5
+        verbosity=verboseLevel
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
