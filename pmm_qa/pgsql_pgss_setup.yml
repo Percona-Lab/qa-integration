@@ -41,7 +41,8 @@
       - docker cp ./pmm3-client-setup.sh {{ pgsql_pgss_container }}:/
 
   - name: cleanup container for client and DB setup
-    shell: >
+    shell: "{{ item }}"
+    with_items:
       sleep 180
       docker ps -a
 
