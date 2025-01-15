@@ -83,9 +83,9 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
 
-    verboseLevelEnv = os.environ.get('VERBOSE_LEVEL')
+    verboseLevel = os.environ.get('VERBOSE_LEVEL')
 
-    verboseLevel = verboseLevelEnv if verboseLevelEnv is not None else "0"
+    # verboseLevel = verboseLevelEnv if verboseLevelEnv is not None else "0"
 
     print(f'Verbose level is: {verboseLevel}')
 
