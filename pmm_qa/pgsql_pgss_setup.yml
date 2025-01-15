@@ -40,6 +40,11 @@
       - docker cp ./pgsm_run_queries.sh {{ pgsql_pgss_container }}:/
       - docker cp ./pmm3-client-setup.sh {{ pgsql_pgss_container }}:/
 
+  - name: cleanup container for client and DB setup
+    shell: >
+      sleep 180
+      docker ps -a
+
   - name: Execute Setup script inside the pgsql pgsql_pgss_container
     shell: "{{ item }}"
     with_items:
