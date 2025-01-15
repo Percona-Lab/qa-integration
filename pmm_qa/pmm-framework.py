@@ -339,7 +339,7 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
     env_vars = {
         'PGSQL_VERSION': pgsql_version,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSM_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
+        'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
