@@ -85,7 +85,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
 
     verboseLevel = os.environ.get('VERBOSE_LEVEL')
 
-    # verboseLevel = verboseLevelEnv if verboseLevelEnv is not None else "0"
+    if verboseLevel is None:
+      verboseLevel = "0"
 
     print(f'Verbose level is: {verboseLevel}')
 
