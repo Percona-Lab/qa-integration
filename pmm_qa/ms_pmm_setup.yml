@@ -44,7 +44,7 @@
       - docker cp ./pmm3-client-setup.sh {{ ms_container }}:/
 
   - name: Get Product tarball URL based on the version
-    shell: cat product_version_download_helper | grep -v pxc | grep mysql | grep "\-{{ ms_version }}" | head -1 | awk -F'# ' '{print $3}'
+    shell: awk -F'# ' '/-{{ ms_version | regex_escape }}/ && /ms/ {print $3; exit}' product_version_download_helper
     register: tarball
     when: lookup('env', 'MS_TARBALL') == ''
 

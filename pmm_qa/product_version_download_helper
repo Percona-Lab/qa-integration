@@ -22,7 +22,9 @@ ps # 8.0.40 # https://downloads.percona.com/downloads/Percona-Server-8.0/Percona
 
 ps # 5.7.44 # https://downloads.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.44-48/binary/tarball/Percona-Server-5.7.44-48-Linux.x86_64.glibc2.35-minimal.tar.gz
 
-ms # 8.0.33 # https://dev.mysql.com/get/Downloads/MySQL-8/mysql-8.0.33-linux-glibc2.28-x86_64.tar.gz
+ms # 8.4 # https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.3-linux-glibc2.17-x86_64-minimal.tar.xz
+
+ms # 8.0.40 # https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
 
 proxysql # 2.6.2 # https://downloads.percona.com/downloads/proxysql2/proxysql2-2.6.2/binary/debian/jammy/x86_64/proxysql2_2.6.2-1.1.jammy_amd64.deb
 

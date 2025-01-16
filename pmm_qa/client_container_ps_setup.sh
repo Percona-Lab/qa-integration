@@ -22,7 +22,7 @@ fi
 
 if [ -z "$ps_tarball" ]
 then
-      export ps_tarball=https://downloads.percona.com/downloads/Percona-Server-LATEST/Percona-Server-8.0.29-21/binary/tarball/Percona-Server-8.0.29-21-Linux.x86_64.glibc2.17-minimal.tar.gz
+      export ps_tarball="https://downloads.percona.com/downloads/Percona-Server-8.0/Percona-Server-8.0.40-31/binary/tarball/Percona-Server-8.0.40-31-Linux.x86_64.glibc2.35-minimal.tar.gz"
 fi
 
 if [ -z "$query_source" ]
