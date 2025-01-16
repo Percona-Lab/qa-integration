@@ -53,11 +53,12 @@ export db_version_sandbox=$(ls ~/ps${ps_version})
 export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
-# Check if ps_version is 8.4 or greater to enable plugin to change password
+# Initialize my_cnf_options
+my_cnf_options=""
+
+# Check if ps_version is 8.4 or greater to enable the plugin to change the password
 if [[ "$ps_version" =~ ^8\.[4-9]([0-9])? || "$ps_version" =~ ^[9-9][0-9]\. ]]; then
   my_cnf_options="mysql-native-password=ON"
-else
-  my_cnf_options=""
 fi
 
 if [[ "$number_of_nodes" == 1 ]];then
