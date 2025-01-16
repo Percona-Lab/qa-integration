@@ -45,6 +45,7 @@
     with_items:
       - sleep 180
       - docker ps -a
+      - docker logs {{ pgsql_pgss_container }}
 
   - name: Execute Setup script inside the pgsql pgsql_pgss_container
     shell: "{{ item }}"
