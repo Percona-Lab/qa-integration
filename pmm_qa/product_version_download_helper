@@ -16,11 +16,15 @@ psmdb # 6.0.2 # https://downloads.percona.com/downloads/percona-distribution-mon
 
 psmdb # 7.0.2 # https://downloads.percona.com/downloads/percona-server-mongodb-7.0/percona-server-mongodb-7.0.2-1/binary/tarball/percona-server-mongodb-7.0.2-1-x86_64.glibc2.17.tar.gz
 
-ps # 8.0.33 # https://downloads.percona.com/downloads/Percona-Server-8.0/Percona-Server-8.0.33-25/binary/tarball/Percona-Server-8.0.33-25-Linux.x86_64.glibc2.17-minimal.tar.gz
+ps # 8.4.3 # https://downloads.percona.com/downloads/Percona-Server-8.4/Percona-Server-8.4.3-3/binary/tarball/Percona-Server-8.4.3-3-Linux.x86_64.glibc2.35-minimal.tar.gz
 
-ps # 5.7.43 # https://downloads.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.43-47/binary/tarball/Percona-Server-5.7.43-47-Linux.x86_64.glibc2.17-minimal.tar.gz
+ps # 8.0.40 # https://downloads.percona.com/downloads/Percona-Server-8.0/Percona-Server-8.0.40-31/binary/tarball/Percona-Server-8.0.40-31-Linux.x86_64.glibc2.35-minimal.tar.gz
 
-ms # 8.0.33 # https://dev.mysql.com/get/Downloads/MySQL-8/mysql-8.0.33-linux-glibc2.28-x86_64.tar.gz
+ps # 5.7.44 # https://downloads.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.44-48/binary/tarball/Percona-Server-5.7.44-48-Linux.x86_64.glibc2.35-minimal.tar.gz
+
+ms # 8.4 # https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.3-linux-glibc2.17-x86_64-minimal.tar.xz
+
+ms # 8.0.40 # https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
 
 proxysql # 2.6.2 # https://downloads.percona.com/downloads/proxysql2/proxysql2-2.6.2/binary/debian/jammy/x86_64/proxysql2_2.6.2-1.1.jammy_amd64.deb
 

@@ -17,12 +17,12 @@ fi
 
 if [ -z "$ms_version" ]
 then
-      export ms_version="8.0.33"
+      export ms_version="8.0"
 fi
 
 if [ -z "$ms_tarball" ]
 then
-      export ms_tarball="https://dev.mysql.com/get/Downloads/MySQL-8/mysql-8.0.33-linux-glibc2.28-x86_64.tar.gz"
+      export ms_tarball="https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz"
 fi
 
 if [ -z "$query_source" ]
@@ -49,9 +49,17 @@ dbdeployer unpack ${tar_ball_name} --sandbox-binary=~/ms${ms_version} --overwrit
 export db_version_sandbox=$(ls ~/ms${ms_version})
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
+# Initialize my_cnf_options
+my_cnf_options=""
+
+# Check if ps_version is 8.4 or greater to enable the plugin to change the password
+if [[ "$ms_version" =~ ^8\.[4-9]([0-9])? || "$ms_version" =~ ^[9-9][0-9]\. ]]; then
+  my_cnf_options="mysql-native-password=ON"
+fi
+
 if [[ "$number_of_nodes" == 1 ]];then
    if [[ ! -z $group_replication ]]; then
-      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ms${ms_version} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ms${ms_version} --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'group-single-primary' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
@@ -59,7 +67,7 @@ if [[ "$number_of_nodes" == 1 ]];then
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
    else
-      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --port=$MS_PORT --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --port=$MS_PORT --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep  ${db_version_sandbox} | grep 'single' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
@@ -91,7 +99,7 @@ if [[ "$number_of_nodes" == 1 ]];then
       pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ms-single-${SERVICE_RANDOM_NUMBER} 127.0.0.1:$node_port
    fi
 else
-     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0
+     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ms${ms_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0 ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
      export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
      node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
