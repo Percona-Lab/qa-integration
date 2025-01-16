@@ -19,17 +19,17 @@ database_configs = {
                            "TARBALL": ""}
     },
     "MYSQL": {
-        "versions": ["8.0", "8.4"],
+        "versions": ["8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
     "PS": {
-        "versions": ["5.7", "8.0", "8.4"],
+        "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
     "SSL_MYSQL": {
-        "versions": ["5.7", "8.0", "8.4"],
+        "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
