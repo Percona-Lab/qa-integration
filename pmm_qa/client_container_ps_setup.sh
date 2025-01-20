@@ -17,12 +17,12 @@ fi
 
 if [ -z "$ps_version" ]
 then
-      export ps_version=8
+      export ps_version=8.0
 fi
 
 if [ -z "$ps_tarball" ]
 then
-      export ps_tarball=https://downloads.percona.com/downloads/Percona-Server-LATEST/Percona-Server-8.0.29-21/binary/tarball/Percona-Server-8.0.29-21-Linux.x86_64.glibc2.17-minimal.tar.gz
+      export ps_tarball="https://downloads.percona.com/downloads/Percona-Server-8.0/Percona-Server-8.0.40-31/binary/tarball/Percona-Server-8.0.40-31-Linux.x86_64.glibc2.35-minimal.tar.gz"
 fi
 
 if [ -z "$query_source" ]
@@ -53,15 +53,23 @@ export db_version_sandbox=$(ls ~/ps${ps_version})
 export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
+# Initialize my_cnf_options
+my_cnf_options=""
+
+# Check if ps_version is 8.4 or greater to enable the plugin to change the password
+if [[ "$ps_version" =~ ^8\.[4-9]([0-9])? || "$ps_version" =~ ^[9-9][0-9]\. ]]; then
+  my_cnf_options="mysql-native-password=ON"
+fi
+
 if [[ "$number_of_nodes" == 1 ]];then
    if [[ ! -z $group_replication ]]; then
-      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'group-single-primary' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
    else
-      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --port=${PS_PORT} --remote-access=% --bind-address=0.0.0.0 --force
+      dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --port=${PS_PORT} --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep  ${db_version_sandbox} | grep 'single' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
       mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
@@ -115,7 +123,7 @@ if [[ "$number_of_nodes" == 1 ]];then
       pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ps-single-${SERVICE_RANDOM_NUMBER} 127.0.0.1:$node_port
    fi
 else
-     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0
+     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0 ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
      export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
      node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
      for j in `seq 1  $number_of_nodes`; do
