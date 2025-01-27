@@ -70,6 +70,7 @@ if [[ "$mongodb_version" == "6.0" || "$mongodb_version" == "7.0" || "$mongodb_ve
     cp mongosh/bin/mongosh ./psmdb_${mongodb_version}/bin/mongo
     rm mongosh.tar.gz
 fi
+rm percona_server_mongodb.tar.gz*
 
 # For mongodb dependency in Debian
 wget http://http.us.debian.org/debian/pool/main/o/openldap/libldap-2.4-2_2.4.47+dfsg-3+deb10u7_amd64.deb

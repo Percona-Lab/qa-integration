@@ -70,6 +70,7 @@ if [[ "$mongodb_version" == "6.0" || "$mongodb_version" == "7.0" || "$mongodb_ve
     cp mongosh/bin/mongosh ./psmdb_${mongodb_version}/bin/mongo
     rm mongosh.tar.gz
 fi
+rm percona_server_mongodb.tar.gz*
 
 if [ "$mongodb_setup" == "sharded" ]; then
     bash ./mongo_startup.sh -s -e wiredTiger --mongosExtra="--slowms 1" --mongodExtra="--profile 2 --slowms 1" --configExtra="--profile 2 --slowms 1" --b=./psmdb_${mongodb_version}/bin
