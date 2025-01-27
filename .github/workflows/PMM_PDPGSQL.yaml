@@ -35,7 +35,7 @@ on:
 
 jobs:
   PMM_PDPGSQL_TEST:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
       ADMIN_PASSWORD: 'admin'
@@ -62,9 +62,9 @@ jobs:
       working-directory: qa-integration
       run: echo "PATH_TO_PMM_QA=$(pwd)" >> $GITHUB_ENV
 
-    - name: Setup tools
-      run: |
-        sudo apt-get install -y apt-transport-https ca-certificates dirmngr ansible libaio1 libaio-dev libnuma-dev libncurses5 socat
+#    - name: Setup tools
+#      run: |
+#        sudo apt-get install -y apt-transport-https ca-certificates dirmngr ansible libaio-dev libnuma-dev libncurses5 socat
 
     - name: Run Setup for E2E Tests
       working-directory: qa-integration/pmm_qa
