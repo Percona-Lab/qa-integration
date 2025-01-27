@@ -426,7 +426,7 @@ def setup_mlaunch(db_type, db_version=None, db_config=None, args=None):
         exit()
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
                     database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
@@ -665,7 +665,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
+    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
                     database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
