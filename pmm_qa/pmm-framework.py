@@ -14,11 +14,11 @@ database_configs = {
                            "TARBALL": ""}
     },
     "MLAUNCH": {
-        "versions": ["4.4", "5.0", "6.0", "7.0"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
     },
     "SSL_MLAUNCH": {
-        "versions": ["4.4", "5.0", "6.0", "7.0"],
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
