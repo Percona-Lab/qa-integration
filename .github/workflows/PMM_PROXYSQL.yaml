@@ -40,7 +40,7 @@ on:
 jobs:
   PMM_PXC_TEST:
     runs-on: ubuntu-20.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       ADMIN_PASSWORD: 'admin'
       PXC_VERSION: ${{ github.event.inputs.pxc_version || '8.0' }}

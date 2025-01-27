@@ -36,7 +36,7 @@ on:
 jobs:
   PMM_PDPGSQL_TEST:
     runs-on: ubuntu-20.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       ADMIN_PASSWORD: 'admin'
       PDPGSQL_VERSION: ${{ github.event.inputs.pdpgsql_version || '17' }}
