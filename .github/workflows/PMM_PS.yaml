@@ -99,6 +99,7 @@ jobs:
         python3 -m venv virtenv
         . virtenv/bin/activate
         pip install --upgrade pip
+        pip install --force-reinstall -U setuptools
         pip install -r requirements.txt
         if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
           python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS=${{ env.PS_VERSION }}
