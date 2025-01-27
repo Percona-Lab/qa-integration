@@ -35,8 +35,8 @@ on:
 
 jobs:
   PMM_PDPGSQL_TEST:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-20.04
+    timeout-minutes: 40
     env:
       ADMIN_PASSWORD: 'admin'
       PDPGSQL_VERSION: ${{ github.event.inputs.pdpgsql_version || '17' }}
@@ -69,6 +69,7 @@ jobs:
         python3 -m venv virtenv
         . virtenv/bin/activate
         pip install --upgrade pip
+        pip install --force-reinstall -U setuptools
         pip install -r requirements.txt
         python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PDPGSQL=${{ env.PDPGSQL_VERSION }}
 
@@ -87,4 +88,4 @@ jobs:
       working-directory: pmm-ui-tests
       run: |
         export PMM_UI_URL="http://127.0.0.1:8081/"
-        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js --steps --debug
+        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js
