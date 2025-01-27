@@ -62,10 +62,6 @@ jobs:
       working-directory: qa-integration
       run: echo "PATH_TO_PMM_QA=$(pwd)" >> $GITHUB_ENV
 
-#    - name: Setup tools
-#      run: |
-#        sudo apt-get install -y apt-transport-https ca-certificates dirmngr ansible libaio-dev libnuma-dev libncurses5 socat
-
     - name: Run Setup for E2E Tests
       working-directory: qa-integration/pmm_qa
       run: |
@@ -92,4 +88,4 @@ jobs:
       working-directory: pmm-ui-tests
       run: |
         export PMM_UI_URL="http://127.0.0.1:8081/"
-        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js --steps --debug
+        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pdpgsql_integration_test.js
