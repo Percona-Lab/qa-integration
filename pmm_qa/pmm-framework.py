@@ -96,6 +96,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
+        suppress_env_files=True,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -664,7 +665,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
     # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
                     database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
@@ -708,7 +709,7 @@ def setup_ssl_mlaunch(db_type, db_version=None, db_config=None, args=None):
         exit(1)
 
         # Gather Version details
-    psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
+    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
                     database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
