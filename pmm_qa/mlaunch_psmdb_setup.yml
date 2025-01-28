@@ -34,7 +34,7 @@
   - name: Copy all required Artifacts to the docker psmdb_container
     shell: "{{ item }}"
     with_items:
-      - docker cp ./mlaunch_setup.sh {{ psmdb_container }}:/
+      - docker cp ./mlaunch_psmdb_setup.sh {{ psmdb_container }}:/
       - docker cp ./pmm3-client-setup.sh {{ psmdb_container }}:/
       - docker exec {{ psmdb_container }} apt-get update
       - docker exec {{ psmdb_container }} apt-get -y install wget curl git gnupg2 lsb-release jq python3 pip
@@ -54,7 +54,7 @@
   - name: Setup psmdb for monitoring
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ psmdb_container }} bash -x ./mlaunch_setup.sh --mongodb_version {{ psmdb_version }} --mongodb_setup {{ psmdb_setup }} > setup_psmdb_{{ psmdb_version }}_{{ psmdb_setup }}.log
+      - docker exec {{ psmdb_container }} bash -x ./mlaunch_psmdb_setup.sh --mongodb_version {{ psmdb_version }} --mongodb_setup {{ psmdb_setup }} > setup_psmdb_{{ psmdb_version }}_{{ psmdb_setup }}.log
 
   - name: Setup Load Running Docker Container
     shell: "{{ item }}"
