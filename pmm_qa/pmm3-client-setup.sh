@@ -73,7 +73,6 @@ fi
 
 ## Only supported for debian based systems for now
 if [[ "$client_version" =~ ^3\.[0-9]+\.[0-9]+$ ]]; then
-  ## Note: only experimental packages are present atm.
   wget -O pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_${client_version}-6.$(lsb_release -sc)_amd64.deb
   dpkg -i pmm-client.deb
 fi
