@@ -58,6 +58,19 @@ def test_simple_auth_tls():
              '--tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem '
              '--cluster=mycluster')
 
+#####
+# All tests for external authentication methods (X509, LDAP, Kerberos, AWS) rely on the `mongod` configuration to handle
+# authentication using the selected method, followed by authorization via LDAP.
+#
+# Therefore, no users are added to `$external` database before testing. Instead, after successful authentication
+# against the selected service, the username is transformed based on the pattern below to match LDAP user
+# `cn=pmm-test,ou=users,dc=example,dc=org`.
+# This user is preconfigured on LDAP server and, after authorization, inherits the privileges assigned in
+# MongoDB to its default group, `cn=readers,ou=users,dc=example,dc=org`.
+#
+# Transformation pattern from `mongod` configuration:
+# [{match: "arn:aws:iam::(.+):user/(.+)|CN=(.+)|([^@]+)@PERCONATEST.COM", substitution: "cn={1}{2}{3},ou=users,dc=example,dc=org"}]
+#####
 
 def test_x509_auth():
     run_test('pmm-admin add mongodb psmdb-server --host=psmdb-server --port 27017 '
@@ -80,6 +93,18 @@ def test_ldap_auth_tls():
              '--tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem '
              '--cluster=mycluster')
 
+def test_kerberos_auth_wo_tls():
+    run_test('pmm-admin add mongodb psmdb-server --username="pmm-test@PERCONATEST.COM" --password=password1 '
+             '--host=psmdb-server --port 27017 '
+             '--authentication-mechanism=GSSAPI --authentication-database=\'$external\' '
+             '--cluster=mycluster')
+
+def test_kerberos_auth_tls():
+    run_test('pmm-admin add mongodb psmdb-server --username="pmm-test@PERCONATEST.COM" --password=password1 '
+             '--host=psmdb-server --port 27017 '
+             '--authentication-mechanism=GSSAPI --authentication-database=\'$external\' '
+             '--tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem '
+             '--cluster=mycluster')
 
 @pytest.mark.skipif(
     any(not os.environ.get(var) for var in env_vars) or os.environ.get('SKIP_AWS_TESTS') == 'true',

@@ -81,6 +81,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
 
 COPY conf/sysconfig/mongod /etc/sysconfig/
 COPY keyfile /etc/keyfile
+COPY conf/krb/krb5.conf /etc/krb5.conf
 RUN ln -s /usr/bin/mongosh /usr/bin/mongo || true
 RUN chown mongod /etc/keyfile && chmod 400 /etc/keyfile
 EXPOSE 27017
