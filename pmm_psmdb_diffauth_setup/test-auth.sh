@@ -37,6 +37,7 @@ cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
 
 #Start setup
+docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
 docker compose -f docker-compose-pmm-psmdb.yml up -d
 
@@ -68,7 +69,7 @@ done
 tests=${TESTS:-yes}
 if [ $tests = "yes" ]; then
     echo "running tests"
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml run test pytest -s -x --verbose test.py)
+    output=$(docker compose -f docker-compose-pmm-psmdb.yml run test pytest -s --verbose test.py)
     else
     echo "skipping tests"
 fi
