@@ -28,7 +28,7 @@
 
   - name: Prepare Container for External Exporters
     shell: >
-      sudo docker run -d -p 43100:43100 --name={{ external_container }}
+      sudo docker run -d -p 42200:42200 --name={{ external_container }}
       phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker external_container
@@ -44,7 +44,6 @@
     with_items:
       - docker run --name redis_container -d -p 6379:6379 redis '--requirepass oFukiBRg7GujAJXq3tmd'
       - docker network connect pmm-qa redis_container
-      - docker network connect pmm-qa {{ external_container }}
 
   - name: Setup External Exporters for monitoring
     shell: "{{ item }}"
