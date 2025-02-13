@@ -44,6 +44,7 @@
     with_items:
       - docker run --name redis_container -d -p 6379:6379 redis '--requirepass oFukiBRg7GujAJXq3tmd'
       - docker network connect pmm-qa redis_container
+      - docker network connect pmm-qa {{ external_container }}
 
   - name: Setup External Exporters for monitoring
     shell: "{{ item }}"
