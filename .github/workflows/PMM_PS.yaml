@@ -92,7 +92,7 @@ jobs:
       working-directory: qa-integration
       run: echo "PATH_TO_PMM_QA=$(pwd)" >> $GITHUB_ENV
 
-    - name: Run Setup for E2E Tests
+    - name: Run Setup for PS E2E Tests
       working-directory: qa-integration/pmm_qa
       run: |
         mkdir -m 777 -p /tmp/backup_data
@@ -105,6 +105,15 @@ jobs:
           python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS=${{ env.PS_VERSION }}
         else
           python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS,TARBALL=${{ env.PS_TARBALL_PATH }}
+        fi
+
+    - name: Run Setup for PS Replica E2E Tests
+      working-directory: qa-integration/pmm_qa
+      run: |
+        if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
+          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS=${{ env.PS_VERSION }},SETUP_TYPE=replica
+        else
+          python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS,TARBALL=${{ env.PS_TARBALL_PATH }},SETUP_TYPE=replica
         fi
 
     - name: Checkout PMM UI tests
@@ -122,4 +131,10 @@ jobs:
       run: |
         export PMM_UI_URL="http://127.0.0.1:8081/" 
         npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_ps_integration_test.js
+      working-directory: pmm-ui-tests
+
+    - name: Run the Integration tests of PS Replica
+      run: |
+        export PMM_UI_URL="http://127.0.0.1:8081/" 
+        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_ps_replica_integration_test.js
       working-directory: pmm-ui-tests
