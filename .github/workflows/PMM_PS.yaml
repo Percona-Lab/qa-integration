@@ -110,6 +110,7 @@ jobs:
     - name: Run Setup for PS Replica E2E Tests
       working-directory: qa-integration/pmm_qa
       run: |
+        . virtenv/bin/activate
         if [[ "${{ github.event.inputs.ps_version }}" != http* ]]; then
           python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PS=${{ env.PS_VERSION }},SETUP_TYPE=replica
         else
