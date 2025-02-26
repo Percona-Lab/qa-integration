@@ -15,6 +15,7 @@
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
     number_of_nodes: "{{ lookup('vars', 'extra_number_of_nodes', default=lookup('env','PS_NODES') | default('3', true) ) }}"
+    ps_port: "{{ lookup('vars', 'extra_number_of_nodes', default=lookup('env','PS_PORT') | default('3317', true) ) }}"
     group_replication: "{{ lookup('vars', 'extra_group_replication', default=lookup('env','GROUP_REPLICATION') | default('', true) ) }}"
 
   tasks:
@@ -32,7 +33,7 @@
   - name: Prepare Container for ps and Proxysql
     shell: >
       docker run -d --name={{ ps_container }}
-      -p 3317:3307
+      -p {{ ps_port }}:3307
       phusion/baseimage:jammy-1.0.1
   
   - name: Copy all required Artifacts to the docker ps_container
