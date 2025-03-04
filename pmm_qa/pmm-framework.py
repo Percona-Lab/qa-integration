@@ -272,13 +272,14 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         print(f"Check if PMM Server is Up and Running..Exiting")
         exit()
 
-    # Gather Version details
-    pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    # Gather Version details, Note: we accept minor versions and dont validate in Configs.
+    pdpgsql_version = db_version or database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PDPGSQL_VERSION': pdpgsql_version,
+        'PPG_REPO_TYPE' 'testing'
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
