@@ -273,7 +273,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         exit()
 
     # Gather Version details, Note: we accept minor versions and dont validate in Configs.
-    pdpgsql_version = db_version or database_configs[db_type]["versions"][-1]
+    pdpgsql_version = os.getenv('PDPGSQL_VERSION') or database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
