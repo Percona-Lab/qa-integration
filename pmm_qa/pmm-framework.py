@@ -279,7 +279,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     env_vars = {
         'PGSTAT_MONITOR_BRANCH': 'main',
         'PDPGSQL_VERSION': pdpgsql_version,
-        'PPG_REPO_TYPE' 'testing'
+        'PPG_REPO_TYPE': 'testing',
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
