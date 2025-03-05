@@ -39,8 +39,8 @@ on:
 
 jobs:
   PMM_PXC_TEST:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-20.04
+    timeout-minutes: 40
     env:
       ADMIN_PASSWORD: 'admin'
       PXC_VERSION: ${{ github.event.inputs.pxc_version || '8.0' }}
@@ -99,6 +99,7 @@ jobs:
         python3 -m venv virtenv
         . virtenv/bin/activate
         pip install --upgrade pip
+        pip install --force-reinstall -U setuptools
         pip install -r requirements.txt
         if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
           python pmm-framework.py --verbose --pmm-server-password=${{ env.ADMIN_PASSWORD }} --client-version=${{ env.PMM_CLIENT_VERSION }} --database PXC=${{ env.PXC_VERSION }}
@@ -120,6 +121,6 @@ jobs:
     - name: Run the Integration tests of PXC
       run: |
         export PMM_UI_URL="http://127.0.0.1:8081/" 
-        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pxc_integration_test.js --steps --debug
+        npx codeceptjs run -c pr.codecept.js tests/qa-integration/pmm_pxc_integration_test.js
       working-directory: pmm-ui-tests
 

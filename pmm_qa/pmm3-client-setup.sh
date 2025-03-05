@@ -72,9 +72,8 @@ if [[ "$client_version" == "pmm3-latest" ]]; then
 fi
 
 ## Only supported for debian based systems for now
-if [[ "$client_version" =~ ^"3." ]]; then
-  ## Note: only experimental packages are present atm.
-  wget -O pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/experimental/p/pmm-client/pmm-client_${client_version}-6.$(lsb_release -sc)_amd64.deb
+if [[ "$client_version" =~ ^3\.[0-9]+\.[0-9]+$ ]]; then
+  wget -O pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_${client_version}-7.$(lsb_release -sc)_amd64.deb
   dpkg -i pmm-client.deb
 fi
 
