@@ -56,9 +56,12 @@ export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 # Initialize my_cnf_options
 my_cnf_options=""
 
-# Check if ps_version is 8.4 or greater to enable the plugin to change the password
-if [[ "$ps_version" =~ ^8\.[4-9]([0-9])? || "$ps_version" =~ ^[9-9][0-9]\. ]]; then
-  my_cnf_options="mysql-native-password=ON"
+# Check if ps_version is greater than 8.0
+if [[ "$ps_version" =~ ^8\.[1-9]([0-9])? || "$ps_version" =~ ^9\.[0-9]+ ]]; then
+  my_cnf_options="caching_sha2_password_auto_generate_rsa_keys=ON"
+else
+  # MySQL 5.7, create user fails which already exists, to ignore this we do:
+  my_cnf_options="replicate-ignore-table=mysql.user"
 fi
 
 if [[ "$number_of_nodes" == 1 ]];then
@@ -123,37 +126,51 @@ if [[ "$number_of_nodes" == 1 ]];then
       pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ps-single-${SERVICE_RANDOM_NUMBER} 127.0.0.1:$node_port
    fi
 else
-     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0 ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
+     dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0 --my-cnf-options=gtid_mode=ON --my-cnf-options=enforce-gtid-consistency=ON --my-cnf-options=binlog-format=ROW --my-cnf-options=log-slave-updates=ON --my-cnf-options=binlog-checksum=NONE ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
      export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
-     node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
-     for j in `seq 1  $number_of_nodes`; do
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+     master_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
+     if echo "$ps_version" | grep '5.7'; then
+       slave_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $2}'`
+     else
+       slave_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'multiple' | awk -F'[' '{print $2}' | awk -F' ' '{print $3}'`
+     fi
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $master_port -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'GRgrO9301RuF';"
+     mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $master_port -e "FLUSH PRIVILEGES;"
+     mysql -h 127.0.0.1 -u root -p'GRgrO9301RuF' --port $master_port -e "CREATE USER 'repl'@'%' IDENTIFIED  BY 'repl_pass';"
+     mysql -h 127.0.0.1 -u root -p'GRgrO9301RuF' --port $master_port -e "GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'repl'@'%';"
+     mysql -h 127.0.0.1 -u root -p'GRgrO9301RuF' --port $master_port -e "FLUSH PRIVILEGES;"
+     if echo "$ps_version" | grep '5.7'; then
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $slave_port -e "CHANGE MASTER TO MASTER_HOST='127.0.0.1', MASTER_USER='repl', MASTER_PASSWORD='repl_pass', MASTER_PORT=${master_port}, MASTER_AUTO_POSITION=1;"
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $slave_port -e "START SLAVE;"
+     else
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $slave_port -e "CHANGE REPLICATION SOURCE TO SOURCE_HOST='127.0.0.1', SOURCE_USER='repl', SOURCE_PASSWORD='repl_pass', SOURCE_PORT=${master_port}, SOURCE_AUTO_POSITION=1, SOURCE_SSL=1;"
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $slave_port -e "START REPLICA;"
+     fi
+     for port in $master_port $slave_port; do
         if [[ "${query_source}" == "slowlog" ]]; then
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL slow_query_log='ON';"
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL long_query_time=0;"
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_rate_limit=1;"
-      	   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_admin_statements=ON;"
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL log_slow_slave_statements=ON;"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL slow_query_log='ON';"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL long_query_time=0;"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL log_slow_rate_limit=1;"
+      	   mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL log_slow_admin_statements=ON;"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL log_slow_slave_statements=ON;"
         else
-          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL userstat=1;"
-          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL innodb_monitor_enable=all;"
-          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL userstat=1;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL innodb_monitor_enable=all;"
+          mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%statements%';"
               if echo "$ps_version" | grep '5.7'; then
-                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
-                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
-                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_READ SONAME 'query_response_time.so';"
-                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_WRITE SONAME 'query_response_time.so';"
-                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL query_response_time_stats=ON;"
+                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_AUDIT SONAME 'query_response_time.so';"
+                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME SONAME 'query_response_time.so';"
+                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_READ SONAME 'query_response_time.so';"
+                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "INSTALL PLUGIN QUERY_RESPONSE_TIME_WRITE SONAME 'query_response_time.so';"
+                  mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $port -e "SET GLOBAL query_response_time_stats=ON;"
               fi
         fi
-        if [ $(( ${j} % 2 )) -eq 0 ]; then
-          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ps-prod --cluster=ps-prod-cluster --replication-set=ps-repl2 ps-multiple-node-$j-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$node_port
+        if [[ "$port" == "$master_port" ]]; then
+          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ps-dev --cluster=ps-dev-cluster --replication-set=ps-repl1 ps-multiple-master-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$master_port
         else
-          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ps-dev --cluster=ps-dev-cluster --replication-set=ps-repl1 ps-multiple-node-$j-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$node_port
+          pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=ps-dev --cluster=ps-dev-cluster --replication-set=ps-repl1 ps-multiple-slave-${SERVICE_RANDOM_NUMBER} --debug 127.0.0.1:$slave_port
         fi
         #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-multiple-node
-        node_port=$(($node_port + 1))
         sleep 20
     done
 fi
