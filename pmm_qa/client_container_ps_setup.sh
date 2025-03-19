@@ -56,12 +56,14 @@ export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 # Initialize my_cnf_options
 my_cnf_options=""
 
-# Check if ps_version is greater than 8.0
-if [[ "$ps_version" =~ ^8\.[1-9]([0-9])? || "$ps_version" =~ ^9\.[0-9]+ ]]; then
-  my_cnf_options="caching_sha2_password_auto_generate_rsa_keys=ON"
-else
-  # MySQL 5.7, create user fails which already exists, to ignore this we do:
-  my_cnf_options="replicate-ignore-table=mysql.user"
+if [[ "$number_of_nodes" -gt 1 ]]; then
+  # Check if ps_version is greater than 8.0
+  if [[ "$ps_version" =~ ^8\.[1-9]([0-9])? || "$ps_version" =~ ^9\.[0-9]+ ]]; then
+    my_cnf_options="caching_sha2_password_auto_generate_rsa_keys=ON"
+  else
+    # MySQL 5.7, create user fails which already exists, to ignore this we do:
+    my_cnf_options="replicate-ignore-table=mysql.user"
+  fi
 fi
 
 if [[ "$number_of_nodes" == 1 ]];then
@@ -69,14 +71,12 @@ if [[ "$number_of_nodes" == 1 ]];then
       dbdeployer deploy --topology=group replication ${db_version_sandbox} --single-primary --sandbox-binary=~/ps${ps_version} --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep ${db_version_sandbox} | grep 'group-single-primary' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
-      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
-      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'GRgrO9301RuF';"
    else
       dbdeployer deploy single ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --port=${PS_PORT} --remote-access=% --bind-address=0.0.0.0 --force ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
       export db_sandbox=$(dbdeployer sandboxes | awk -F' ' '{print $1}')
       node_port=`dbdeployer sandboxes --header | grep  ${db_version_sandbox} | grep 'single' | awk -F'[' '{print $2}' | awk -F' ' '{print $1}'`
-      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'msandbox'@'localhost' IDENTIFIED WITH mysql_native_password BY 'msandbox';"
-      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'GRgrO9301RuF';"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'GRgrO9301RuF';"
       if [[ "${query_source}" == "slowlog" ]]; then
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL slow_query_log='ON';"
         mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "SET GLOBAL long_query_time=0;"
