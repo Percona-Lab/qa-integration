@@ -35,7 +35,7 @@ on:
 
 jobs:
   PMM_PDPGSQL_TEST:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
       ADMIN_PASSWORD: 'admin'
