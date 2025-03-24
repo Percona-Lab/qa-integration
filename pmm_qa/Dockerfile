@@ -1,4 +1,4 @@
-FROM php:7.4-alpine
+FROM php:8.1-alpine
 
 RUN set -ex \
 	&& apk --no-cache add postgresql-libs postgresql-dev \
