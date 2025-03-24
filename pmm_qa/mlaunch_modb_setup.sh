@@ -75,7 +75,7 @@ if [ "$mongodb_setup" == "psa" ]; then
     sleep 20
 fi
 
-if [ "$mongodb_setup" == "sharded" || "$mongodb_setup" == "shard" ]; then
+if [ "$mongodb_setup" == "sharded" ] || [ "$mongodb_setup" == "shards" ]; then
     mlaunch init --bind_ip 0.0.0.0 --binarypath "./modb_${mongodb_version}/bin" --replicaset --sharded rs1 rs2 --config 3
     pmm-admin add mongodb --enable-all-collectors --cluster mongodb_node_cluster --environment=mongos_shraded_node mongos_shraded_node_${SERVICE_RANDOM_NUMBER} --metrics-mode=$metrics_mode --debug 127.0.0.1:27017
     sleep 2
