@@ -13,6 +13,19 @@ database_configs = {
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
                            "TARBALL": ""}
     },
+    "MLAUNCH_PSMDB": {
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
+    },
+    "MLAUNCH_MODB": {
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
+    },
+    "SSL_MLAUNCH": {
+        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
+                           "TARBALL": ""}
+    },
     "SSL_PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
@@ -87,7 +100,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         inventory='127.0.0.1',
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
-        suppress_env_files=True
+        suppress_env_files=True,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -408,6 +421,63 @@ def setup_external(db_type, db_version=None, db_config=None, args=None):
     run_ansible_playbook(playbook_filename, env_vars, args)
 
 
+def setup_mlaunch_psmdb(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
+                    database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PSMDB_VERSION': psmdb_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
+        'PSMDB_SETUP': get_value('SETUP_TYPE', db_type, args, db_config),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'mlaunch_psmdb_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    modb_version = os.getenv('MODB_VERSION') or db_version or \
+                    database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'MODB_VERSION': modb_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'MODB_CONTAINER': 'modb_pmm_' + str(modb_version),
+        'MODB_SETUP': get_value('SETUP_TYPE', db_type, args, db_config),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'mlaunch_modb_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
 def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars, args):
     # Get script directory
     current_directory = os.getcwd()
@@ -662,6 +732,34 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
         execute_shell_scripts(shell_scripts, scripts_folder, env_vars, args)
 
 
+def setup_ssl_mlaunch(db_type, db_version=None, db_config=None, args=None):
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running...Exiting")
+        exit(1)
+
+        # Gather Version details
+    psmdb_version = os.getenv('PSMDB_VERSION') or db_version or \
+                    database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'MONGODB_VERSION': psmdb_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'MONGODB_SSL_CONTAINER': 'psmdb_ssl_pmm_' + str(psmdb_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'tls-ssl-setup/mlaunch_tls_setup.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
+
+
 def setup_pxc_proxysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -744,6 +842,13 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_ssl_pdpgsql(db_type, db_version, db_config, args)
     elif db_type == 'SSL_PSMDB':
         setup_ssl_psmdb(db_type, db_version, db_config, args)
+    elif db_type == 'MLAUNCH_PSMDB':
+        setup_mlaunch_psmdb(db_type, db_version, db_config, args)
+    elif db_type == 'MLAUNCH_MODB':
+        setup_mlaunch_modb(db_type, db_version, db_config, args)
+    elif db_type == 'SSL_MLAUNCH':
+        setup_ssl_mlaunch(db_type, db_version, db_config, args)
+
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
