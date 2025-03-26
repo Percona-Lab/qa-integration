@@ -11,7 +11,7 @@
     pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
-    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('main', true) ) }}"
+    pmm_qa_branch: "{{ lookup('vars', 'extra_pmm_qa_branch', default=lookup('env','PMM_QA_GIT_BRANCH') | default('v3', true) ) }}"
 
   tasks:
   - name: cleanup container for client and DB setup
@@ -60,8 +60,8 @@
     shell: "{{ item }}"
     with_items:
       - rm -rf ~/modb_{{ modb_version }} || true; mkdir -p ~/modb_{{ modb_version }}
-      - wget -P ~/modb_{{ modb_version }}/ "https://raw.githubusercontent.com/Percona-Lab/qa-integration/pmm3-mongo-mlaunch/pmm_qa/Dockerfile"
-      - wget -P ~/modb_{{ modb_version }}/ "https://raw.githubusercontent.com/Percona-Lab/qa-integration/pmm3-mongo-mlaunch/pmm_qa/mongodb_query.php"
+      - wget -P ~/modb_{{ modb_version }}/ "https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{pmm_qa_branch}}/pmm_qa/Dockerfile"
+      - wget -P ~/modb_{{ modb_version }}/ "https://raw.githubusercontent.com/Percona-Lab/qa-integration/{{pmm_qa_branch}}/pmm_qa/mongodb_query.php"
       - docker build --tag php-db ~/modb_{{ modb_version }}/ > ~/docker-build_mongodb_load_{{ modb_version }}_{{ modb_setup }}.log || true
       - docker rm mongodb_load_{{ modb_version }}_{{ modb_setup }} || true
       - docker run --rm --name mongodb_load_{{ modb_version }}_{{ modb_setup }} --network=pmm-qa -v $(pwd):/usr/src/myapp -w /usr/src/myapp php-db composer require mongodb/mongodb || true
