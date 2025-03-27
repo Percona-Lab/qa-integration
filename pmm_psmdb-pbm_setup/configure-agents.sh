@@ -18,6 +18,8 @@ do
     docker compose -f docker-compose-rs.yaml exec -T $node systemctl restart pbm-agent
 done
 
+docker compose -f docker-compose-rs.yaml exec -T rs101 pbm config --file /etc/pbm/minio.yaml
+
 if [[ $mongo_setup_type == "psa" ]]; then
   echo "stop pbm agent for arbiter node"
   docker compose -f docker-compose-rs.yaml exec -T rs103 systemctl stop pbm-agent

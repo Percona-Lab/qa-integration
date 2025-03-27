@@ -33,7 +33,6 @@ services:
       - ./conf/datagen:/etc/datagen:ro
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
-      - /tmp/mongodb:/tmp
     privileged: true
     cgroup: host
     environment:
