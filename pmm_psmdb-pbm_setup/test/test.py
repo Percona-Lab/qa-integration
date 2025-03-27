@@ -173,7 +173,7 @@ def test_metrics():
     pmm_admin_list = json.loads(docker_rs101.check_output('pmm-admin list --json', timeout=30))
     for agent in pmm_admin_list['agent']:
         if agent['agent_type'] == 'AGENT_TYPE_MONGODB_EXPORTER':
-            agent_id = agent['agent_id']
+            agent_id = "mypass"
             agent_port = agent['port']
             break
     try:
