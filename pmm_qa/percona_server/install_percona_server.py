@@ -16,4 +16,4 @@ def install_percona_server(ps_version):
 def run_command(cmd):
     print(f"Running command: {cmd}")
     response = subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
-    print(response)
+    print(response.stdout)
