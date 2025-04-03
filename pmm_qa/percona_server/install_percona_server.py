@@ -14,5 +14,6 @@ def install_percona_server(ps_version):
     run_command(f"docker exec {ps_container} apt-get -y install sysbench")
 
 def run_command(cmd):
+    print(f"Running command: {cmd}")
     response = subprocess.run(cmd, shell=True, check=True, text=True, capture_output=True)
     print(response)
