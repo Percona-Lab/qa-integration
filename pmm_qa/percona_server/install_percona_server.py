@@ -18,7 +18,7 @@ def install_percona_server(ps_version, query_source):
     run_command(f"docker exec {ps_container} apt update")
 
     if(ps_version == 84):
-        run_command(f"docker exec {ps_container} sudo percona-release setup ps80")
+        run_command(f"docker exec {ps_container} percona-release setup ps84lts")
     else:
         raise Exception(f"Percona server version: {ps_version} is not supported")
 
