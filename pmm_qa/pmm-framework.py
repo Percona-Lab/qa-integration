@@ -184,6 +184,8 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    print(f"Percona server version is: {ps_version}")
+    print(f"Percona server version is: {ps_version.replace(".", "")}")
     # Define environment variables for playbook
     env_vars = {
         'GROUP_REPLICATION': setup_type,
