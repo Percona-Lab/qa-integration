@@ -21,7 +21,7 @@ def install_percona_server(ps_version, query_source):
         run_command(f"docker exec {ps_container} percona-release setup ps84lts")
     else:
         raise Exception(f"Percona server version: {ps_version} is not supported")
-    run_command(f"docker exec {ps_container} grep \"temporary password\" /var/log/mysqld.log | awk '{{print $NF}}' | tail -1")
+    run_command(f"docker exec {ps_container} cat /var/log/mysqld.log")
     run_command(f"docker exec {ps_container} apt -y install percona-server-server")
     run_command(f"INIT_PASS=$(docker exec {ps_container} grep \"temporary password\" /var/log/mysqld.log | awk '{{print $NF}}' | tail -1)")
     run_command("echo $INIT_PASS")
