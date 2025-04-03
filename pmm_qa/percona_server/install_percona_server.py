@@ -17,12 +17,12 @@ def install_percona_server(ps_version, query_source):
     run_command(f"docker exec {ps_container} apt -y install gnupg2 lsb-release ./percona-release_latest.generic_all.deb")
     run_command(f"docker exec {ps_container} apt update")
 
-    if(ps_version == 84):
-        run_command(f"docker exec {ps_container} percona-release setup ps84lts")
-    else:
-        raise Exception(f"Percona server version: {ps_version} is not supported")
+    # if(ps_version == 84):
+        # run_command(f"docker exec {ps_container} percona-release setup ps84lts")
+    # else:
+    #     raise Exception(f"Percona server version: {ps_version} is not supported")
 
-    run_command(f"docker exec {ps_container} DEBIAN_FRONTEND=noninteractive  apt -y install percona-server-server")
+    # run_command(f"docker exec {ps_container} DEBIAN_FRONTEND=noninteractive  apt -y install percona-server-server")
     # mysql - u root - p - e "CREATE USER 'msandbox'@'%' IDENTIFIED BY 'msandbox'; GRANT ALL PRIVILEGES ON *.* TO 'msandbox'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
 
     # sysbench
