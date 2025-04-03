@@ -22,7 +22,24 @@ def install_percona_server(ps_version, query_source):
     else:
         raise Exception(f"Percona server version: {ps_version} is not supported")
 
-    run_command(f"docker exec {ps_container} apt -y install percona-server-server")
+    run_command(f"docker exec {ps_container} DEBIAN_FRONTEND=noninteractive  apt -y install percona-server-server")
+    # mysql - u root - p - e "CREATE USER 'msandbox'@'%' IDENTIFIED BY 'msandbox'; GRANT ALL PRIVILEGES ON *.* TO 'msandbox'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+
+    # sysbench
+    # oltp_common - -db - driver = mysql - -mysql - db = test - -mysql - user = username - -mysql - password = password - -mysql - host = localhost - -mysql - port = 3306 - -tables = 10 - -table - size = 1000000
+    # prepare
+    # service
+    # mysql
+    # restart
+    # mysql - e
+    # "create user pmm@'%' identified by \"pmm\""
+    # mysql - e
+    # "grant all on *.* to pmm@'%'"
+    # mysql - e
+    # "CREATE USER 'pmm_tls'@'%' REQUIRE X509"
+    # service
+    # mysql
+    # restart
     # if(query_source == "perfschema"):
 
 def run_command(cmd):
