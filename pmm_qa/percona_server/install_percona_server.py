@@ -1,6 +1,7 @@
 import subprocess
 
 def install_percona_server(ps_version, query_source):
+    print(f"Query Source is: {query_source}")
     ps_port=3317
     ps_container=f"pmm_ps_{ps_version}"
     print(f"Percona server version is: {ps_version}")
