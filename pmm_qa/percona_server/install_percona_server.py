@@ -16,8 +16,8 @@ def install_percona_server(ps_version, query_source):
     run_command(f"docker exec {ps_container} curl -O https://repo.percona.com/apt/percona-release_latest.generic_all.deb")
     run_command(f"docker exec {ps_container} apt -y install gnupg2 lsb-release ./percona-release_latest.generic_all.deb")
     run_command(f"docker exec {ps_container} apt update")
-    run_command(f"docker exec {ps_container} init_pass=$(grep \"temporary password\" /var/log/mysqld.log | awk '{{print $NF}}' | tail -1)")
-    run_command(f"docker exec {ps_container} echo init_pass")
+    run_command(f"INIT_PASS=$(docker exec {ps_container} grep \"temporary password\" /var/log/mysqld.log | awk '{{print $NF}}' | tail -1)")
+    run_command(f"echo INIT_PASS")
 
     if(ps_version == 84):
         run_command(f"docker exec {ps_container} percona-release setup ps84lts")
