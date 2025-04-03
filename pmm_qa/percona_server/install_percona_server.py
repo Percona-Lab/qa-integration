@@ -10,7 +10,7 @@ def install_percona_server(ps_version):
     run_command(f"docker cp ./client_container_ps_setup.sh {ps_container}:/")
     run_command(f"docker exec {ps_container} apt-get update")
     run_command(f"docker exec {ps_container} apt-get -y install wget curl git gnupg2 lsb-release")
-    run_command(f"docker exec {ps_container} apt-get -y install libaio1 libaio-dev libnuma-dev socat")
+    run_command(f"docker exec {ps_container} apt-get -y install libaio1t64 libaio-dev libnuma-dev socat")
     run_command(f"docker exec {ps_container} apt-get -y install sysbench")
 
 def run_command(cmd):
