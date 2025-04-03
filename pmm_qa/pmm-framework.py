@@ -185,9 +185,9 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-
-    if int(ps_version.replace(".", "")) >= 84:
-        install_percona_server(int(ps_version.replace(".", "")))
+    ps_version_int = int(ps_version.replace(".", ""))
+    if ps_version_int >= 84:
+        install_percona_server(ps_version_int)
     else:
         # Define environment variables for playbook
         env_vars = {
