@@ -13,7 +13,7 @@
     mysql_port: 33066
     mysql_listen_port: 3306
     group_seeds_port: 33061
-    number_of_nodes: 3
+    number_of_nodes: "{{ lookup('env', 'SETUP_TYPE') | default('3', true) }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
     server_id_start: 1
@@ -195,9 +195,13 @@
         msg: "{{ verification_msg | split('\n') }}"
       when: setup_type == "gr"
 
-    - name: "Set correct pmm server address"
+    - name: Set correct pmm server address
       shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
       register: pmm_server_ip
+
+    - name: Set correct pmm server address
+      set_fact:
+        instance_ip: "{{ pmm_server_ip.stdout }}"
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client_centos.yml
