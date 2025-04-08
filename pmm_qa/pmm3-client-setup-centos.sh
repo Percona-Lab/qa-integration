@@ -40,7 +40,7 @@ if [ ! -z "$upgrade" ]; then
      upgrade="-u"
 fi
 
-port=443
+port=8443
 
 microdnf install -y wget gnupg2
 wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
