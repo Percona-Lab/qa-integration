@@ -1,3 +1,7 @@
+---
+# This playbook does following:
+#   Install selected version of pmm client V3
+
 - name: Setup PMM Client V3 inside of docker container
   hosts: localhost
   connection: local
