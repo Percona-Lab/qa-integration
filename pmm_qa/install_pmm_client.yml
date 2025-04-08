@@ -1,24 +1,10 @@
----
-# This playbook does following:
-#   Install selected version of pmm client V3
 
-- name: Setup PMM Client V3 inside of docker container
-  hosts: localhost
-  connection: local
-  gather_facts: yes
-#  vars:
-#    container_name: "{{ (container_name is defined) | ternary (container_name, '') }}"
-#    pmm_server_ip: "{{ (pmm_server_ip is defined) | ternary (pmm_server_ip, '') }}"
-#    client_version: "{{ (client_version is defined) | ternary (client_version, '') }}"
-#    admin_password: "{{ (admin_password is defined) | ternary (admin_password, '') }}"
+- name: Copy installation files of pmm client
+  shell: "{{ item }}"
+  with_items:
+    - docker cp ./pmm3-client-setup.sh {{ container_name }}:/
 
-  tasks:
-    - name: Copy installation files of pmm client
-      shell: "{{ item }}"
-      with_items:
-        - docker cp ./pmm3-client-setup.sh {{ container_name }}:/
-
-    - name: Install pmm-client
-      shell: "{{ item }}"
-      with_items:
-        - docker exec {{ container_name }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
+- name: Install pmm-client
+  shell: "{{ item }}"
+  with_items:
+  - docker exec {{ container_name }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
