@@ -181,7 +181,7 @@
         msg: "{{ client_version }} is pmm client version"
 
     - name: Install and add pmm client.
-      include_tasks: ../tasks/install_pmm_client.yml
+      include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
         container_name: "mysql{{ item }}"
       loop: "{{ range(1, number_of_nodes + 1) | list }}"

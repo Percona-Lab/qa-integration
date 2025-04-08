@@ -45,11 +45,10 @@ if [[  "$pmm_server_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
   port=443
 fi
 
-microdnf install -y wget gnupg2 mysql-client postgresql-client
+microdnf install -y wget gnupg2
 wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 rpm -i ./percona-release-latest.noarch.rpm
 export PMM_AGENT_SETUP_NODE_NAME=client_container_$(echo $((1 + $RANDOM % 9999)))
-mv -v /artifacts/* .
 
 if [[ "$client_version" == "3-dev-latest" ]]; then
     echo "Installing 3-dev-latest pmm client"
@@ -97,10 +96,10 @@ fi
 ## Check if we are upgrading or attempting fresh install.
 if [[ -z "$upgrade" ]]; then
     if [[ "$use_metrics_mode" == "yes" ]]; then
-        echo "setup pmm-agent"
+        echo "setup pmm-agent when metrics mode yes"
         pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --metrics-mode=${metrics_mode} --server-username=admin --server-password=${admin_password}
     else 
-        echo "setup pmm-agent"
+        echo "setup pmm-agent when metrics mode no"
         pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --server-username=admin --server-password=${admin_password}
     fi    
     sleep 10

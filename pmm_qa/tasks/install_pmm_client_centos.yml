@@ -1,13 +1,8 @@
 - name: Copy a file into the container
   community.docker.docker_container_copy_into:
     container: "{{ container_name }}"
-    path: ../pmm3-client-setup.sh
+    path: ../pmm3-client-setup-centos.sh
     container_path: /pmm3-client-setup.sh
-
-- name: Install pmm-client
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: ls
 
 - name: Install pmm-client
   community.docker.docker_container_exec:
