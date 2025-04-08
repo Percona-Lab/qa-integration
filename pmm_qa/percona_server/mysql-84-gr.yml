@@ -164,8 +164,8 @@
 
     - name: Install and add pmm client.
       include_tasks: ../install_pmm_client.yml
-      vars:
-        container_name: "mysql{{ item }}"
-        pmm_server_ip: "{{ pmm_server_ip }}"
-        client_version: "{{ client_version }}"
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+#      vars:
+#        container_name: "mysql{{ item }}"
+#        pmm_server_ip: "{{ pmm_server_ip }}"
+#        client_version: "{{ client_version }}"
+#      loop: "{{ range(1, number_of_nodes + 1) | list }}"

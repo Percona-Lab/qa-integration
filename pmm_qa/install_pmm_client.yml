@@ -6,11 +6,11 @@
   hosts: localhost
   connection: local
   gather_facts: yes
-  vars:
-    container_name: "{{ (container_name is defined) | ternary (container_name, '') }}"
-    pmm_server_ip: "{{ (pmm_server_ip is defined) | ternary (pmm_server_ip, '') }}"
-    client_version: "{{ (client_version is defined) | ternary (client_version, '') }}"
-    admin_password: "{{ (admin_password is defined) | ternary (admin_password, '') }}"
+#  vars:
+#    container_name: "{{ (container_name is defined) | ternary (container_name, '') }}"
+#    pmm_server_ip: "{{ (pmm_server_ip is defined) | ternary (pmm_server_ip, '') }}"
+#    client_version: "{{ (client_version is defined) | ternary (client_version, '') }}"
+#    admin_password: "{{ (admin_password is defined) | ternary (admin_password, '') }}"
 
   tasks:
     - name: Copy installation files of pmm client
