@@ -33,7 +33,7 @@
         name: "{{ network_name }}"
         state: present
 
-    - name: "Set correct pmm server address"
+    - name: "Remove old data folders"
       shell: 'rm -fr {{ data_dir }}'
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
 
@@ -49,12 +49,14 @@
         src: my.cnf.j2
         dest: "{{ data_dir }}/node{{ item }}/my.cnf"
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      when: setup_type == "gr"
 
     - name: Create initialization script for each node
       template:
         src: init.sql.j2
         dest: "{{ data_dir }}/node{{ item }}/init.sql"
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      when: setup_type == "gr"
 
     - name: Remove old percona server containers
       community.docker.docker_container:
@@ -104,6 +106,7 @@
           "
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
       ignore_errors: yes
+      when: setup_type == "gr"
 
     - name: Bootstrap first node in the cluster
       community.docker.docker_container_exec:
@@ -113,10 +116,12 @@
           SET GLOBAL group_replication_bootstrap_group=ON;
           START GROUP_REPLICATION;
           SET GLOBAL group_replication_bootstrap_group=OFF;"
+      when: setup_type == "gr"
 
     - name: Wait 5 seconds for bootstrap to complete
       pause:
         seconds: 5
+      when: setup_type == "gr"
 
     - name: Start group replication on other nodes
       community.docker.docker_container_exec:
@@ -124,10 +129,12 @@
         command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
       loop: "{{ range(2, number_of_nodes + 1) | list }}"
       ignore_errors: yes
+      when: setup_type == "gr"
 
     - name: Wait 10 seconds for the other nodes to join
       pause:
         seconds: 10
+      when: setup_type == "gr"
 
     - name: Create and seed a test database on primary
       community.docker.docker_container_exec:
@@ -138,26 +145,31 @@
           USE testdb;
           CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
           INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
+      when: setup_type == "gr"
 
     - name: Check replication status on first node
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
         command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
       register: replication_status
+      when: setup_type == "gr"
 
     - name: Display replication status
       debug:
         var: replication_status.stdout
+      when: setup_type == "gr"
 
     - name: Check replication group members count
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
         command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
       register: member_count
+      when: setup_type == "gr"
 
     - name: Display member count
       debug:
         var: member_count.stdout
+      when: setup_type == "gr"
 
     - name: Set verification instructions
       set_fact:
@@ -176,13 +188,15 @@
              docker exec -it ps_pmm_{{ mysql_version }}_2 mysql -uroot -p{{ root_password }}
              USE testdb;
              SELECT * FROM testdb;
+      when: setup_type == "gr"
 
     - name: Display verification instructions
       debug:
         msg: "{{ verification_msg | split('\n') }}"
+      when: setup_type == "gr"
 
     - name: "Set correct pmm server address"
-      shell: 'docker ps -f name=-server --format "{{ .Names }}"'
+      shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
       register: pmm_server_ip
 
     - name: Install and add pmm client.
