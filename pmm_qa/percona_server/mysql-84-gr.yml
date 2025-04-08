@@ -50,7 +50,7 @@
     - name: Remove old percona server containers
       community.docker.docker_container:
         name: "mysql{{ item }}"
-        image: "percona/percona-server:{{ mysql_version }}"
+        image: "mysql:{{ mysql_version }}"
         restart_policy: always
         state: absent
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
@@ -59,7 +59,7 @@
     - name: Start MySQL containers
       community.docker.docker_container:
         name: "mysql{{ item }}"
-        image: "percona/percona-server:{{ mysql_version }}"
+        image: "mysql:{{ mysql_version }}"
         restart_policy: always
         state: started
         networks:
