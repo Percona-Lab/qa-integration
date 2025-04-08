@@ -176,10 +176,6 @@
       debug:
         msg: "{{ verification_msg | split('\n') }}"
 
-    - name: "PMM Server IP is"
-      debug:
-        msg: "{{ pmm_server_ip }} is pmm server IP"
-#
     - name: "Set correct pmm server address"
       shell: 'docker ps -f name=-server --format "\{\{ .Names \}\}"'
       register: pmm_server_ip
