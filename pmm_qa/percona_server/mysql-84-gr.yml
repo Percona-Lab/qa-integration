@@ -202,7 +202,7 @@
 
     - name: Set correct pmm server address
       set_fact:
-        instance_ip: "{{ pmm_server_ip.stdout }}"
+        pmm_server_ip: "{{ pmm_server_ip.stdout }}"
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client_centos.yml
