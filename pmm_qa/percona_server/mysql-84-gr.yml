@@ -49,8 +49,8 @@
 
     - name: Start MySQL containers
       community.docker.docker_container:
-        name: "mysql{{ item }}"
-        image: "mysql:{{ mysql_version }}"
+        name: "percona-server{{ item }}"
+        image: "percona/percona-server:{{ mysql_version }}"
         restart_policy: always
         state: started
         networks:
