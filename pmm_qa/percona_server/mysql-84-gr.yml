@@ -49,7 +49,7 @@
 
     - name: Remove old percona server containers
       community.docker.docker_container:
-        name: "mysql{{ item }}"
+        name: "ps_pmm_{{ mysql_version }}_{{ item }}"
         image: "mysql:{{ mysql_version }}"
         restart_policy: always
         state: absent
@@ -58,7 +58,7 @@
 
     - name: Start MySQL containers
       community.docker.docker_container:
-        name: "mysql{{ item }}"
+        name: "ps_pmm_{{ mysql_version }}_{{ item }}"
         image: "mysql:{{ mysql_version }}"
         restart_policy: always
         state: started
@@ -86,7 +86,7 @@
 
     - name: Reset configuration for all nodes
       community.docker.docker_container_exec:
-        container: "mysql{{ item }}"
+        container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           RESET BINARY LOGS AND GTIDS;
@@ -98,7 +98,7 @@
 
     - name: Bootstrap first node in the cluster
       community.docker.docker_container_exec:
-        container: mysql1
+        container: "ps_pmm_{{ mysql_version }}_1"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL group_replication_bootstrap_group=ON;
@@ -111,7 +111,7 @@
 
     - name: Start group replication on other nodes
       community.docker.docker_container_exec:
-        container: "mysql{{ item }}"
+        container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
       loop: "{{ range(2, number_of_nodes + 1) | list }}"
       ignore_errors: yes
@@ -122,7 +122,7 @@
 
     - name: Create and seed a test database on primary
       community.docker.docker_container_exec:
-        container: mysql1
+        container: "ps_pmm_{{ mysql_version }}_1"
         command: >
           mysql -uroot -p{{ root_password}} -e "
           CREATE DATABASE testdb;
@@ -132,7 +132,7 @@
 
     - name: Check replication status on first node
       community.docker.docker_container_exec:
-        container: mysql1
+        container: "ps_pmm_{{ mysql_version }}_1"
         command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
       register: replication_status
 
@@ -142,7 +142,7 @@
 
     - name: Check replication group members count
       community.docker.docker_container_exec:
-        container: mysql1
+        container: "ps_pmm_{{ mysql_version }}_1"
         command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
       register: member_count
 
@@ -157,14 +157,14 @@
 
           To verify replication is working:
           1. Connect to the first node:
-             docker exec -it mysql1 mysql -uroot -p{{ root_password }}
+             docker exec -it ps_pmm_{{ mysql_version }}_1 mysql -uroot -p{{ root_password }}
 
           2. Insert data in the test database:
              USE testdb;
              INSERT INTO testdb VALUES (100, 'Test replication');
 
           3. Connect to other nodes and verify data is replicated:
-             docker exec -it mysql2 mysql -uroot -p{{ root_password }}
+             docker exec -it ps_pmm_{{ mysql_version }}_2 mysql -uroot -p{{ root_password }}
              USE testdb;
              SELECT * FROM testdb;
 
@@ -175,19 +175,19 @@
     - name: "PMM Server IP is"
       debug:
         msg: "{{ pmm_server_ip }} is pmm server IP"
-
-    - name: "Client version is"
-      debug:
-        msg: "{{ client_version }} is pmm client version"
+#
+    - name: "Set correct pmm server address"
+      shell: "docker ps -f name=-server --format '{{ .Names }}'"
+      register: pmm_server_ip
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
-        container_name: "mysql{{ item }}"
+        container_name: "ps_pmm_{{ mysql_version }}_{{ item }}"
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
-        container: "mysql{{ item }}"
+        container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication --debug 127.0.0.1:3306
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
