@@ -28,6 +28,10 @@
         name: "{{ network_name }}"
         state: present
 
+    - name: "Set correct pmm server address"
+      shell: 'rm -fr {{ data_dir }}'
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
     - name: Create data directories
       file:
         path: "{{ data_dir }}/node{{ item }}/data"
