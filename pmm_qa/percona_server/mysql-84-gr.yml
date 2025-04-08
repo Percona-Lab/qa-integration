@@ -35,27 +35,27 @@
 
     - name: "Remove old data folders"
       shell: 'rm -fr {{ data_dir }}'
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
 
     - name: Create data directories
       file:
         path: "{{ data_dir }}/node{{ item }}/data"
         state: directory
         mode: '0755'
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
 
     - name: Generate my.cnf for each node
       template:
         src: my.cnf.j2
         dest: "{{ data_dir }}/node{{ item }}/my.cnf"
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
       when: setup_type == "gr"
 
     - name: Create initialization script for each node
       template:
         src: init.sql.j2
         dest: "{{ data_dir }}/node{{ item }}/init.sql"
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
       when: setup_type == "gr"
 
     - name: Remove old percona server containers
@@ -64,7 +64,7 @@
         image: "percona/percona-server:{{ mysql_version }}"
         restart_policy: always
         state: absent
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
       ignore_errors: yes
 
     - name: Start MySQL containers
@@ -85,7 +85,7 @@
           - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
           - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
         # command: "--server-id={{ server_id_start + item - 1 }}"
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
 
     - name: Wait for MySQL to be available
       wait_for:
@@ -93,7 +93,7 @@
         port: "{{ mysql_port + item - 1 }}"
         delay: 10
         timeout: 300
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
 
     - name: Reset configuration for all nodes
       community.docker.docker_container_exec:
@@ -104,7 +104,7 @@
           RESET REPLICA ALL;
           SET GLOBAL gtid_purged='';
           "
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
 
@@ -127,7 +127,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
-      loop: "{{ range(2, number_of_nodes + 1) | list }}"
+      loop: "{{ range(2, number_of_nodes + 1 | int) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
 
@@ -207,10 +207,10 @@
       include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
         container_name: "ps_pmm_{{ mysql_version }}_{{ item }}"
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication --debug 127.0.0.1:3306
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
