@@ -1,0 +1,160 @@
+---
+# MySQL 8.4 Cluster with Group Replication
+- name: Setup MySQL 8.4 Cluster with Group Replication in Docker
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    mysql_version: "8.4"
+    cluster_name: "mysql_cluster"
+    replication_user: "repl_user"
+    replication_password: "Repl123!"
+    root_password: "Root123!"
+    mysql_port: 33066
+    mysql_listen_port: 3306
+    group_seeds_port: 33061
+    number_of_nodes: 3
+    network_name: "www"
+    data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
+    server_id_start: 1
+
+  tasks:
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: "{{ network_name }}"
+        state: present
+
+    - name: Create data directories
+      file:
+        path: "{{ data_dir }}/node{{ item }}/data"
+        state: directory
+        mode: '0755'
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
+    - name: Generate my.cnf for each node
+      template:
+        src: my.cnf.j2
+        dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
+    - name: Create initialization script for each node
+      template:
+        src: init.sql.j2
+        dest: "{{ data_dir }}/node{{ item }}/init.sql"
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
+    - name: Start MySQL containers
+      community.docker.docker_container:
+        name: "mysql{{ item }}"
+        image: "mysql:{{ mysql_version }}"
+        restart_policy: always
+        state: started
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+        ports:
+          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+          - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
+          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+        # command: "--server-id={{ server_id_start + item - 1 }}"
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
+    - name: Wait for MySQL to be available
+      wait_for:
+        host: localhost
+        port: "{{ mysql_port + item - 1 }}"
+        delay: 10
+        timeout: 300
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+
+    - name: Reset configuration for all nodes
+      community.docker.docker_container_exec:
+        container: "mysql{{ item }}"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          RESET BINARY LOGS AND GTIDS;
+          RESET REPLICA ALL;
+          SET GLOBAL gtid_purged='';
+          "
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      ignore_errors: yes
+
+    - name: Bootstrap first node in the cluster
+      community.docker.docker_container_exec:
+        container: mysql1
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          SET GLOBAL group_replication_bootstrap_group=ON;
+          START GROUP_REPLICATION;
+          SET GLOBAL group_replication_bootstrap_group=OFF;"
+
+    - name: Wait 5 seconds for bootstrap to complete
+      pause:
+        seconds: 5
+
+    - name: Start group replication on other nodes
+      community.docker.docker_container_exec:
+        container: "mysql{{ item }}"
+        command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
+      loop: "{{ range(2, number_of_nodes + 1) | list }}"
+      ignore_errors: yes
+
+    - name: Wait 10 seconds for the other nodes to join
+      pause:
+        seconds: 10
+
+    - name: Create and seed a test database on primary
+      community.docker.docker_container_exec:
+        container: mysql1
+        command: >
+          mysql -uroot -p{{ root_password}} -e "
+          CREATE DATABASE testdb;
+          USE testdb;
+          CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
+          INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
+
+    - name: Check replication status on first node
+      community.docker.docker_container_exec:
+        container: mysql1
+        command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
+      register: replication_status
+
+    - name: Display replication status
+      debug:
+        var: replication_status.stdout
+
+    - name: Check replication group members count
+      community.docker.docker_container_exec:
+        container: mysql1
+        command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
+      register: member_count
+
+    - name: Display member count
+      debug:
+        var: member_count.stdout
+
+    - name: Set verification instructions
+      set_fact:
+        verification_msg: |
+          MySQL Cluster setup complete!
+
+          To verify replication is working:
+          1. Connect to the first node:
+             docker exec -it mysql1 mysql -uroot -p{{ root_password }}
+
+          2. Insert data in the test database:
+             USE testdb;
+             INSERT INTO testdb VALUES (100, 'Test replication');
+
+          3. Connect to other nodes and verify data is replicated:
+             docker exec -it mysql2 mysql -uroot -p{{ root_password }}
+             USE testdb;
+             SELECT * FROM testdb;
+
+    - name: Display verification instructions
+      debug:
+        msg: "{{ verification_msg | split('\n') }}"

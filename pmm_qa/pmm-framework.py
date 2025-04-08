@@ -5,7 +5,6 @@ import sys
 import ansible_runner
 import requests
 import re
-from percona_server.install_percona_server import install_percona_server
 
 # Database configurations
 database_configs = {
@@ -187,7 +186,11 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
     if ps_version_int >= 84:
-        install_percona_server(ps_version_int, get_value('QUERY_SOURCE', db_type, args, db_config))
+        # Define environment variables for playbook
+        env_vars = {
+        }
+
+        run_ansible_playbook('percona_server/mysql-84-gr.yml', env_vars, args)
     else:
         # Define environment variables for playbook
         env_vars = {

@@ -1,0 +1,15 @@
+-- Create replication user and grant necessary privileges
+SET SQL_LOG_BIN=0;
+CREATE USER '{{ replication_user }}'@'%' IDENTIFIED BY '{{ replication_password }}';
+GRANT REPLICATION SLAVE ON *.* TO '{{ replication_user }}'@'%';
+GRANT CONNECTION_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+GRANT BACKUP_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+GRANT GROUP_REPLICATION_STREAM ON *.* TO '{{ replication_user }}'@'%';
+-- GRANT SERVICE_CONNECTION_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+-- GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+FLUSH PRIVILEGES;
+SET SQL_LOG_BIN=1;
+
+-- Configure group replication recovery credentials
+CHANGE REPLICATION SOURCE TO SOURCE_USER='{{ replication_user }}', SOURCE_PASSWORD='{{ replication_password }}' FOR CHANNEL 'group_replication_recovery';
+
