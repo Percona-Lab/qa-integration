@@ -185,11 +185,12 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
-    print(f'Setup type for PS is {setup_type}')
+    print(f'Setup type for PS is {setup_type_value}')
     if ps_version_int >= 84:
         # Define environment variables for playbook
         env_vars = {
-            # 'SETUP_TYPE'
+            'SETUP_TYPE': setup_type_value,
+            'SERVICES_COUNT': 3
         }
 
         run_ansible_playbook('percona_server/mysql-84-gr.yml', env_vars, args)
