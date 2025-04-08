@@ -21,8 +21,13 @@
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     query_source: "{{ lookup('vars', 'query_source', default=lookup('env','QUERY_SOURCE') | default('perfschema', true) ) }}"
+    setup_type: "{{ lookup('vars', 'query_source', default=lookup('env','SETUP_TYPE') | default('base', true) ) }}"
 
   tasks:
+    - name: "Setup type is:"
+      debug:
+        msg: "{{ setup_type }} is the setup type"
+
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
@@ -177,7 +182,7 @@
         msg: "{{ verification_msg | split('\n') }}"
 
     - name: "Set correct pmm server address"
-      shell: 'docker ps -f name=-server --format "\{\{ .Names \}\}"'
+      shell: 'docker ps -f name=-server --format "{{ .Names }}"'
       register: pmm_server_ip
 
     - name: Install and add pmm client.
