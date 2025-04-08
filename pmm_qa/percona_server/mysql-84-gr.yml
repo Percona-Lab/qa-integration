@@ -50,7 +50,7 @@
     - name: Remove old percona server containers
       community.docker.docker_container:
         name: "ps_pmm_{{ mysql_version }}_{{ item }}"
-        image: "mysql:{{ mysql_version }}"
+        image: "percona/percona-server:{{ mysql_version }}"
         restart_policy: always
         state: absent
       loop: "{{ range(1, number_of_nodes + 1) | list }}"
@@ -177,7 +177,7 @@
         msg: "{{ pmm_server_ip }} is pmm server IP"
 #
     - name: "Set correct pmm server address"
-      shell: "docker ps -f name=-server --format '{{ .Names }}'"
+      shell: "docker ps -f name=-server --format '\{\{ .Names \}\}'"
       register: pmm_server_ip
 
     - name: Install and add pmm client.
