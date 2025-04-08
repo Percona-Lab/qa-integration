@@ -1,0 +1,12 @@
+- name: Setup PMM Client V3 inside of docker container
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    container_name: "{{ (container_name is defined) | ternary (container_name, '') }}"
+
+  tasks:
+    - name: Copy installation files of pmm client
+      shell: "{{ item }}"
+      with_items:
+        - docker cp ./pmm3-client-setup.sh {{ container_name }}:/

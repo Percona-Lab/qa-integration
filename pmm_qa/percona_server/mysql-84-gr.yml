@@ -158,3 +158,9 @@
     - name: Display verification instructions
       debug:
         msg: "{{ verification_msg | split('\n') }}"
+
+    - name: Install and add pmm client.
+      include_tasks: ../tasks/install_pmm_client.yml
+      vars:
+        container_name: "mysql{{ item }}"
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
