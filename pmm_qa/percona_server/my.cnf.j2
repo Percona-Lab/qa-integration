@@ -14,13 +14,13 @@ disabled_storage_engines="MyISAM,BLACKHOLE,FEDERATED,ARCHIVE,MEMORY"
 lower_case_table_names=2 # MacOS-specific, but also good generally
 
 # MySQL 8.4 compatibility settings
-report_host=mysql{{ item }}
+report_host=ps_pmm_{{mysql_version}}_{{ item }}
 
 # Group Replication Settings
 plugin_load_add='group_replication.so'
 loose-group_replication_group_name='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
-loose-group_replication_local_address='mysql{{ item }}:{{ group_seeds_port }}'
-loose-group_replication_group_seeds='{% for i in range(1, number_of_nodes + 1) %}mysql{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}'
+loose-group_replication_local_address='ps_pmm_{{mysql_version}}_{{ item }}:{{ group_seeds_port }}'
+loose-group_replication_group_seeds='{% for i in range(1, number_of_nodes + 1) %}ps_pmm_{{mysql_version}}_{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}'
 loose-group_replication_communication_stack=XCOM
 
 # Group replication behavior
@@ -35,7 +35,7 @@ loose-group_replication_recovery_retry_count=10
 loose-group_replication_recovery_reconnect_interval=60
 
 # Crash-safe replication settings
-relay-log=mysql{{ item }}-relay-bin
+relay-log=ps_pmm_{{mysql_version}}_{{ item }}-relay-bin
 relay_log_recovery=ON
 relay_log_purge=ON
 
