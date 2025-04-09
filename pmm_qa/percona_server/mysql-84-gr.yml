@@ -109,7 +109,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
         command: >
-          mysql -uroot -p{{ root_password }} -e "
+          mysql -umysql -p{{ root_password }} -e "
           RESET BINARY LOGS AND GTIDS;
           RESET REPLICA ALL;
           SET GLOBAL gtid_purged='';
@@ -122,7 +122,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
         command: >
-          mysql -uroot -p{{ root_password }} -e "
+          mysql -umysql -p{{ root_password }} -e "
           SET GLOBAL group_replication_bootstrap_group=ON;
           START GROUP_REPLICATION;
           SET GLOBAL group_replication_bootstrap_group=OFF;"
@@ -136,7 +136,7 @@
     - name: Start group replication on other nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
-        command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
+        command: mysql -umysql -p{{ root_password }} -e "START GROUP_REPLICATION;"
       loop: "{{ range(2, number_of_nodes | int + 1) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
@@ -150,7 +150,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
         command: >
-          mysql -uroot -p{{ root_password}} -e "
+          mysql -umysql -p{{ root_password}} -e "
           CREATE DATABASE testdb;
           USE testdb;
           CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
@@ -160,7 +160,7 @@
     - name: Check replication status on first node
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
+        command: mysql -umysql -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
       register: replication_status
       when: setup_type == "gr"
 
@@ -172,7 +172,7 @@
     - name: Check replication group members count
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
+        command: mysql -umysql -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
       register: member_count
       when: setup_type == "gr"
 
@@ -188,14 +188,14 @@
 
           To verify replication is working:
           1. Connect to the first node:
-             docker exec -it ps_pmm_{{ mysql_version }}_1 mysql -uroot -p{{ root_password }}
+             docker exec -it ps_pmm_{{ mysql_version }}_1 mysql -umysql -p{{ root_password }}
 
           2. Insert data in the test database:
              USE testdb;
              INSERT INTO testdb VALUES (100, 'Test replication');
 
           3. Connect to other nodes and verify data is replicated:
-             docker exec -it ps_pmm_{{ mysql_version }}_2 mysql -uroot -p{{ root_password }}
+             docker exec -it ps_pmm_{{ mysql_version }}_2 mysql -umysql -p{{ root_password }}
              USE testdb;
              SELECT * FROM testdb;
       when: setup_type == "gr"
