@@ -213,5 +213,5 @@
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication --debug 127.0.0.1:3306
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ mysql_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
