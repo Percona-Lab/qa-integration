@@ -98,7 +98,7 @@
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Save logs from first replica
-      shell: "ps_pmm_{{ mysql_version }}_1"
+      shell: "docker logs ps_pmm_{{ mysql_version }}_1"
       register: ps_pmm_1_logs
 
     - set_fact:
