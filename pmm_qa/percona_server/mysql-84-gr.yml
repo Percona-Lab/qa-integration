@@ -127,6 +127,8 @@
           START GROUP_REPLICATION;
           SET GLOBAL group_replication_bootstrap_group=OFF;"
       when: setup_type == "gr"
+      retries: 5
+      delay: 10
 
     - name: Wait 5 seconds for bootstrap to complete
       pause:
