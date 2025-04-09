@@ -70,7 +70,7 @@
 
     - name: Recursively change ownership of a directory
       ansible.builtin.file:
-      path: {{ data_dir }}/node{{ item }}/data
+      path: "{{ data_dir }}/node{{ item }}/data"
       state: directory
       recurse: yes
       owner: mysql
