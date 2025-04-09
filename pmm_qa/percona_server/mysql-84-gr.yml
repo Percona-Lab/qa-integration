@@ -70,11 +70,11 @@
 
     - name: Recursively change ownership of a directory
       ansible.builtin.file:
-      path: "{{ data_dir }}/node{{ item }}/data"
-      state: directory
-      recurse: yes
-      owner: mysql
-      group: mysql
+        path: "{{ data_dir }}/node{{ item }}/data"
+        state: directory
+        recurse: yes
+        owner: mysql
+        group: mysql
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Start MySQL containers
