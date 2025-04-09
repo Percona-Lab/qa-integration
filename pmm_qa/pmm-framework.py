@@ -39,7 +39,7 @@ database_configs = {
     "PS": {
         "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": ""}
+                           "TARBALL": "", "COUNT": 1}
     },
     "SSL_MYSQL": {
         "versions": ["5.7", "8.4", "8.0"],
