@@ -75,6 +75,7 @@
       recurse: yes
       owner: mysql
       group: mysql
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Start MySQL containers
       community.docker.docker_container:
