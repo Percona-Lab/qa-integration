@@ -68,6 +68,10 @@
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
       ignore_errors: yes
 
+    - name: Recursively change ownership of a directory
+      shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+
 #    - name: Recursively change ownership of a directory
 #      ansible.builtin.file:
 #        path: "{{ data_dir }}/node{{ item }}/data"
