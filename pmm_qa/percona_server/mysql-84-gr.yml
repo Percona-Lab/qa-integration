@@ -68,6 +68,14 @@
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
       ignore_errors: yes
 
+    - name: Recursively change ownership of a directory
+      ansible.builtin.file:
+      path: {{ data_dir }}/node{{ item }}/data
+      state: directory
+      recurse: yes
+      owner: mysql
+      group: mysql
+
     - name: Start MySQL containers
       community.docker.docker_container:
         name: "ps_pmm_{{ mysql_version }}_{{ item }}"
