@@ -187,6 +187,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
     print(f'Setup type for PS is {setup_type_value}')
+    print(f'Args are: {args}')
     print(f'COUNT is: {get_value('COUNT', db_type, args, db_config).lower()}')
     if ps_version_int >= 84:
         # Define environment variables for playbook
