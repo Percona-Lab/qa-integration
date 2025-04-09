@@ -105,6 +105,17 @@
         timeout: 300
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
+    - name: Save logs from first replica
+      shell: "ps_pmm_{{ mysql_version }}_1"
+      register: ps_pmm_1_logs
+
+    - set_fact:
+        ps_pmm_1_logs: "{{ ps_pmm_1_logs.stdout }}"
+
+    - name: Print logs from first replica
+      debug:
+        msg: ps_pmm_1_logs
+
     - name: Reset configuration for all nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_{{ item }}"
