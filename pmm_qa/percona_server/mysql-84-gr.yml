@@ -14,7 +14,7 @@
     mysql_listen_port: 3306
     group_seeds_port: 33061
 #    number_of_nodes: 3
-    number_of_nodes: {{ (lookup('env', 'SERVICES_COUNT') | default('3', true)) | int }}
+    number_of_nodes: "{{ (lookup('env', 'SERVICES_COUNT') | default('3', true)) | int }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
     server_id_start: 1
@@ -28,6 +28,10 @@
     - name: "Setup type is:"
       debug:
         msg: "{{ setup_type }} is the setup type"
+
+    - name: Convert number of nodes to int
+      set_fact:
+        number_of_nodes: number_of_nodes|int
 
     - name: Create Docker network
       community.docker.docker_network:
