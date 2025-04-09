@@ -48,14 +48,14 @@
 
     - name: "Remove old data folders"
       shell: 'rm -fr {{ data_dir }}'
-      loop: "{{ range(1, number_of_nodes + 1) | list }}"
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Create data directories
       file:
         path: "{{ data_dir }}/node{{ item }}/data"
         state: directory
         mode: '0755'
-      loop: "{{ range(1, number_of_nodes + 1 | int) | list }}"
+      loop: "{{ range(1, number_of_nodes + 1) | list }}"
 
     - name: Generate my.cnf for each node
       template:
