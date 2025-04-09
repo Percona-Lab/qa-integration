@@ -97,14 +97,6 @@
         # command: "--server-id={{ server_id_start + item - 1 }}"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
-    - name: Wait for MySQL to be available
-      wait_for:
-        host: localhost
-        port: "{{ mysql_port + item - 1 }}"
-        delay: 10
-        timeout: 300
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
-
     - name: Save logs from first replica
       shell: "ps_pmm_{{ mysql_version }}_1"
       register: ps_pmm_1_logs
@@ -115,6 +107,14 @@
     - name: Print logs from first replica
       debug:
         msg: ps_pmm_1_logs
+
+    - name: Wait for MySQL to be available
+      wait_for:
+        host: localhost
+        port: "{{ mysql_port + item - 1 }}"
+        delay: 10
+        timeout: 300
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Reset configuration for all nodes
       community.docker.docker_container_exec:
