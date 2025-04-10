@@ -13,7 +13,6 @@
     mysql_port: 33066
     mysql_listen_port: 3306
     group_seeds_port: 33061
-#    number_of_nodes: 3
     number_of_nodes: "{{ (lookup('env', 'SERVICES_COUNT') | default('3', true)) | int }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
@@ -25,10 +24,6 @@
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
 
   tasks:
-    - name: "Query source is:"
-      debug:
-        msg: "{{ query_source }} is the Query source"
-
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
@@ -89,19 +84,7 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
           - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
           - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
-        # command: "--server-id={{ server_id_start + item - 1 }}"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
-
-    - name: Save logs from first replica
-      shell: "docker logs ps_pmm_{{ mysql_version }}_1"
-      register: ps_pmm_1_logs
-
-    - set_fact:
-        ps_pmm_1_logs: "{{ ps_pmm_1_logs.stdout }}"
-
-    - name: Print logs from first replica
-      debug:
-        msg: ps_pmm_1_logs
 
     - name: Wait for MySQL to be available
       wait_for:
