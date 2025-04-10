@@ -192,7 +192,8 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         env_vars = {
             'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
             'SETUP_TYPE': setup_type_value,
-            'SERVICES_COUNT': get_value('COUNT', db_type, args, db_config)
+            'SERVICES_COUNT': get_value('COUNT', db_type, args, db_config),
+            'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config)
         }
 
         run_ansible_playbook('percona_server/mysql-84-gr.yml', env_vars, args)

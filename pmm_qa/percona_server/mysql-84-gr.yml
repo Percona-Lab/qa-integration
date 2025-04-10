@@ -124,6 +124,19 @@
       ignore_errors: yes
       when: setup_type == "gr"
 
+    - name: Create slowlog configuration for mysql nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ mysql_version }}_{{ item }}"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          SET GLOBAL slow_query_log='ON';
+          SET GLOBAL long_query_time=0;
+          SET GLOBAL log_slow_admin_statements=ON;
+          SET GLOBAL log_slow_slave_statements=ON;
+          "
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: query_source == "slowlog"
+
     - name: Bootstrap first node in the cluster
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ mysql_version }}_1"
