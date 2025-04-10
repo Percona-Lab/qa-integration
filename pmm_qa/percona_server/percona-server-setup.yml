@@ -52,7 +52,7 @@
         src: init.sql.j2
         dest: "{{ data_dir }}/node{{ item }}/init.sql"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
-#      when: setup_type == "gr"
+      when: setup_type == "gr"
 
     - name: Remove old percona server containers
       community.docker.docker_container:
