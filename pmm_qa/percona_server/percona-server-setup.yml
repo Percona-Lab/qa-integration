@@ -328,21 +328,22 @@
             --time=60 
             run
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
-      when: setup_type != "gr"
-
-    - name: Run load for sysbench inside of first percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            --threads=16 
-            --time=60 
-            run
-      when: setup_type == "gr"
+#      when: setup_type != "gr"
+#
+#    - name: Run load for sysbench inside of first percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: >
+#          sysbench /usr/share/sysbench/oltp_read_write.lua
+#            --mysql-host=127.0.0.1
+#            --mysql-port=3306
+#            --mysql-user=sbtest
+#            --mysql-password=password
+#            --mysql-db=sbtest
+#            --tables=10
+#            --table-size=100000
+#            --threads=16
+#            --time=60
+#            run
+#      when: setup_type == "gr"
+#
