@@ -64,6 +64,11 @@ if [[ "$client_version" == "pmm3-latest" ]]; then
     microdnf -y install pmm-client
 fi
 
+if [[ "$client_version" =~ ^3\.[0-9]+\.[0-9]+$ ]]; then
+  wget -O pmm-client.deb https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-${client_version}-7.el9.x86_64.rpm
+  rpm -i pmm-client.deb
+fi
+
 ## Default Binary path
 path="/usr/local/percona/pmm";
 ## As export PATH is not working link the paths
