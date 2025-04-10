@@ -244,12 +244,13 @@
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL super_read_only = OFF;
           SET GLOBAL read_only = OFF;
           "
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
