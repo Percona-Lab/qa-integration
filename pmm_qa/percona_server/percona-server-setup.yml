@@ -244,11 +244,18 @@
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "ps_pmm_{{ ps_version }}_1"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL super_read_only = OFF;
           SET GLOBAL read_only = OFF;
+          "
+
+    - name: Prepare sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
           CREATE DATABASE sbtest;
           CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
           GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
@@ -264,8 +271,6 @@
         container: "ps_pmm_{{ ps_version }}_1"
         command: >
           mysql -uroot -p{{ root_password }} -e "
-          SET GLOBAL super_read_only = OFF;
-          SET GLOBAL read_only = OFF;
           CREATE DATABASE sbtest;
           CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
           GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
