@@ -1,5 +1,5 @@
 ---
-# MySQL 8.4 Cluster with Group Replication
+# Percona Server 8.4 Single instance and also Cluster with Group Replication
 - name: Setup MySQL 8.4 Cluster with Group Replication in Docker
   hosts: localhost
   connection: local
