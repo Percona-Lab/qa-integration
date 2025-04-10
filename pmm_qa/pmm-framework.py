@@ -37,7 +37,7 @@ database_configs = {
                            "TARBALL": ""}
     },
     "PS": {
-        "versions": ["5.7", "8.4", "8.6", "8.0"],
+        "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": "", "COUNT": 1}
     },
