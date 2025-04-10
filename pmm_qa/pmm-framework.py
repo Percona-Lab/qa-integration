@@ -196,7 +196,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config)
         }
 
-        run_ansible_playbook('percona_server/mysql-84-gr.yml', env_vars, args)
+        run_ansible_playbook('percona_server/percona-server-setup.yml', env_vars, args)
     else:
         # Define environment variables for playbook
         env_vars = {
