@@ -228,3 +228,54 @@
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+
+
+    - name: Install sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: "sudo apt-get update -y && sudo apt-get install sysbench -y"
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+
+    - name: Prepare sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          CREATE DATABASE sbtest;
+          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
+          GRANT ALL PRIVILEGES ON sbtest.* TO 'sbtest'@'localhost';
+          FLUSH PRIVILEGES;
+          "
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+
+    - name: Prepare data for sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          sysbench /usr/share/sysbench/oltp_read_write.lua \
+            --mysql-host=127.0.0.1 \
+            --mysql-port=3306 \
+            --mysql-user=sbtest \
+            --mysql-password=password \
+            --mysql-db=sbtest \
+            --tables=10 \
+            --table-size=100000 \
+            prepare
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+
+    - name: Run load for sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          sysbench /usr/share/sysbench/oltp_read_write.lua \
+            --mysql-host=127.0.0.1 \
+            --mysql-port=3306 \
+            --mysql-user=sbtest \
+            --mysql-password=password \
+            --mysql-db=sbtest \
+            --tables=10 \
+            --table-size=100000 \
+            --threads=16 \
+            --time=60 \
+            run
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
