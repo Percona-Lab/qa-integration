@@ -235,9 +235,11 @@
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         user: "root"
         command: >
+          /bin/sh -c "
           wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
           rpm -i epel-release.rpm &&
           microdnf install -y sysbench
+          "
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
     - name: Prepare sysbench inside of all percona server nodes
