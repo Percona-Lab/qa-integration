@@ -255,6 +255,21 @@
           FLUSH PRIVILEGES;
           "
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: setup_type != "gr"
+
+    - name: Prepare sysbench inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_1"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          SET GLOBAL super_read_only = OFF;
+          SET GLOBAL read_only = OFF;
+          CREATE DATABASE sbtest;
+          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
+          GRANT ALL PRIVILEGES ON sbtest.* TO 'sbtest'@'localhost';
+          FLUSH PRIVILEGES;
+          "
+      when: setup_type == "gr"
 
     - name: Prepare data for sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
