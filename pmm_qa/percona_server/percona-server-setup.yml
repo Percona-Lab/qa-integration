@@ -67,7 +67,7 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
-    - name: Start MySQL containers
+    - name: Start Percona Server containers
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
         image: "percona/percona-server:{{ ps_version }}"
@@ -85,6 +85,25 @@
           - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
           - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: setup_type == "gr"
+
+    - name: Start Percona Server containers
+      community.docker.docker_container:
+        name: "ps_pmm_{{ ps_version }}_{{ item }}"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: started
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+        ports:
+          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: setup_type != "gr"
 
     - name: Wait for MySQL to be available
       wait_for:
