@@ -8,8 +8,8 @@
     ps_version: "{{ lookup('env', 'PS_VERSION') | default('8.4', true) }}"
     cluster_name: "mysql_cluster"
     replication_user: "repl_user"
-    replication_password: "Repl123!"
-    root_password: "Root123!"
+    replication_password: "GRgrO9301RuF"
+    root_password: "GRgrO9301RuF"
     mysql_port: 33066
     mysql_listen_port: 3306
     group_seeds_port: 33061
@@ -67,7 +67,7 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
 
-    - name: Start Percona Server containers
+    - name: Start Percona Server containers with group replication
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
         image: "percona/percona-server:{{ ps_version }}"
@@ -247,7 +247,14 @@
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: setup_type == "gr"
 
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      when: setup_type != "gr"
 
     - name: Install sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -347,22 +354,3 @@
             --time=60 
             run
       loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
-#      when: setup_type != "gr"
-#
-#    - name: Run load for sysbench inside of first percona server nodes
-#      community.docker.docker_container_exec:
-#        container: "ps_pmm_{{ ps_version }}_1"
-#        command: >
-#          sysbench /usr/share/sysbench/oltp_read_write.lua
-#            --mysql-host=127.0.0.1
-#            --mysql-port=3306
-#            --mysql-user=sbtest
-#            --mysql-password=password
-#            --mysql-db=sbtest
-#            --tables=10
-#            --table-size=100000
-#            --threads=16
-#            --time=60
-#            run
-#      when: setup_type == "gr"
-#
