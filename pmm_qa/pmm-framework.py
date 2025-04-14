@@ -566,9 +566,6 @@ def mongo_sharding_setup(script_filename, args):
 def get_latest_psmdb_version(psmdb_version):
     if psmdb_version == "latest":
         return psmdb_version
-    # workaround till 8.0 is released.
-    elif psmdb_version in ("8.0", "8.0.1", "8.0.1-1"):
-        return "8.0.1-1"
 
     # Define the data to be sent in the POST request
     data = {
@@ -583,7 +580,7 @@ def get_latest_psmdb_version(psmdb_version):
 
     if version_number:
         # Sort the version numbers and extract the latest one
-        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
+        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[0]
 
         # Extract the full version number
         major_version = latest_version.split('-')[3].strip()  # Trim spaces
