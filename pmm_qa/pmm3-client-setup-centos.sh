@@ -41,6 +41,9 @@ if [ ! -z "$upgrade" ]; then
 fi
 
 port=8443
+if [[  "$pmm_server_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+  port=443
+fi
 
 microdnf install -y wget gnupg2
 wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
