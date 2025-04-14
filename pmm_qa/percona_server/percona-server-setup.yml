@@ -13,7 +13,7 @@
     mysql_port: 33066
     mysql_listen_port: 3306
     group_seeds_port: 34061
-    number_of_nodes: "{{ (lookup('env', 'SERVICES_COUNT') | default('3', true)) | int }}"
+    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('3', true)) | int }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
     server_id_start: 1
@@ -31,27 +31,27 @@
 
     - name: "Remove old data folders"
       shell: 'rm -fr {{ data_dir }}'
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Create data directories
       file:
         path: "{{ data_dir }}/node{{ item }}/data"
         state: directory
         mode: '0755'
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Generate my.cnf for each node
       template:
         src: my.cnf.j2
         dest: "{{ data_dir }}/node{{ item }}/my.cnf"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Create initialization script for each node
       template:
         src: init.sql.j2
         dest: "{{ data_dir }}/node{{ item }}/init.sql"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Remove old percona server containers
@@ -60,12 +60,12 @@
         image: "percona/percona-server:{{ ps_version }}"
         restart_policy: always
         state: absent
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
     - name: Recursively change ownership of a directory
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Start Percona Server containers with group replication
       community.docker.docker_container:
@@ -84,7 +84,7 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
           - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
           - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Start Percona Server containers
@@ -102,7 +102,7 @@
           - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr"
 
     - name: Wait for MySQL to be available
@@ -111,7 +111,7 @@
         port: "{{ mysql_port + item - 1 }}"
         delay: 10
         timeout: 300
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Reset configuration for all nodes
       community.docker.docker_container_exec:
@@ -122,7 +122,7 @@
           RESET REPLICA ALL;
           SET GLOBAL gtid_purged='';
           "
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
 
@@ -136,7 +136,7 @@
           SET GLOBAL log_slow_admin_statements=ON;
           SET GLOBAL log_slow_slave_statements=ON;
           "
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: query_source == "slowlog"
 
     - name: Bootstrap first node in the cluster
@@ -160,7 +160,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
-      loop: "{{ range(2, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
 
@@ -232,20 +232,20 @@
       include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr"
 
     - name: Install sysbench inside of all percona server nodes
@@ -258,7 +258,7 @@
           rpm -i epel-release.rpm &&
           microdnf install -y sysbench
           "
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -268,7 +268,7 @@
           SET GLOBAL super_read_only = OFF;
           SET GLOBAL read_only = OFF;
           "
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -282,7 +282,7 @@
           GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
           FLUSH PRIVILEGES;
           "
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr"
 
     - name: Prepare sysbench inside of all percona server nodes
@@ -313,7 +313,7 @@
             --table-size=100000 
             prepare
       when: setup_type != "gr"
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare data for sysbench inside of first percona server nodes
       community.docker.docker_container_exec:
@@ -345,4 +345,4 @@
             --threads=16 
             --time=60 
             run
-      loop: "{{ range(1, number_of_nodes | int + 1) | list }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
