@@ -20,7 +20,7 @@ report_host=ps_pmm_{{ps_version}}_{{ item }}
 plugin_load_add='group_replication.so'
 loose-group_replication_group_name='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
 loose-group_replication_local_address='ps_pmm_{{ps_version}}_{{ item }}:{{ group_seeds_port }}'
-loose-group_replication_group_seeds='{% for i in range(1, number_of_nodes | int + 1) %}ps_pmm_{{ps_version}}_{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}'
+loose-group_replication_group_seeds='{% for i in range(1, nodes_count | int + 1) %}ps_pmm_{{ps_version}}_{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}'
 loose-group_replication_communication_stack=XCOM
 
 # Group replication behavior
