@@ -578,9 +578,10 @@ def get_latest_psmdb_version(psmdb_version):
     # Extract the version number using regular expression
     version_number = [v.split('|')[0] for v in re.findall(r'value="([^"]*)"', response.text)]
 
+
     if version_number:
         # Sort the version numbers and extract the latest one
-        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[0]
+        latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
 
         # Extract the full version number
         major_version = latest_version.split('-')[3].strip()  # Trim spaces
