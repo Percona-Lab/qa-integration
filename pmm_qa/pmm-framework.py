@@ -576,7 +576,7 @@ def get_latest_psmdb_version(psmdb_version):
     response = requests.post('https://www.percona.com/products-api.php', data=data)
 
     # Extract the version number using regular expression
-    version_number = re.findall(r'value="([^"]*)"', response.text)
+    version_number = [v.split('|')[0] for v in re.findall(r'value="([^"]*)"', response.text)]
 
     if version_number:
         # Sort the version numbers and extract the latest one
