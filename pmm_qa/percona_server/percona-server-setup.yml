@@ -231,7 +231,7 @@
     - name: Set correct pmm server address
       shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
       register: pmm_server_ip
-      when: pmm_server_ip == 127.0.0.1
+      when: pmm_server_ip == "127.0.0.1"
 
     - name: Set correct pmm server address
       set_fact:
