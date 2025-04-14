@@ -236,6 +236,11 @@
     - name: Set correct pmm server address
       set_fact:
         pmm_server_ip: "{{ pmm_server_ip.stdout }}"
+      when: pmm_server_ip == "127.0.0.1"
+
+    - name: Print pmm server address
+      debug:
+        var: pmm_server_ip
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client_centos.yml
