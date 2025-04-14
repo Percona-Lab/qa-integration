@@ -234,12 +234,12 @@
 
     - name: Set correct pmm server address
       shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
-      register: pmm_server_ip
+      register: pmm_server_ip_output
       when: pmm_server_ip == "127.0.0.1"
 
     - name: Set correct pmm server address
       set_fact:
-        pmm_server_ip: "{{ pmm_server_ip.stdout }}"
+        pmm_server_ip: "{{ pmm_server_ip_output.stdout }}"
       when: pmm_server_ip == "127.0.0.1"
 
     - name: Print pmm server address
