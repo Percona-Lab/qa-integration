@@ -12,7 +12,7 @@
     root_password: "GRgrO9301RuF"
     mysql_port: 33066
     mysql_listen_port: 3306
-    group_seeds_port: 33061
+    group_seeds_port: 34061
     number_of_nodes: "{{ (lookup('env', 'SERVICES_COUNT') | default('3', true)) | int }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
