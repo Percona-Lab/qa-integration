@@ -39,7 +39,7 @@ database_configs = {
     "PS": {
         "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": "", "COUNT": 1}
+                           "TARBALL": "", "NODES_COUNT": 1}
     },
     "SSL_MYSQL": {
         "versions": ["5.7", "8.4", "8.0"],
@@ -190,7 +190,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         env_vars = {
             'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
             'SETUP_TYPE': setup_type_value,
-            'SERVICES_COUNT': get_value('COUNT', db_type, args, db_config),
+            'NODES_COUNT': get_value('NODES_COUNT ', db_type, args, db_config),
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
             'PS_VERSION': ps_version,
             'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -888,7 +888,6 @@ if __name__ == "__main__":
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
-    parser.add_argument("--verbosity", action='store_true', help='Set level of verbose information')
     args = parser.parse_args()
 
     # Parse arguments
