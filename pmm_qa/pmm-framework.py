@@ -101,7 +101,6 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
         suppress_env_files=True,
-        verbosity= 5,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -186,8 +185,6 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
-    print(f'Args are: {args}')
-    print(f'PS Version is: {ps_version_int}')
     if ps_version_int >= 84:
         # Define environment variables for playbook
         env_vars = {
@@ -195,7 +192,9 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'SETUP_TYPE': setup_type_value,
             'SERVICES_COUNT': get_value('COUNT', db_type, args, db_config),
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-            'PS_VERSION': ps_version
+            'PS_VERSION': ps_version,
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         }
 
         run_ansible_playbook('percona_server/percona-server-setup.yml', env_vars, args)
@@ -889,6 +888,7 @@ if __name__ == "__main__":
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
+    parser.add_argument("--verbosity", action='store_true', help='Set level of verbose information')
     args = parser.parse_args()
 
     # Parse arguments
