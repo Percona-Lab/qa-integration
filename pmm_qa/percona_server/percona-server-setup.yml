@@ -228,6 +228,10 @@
         msg: "{{ verification_msg | split('\n') }}"
       when: setup_type == "gr"
 
+    - name: Print pmm server address
+      debug:
+        var: pmm_server_ip
+
     - name: Set correct pmm server address
       shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
       register: pmm_server_ip
