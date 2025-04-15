@@ -13,10 +13,6 @@
         state: present
       when: ansible_facts['os_family'] == 'RedHat'
 
-    - name: Install jq on systems with microdnf (like minimal containers)
-      shell: microdnf install -y jq
-      when: "'microdnf' in ansible_facts.packages"
-
 - name: Verify that service with expected name is not connected to pmm server
   shell: |
     SERVICE_NAME="{{ container_name }}"
