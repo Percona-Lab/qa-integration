@@ -228,7 +228,7 @@
         msg: "{{ verification_msg | split('\n') }}"
       when: setup_type == "gr"
 
-    - name: Install and add pmm client.
+    - name: Install pmm client and connect to pmm server
       include_tasks: ../tasks/add_mysql_to_pmm_server.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
