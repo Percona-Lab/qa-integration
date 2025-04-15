@@ -13,12 +13,12 @@
     SERVICE_NAME="{{ container_name }}"
     echo "$SERVICE_NAME"
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep -q $SERVICE_NAME
-  register: service_exists
+  register: service_exists_old
   ignore_errors: yes
 
 - name: Display service name
   debug:
-    var: service_exists.stdout
+    var: service_exists_old.stdout
 
 - name: Create a new service name that is not connected to pmm server
   shell: |
@@ -26,19 +26,25 @@
     SERVICE_NAME="{{ container_name }}$RANDOM_ID"
     echo "$SERVICE_NAME"
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep -q $SERVICE_NAME
-  register: service_exists
+  register: service_exists_new
   ignore_errors: yes
   retries: 5
-  until: service_exists.rc == 1
-  when: service_exists.rc == 0
+  until: service_exists_new.rc == 1
+  when: service_exists_old.rc == 0
 
 - name: Display service name
   debug:
-    var: service_exists.stdout
+    var: service_exists_new.stdout
 
 - name: Set correct pmm server address
   set_fact:
-    service_name: "{{ service_exists.stdout }}"
+    service_name: "{{ service_exists_new.stdout }}"
+  when: service_exists_old.rc == 0
+
+- name: Set correct pmm server address
+  set_fact:
+    service_name: "{{ service_exists_old.stdout }}"
+  when: service_exists_new.rc == 0
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
