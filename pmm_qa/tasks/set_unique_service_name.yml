@@ -1,5 +1,21 @@
-- name: Install required software
-  shell: apt-get install -y jq
+- name: Install jq via appropriate package manager
+  become: true
+  block:
+    - name: Install jq on Debian/Ubuntu
+      apt:
+        name: jq
+        state: present
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: Install jq on RHEL/CentOS/Alma/Rocky
+      yum:
+        name: jq
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    - name: Install jq on systems with microdnf (like minimal containers)
+      shell: microdnf install -y jq
+      when: "'microdnf' in ansible_facts.packages"
 
 - name: Verify that service with expected name is not connected to pmm server
   shell: |
