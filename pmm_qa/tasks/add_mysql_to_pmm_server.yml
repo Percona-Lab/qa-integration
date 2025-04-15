@@ -38,13 +38,13 @@
 
 - name: Set correct service name in pmm server
   set_fact:
-    service_name: "{{ service_exists_new.stdout }}"
+    service_name: "{{ service_exists_old.stdout }}"
   when: service_exists_old.rc == 1
 
 - name: Set correct service name in pmm server
   set_fact:
-    service_name: "{{ service_exists_old.stdout }}"
-  when: service_exists_new is not defined
+    service_name: "{{ service_exists_new.stdout }}"
+  when: service_exists_new is defined
 
 - name: Add group replication service to pmm server
   community.docker.docker_container_exec:
