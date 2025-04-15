@@ -11,7 +11,8 @@
 - name: Verify that service with expected name is not connected to pmm server
   shell: |
     SERVICE_NAME="{{ container_name }}"
-    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
+    echo "$SERVICE_NAME"
+    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep -q $SERVICE_NAME
   register: service_exists
   ignore_errors: yes
 
@@ -23,7 +24,8 @@
   shell: |
     RANDOM_ID="_$(shuf -i 1-10000 -n 1)"
     SERVICE_NAME="{{ container_name }}$RANDOM_ID"
-    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
+    echo "$SERVICE_NAME"
+    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep -q $SERVICE_NAME
   register: service_exists
   ignore_errors: yes
   retries: 5
