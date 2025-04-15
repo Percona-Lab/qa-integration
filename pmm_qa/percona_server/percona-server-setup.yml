@@ -254,7 +254,7 @@
         user: "root"
         command: >
           /bin/sh -c "
-          wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
+          wget -O epel-release.rpm -nv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
           rpm -i epel-release.rpm &&
           microdnf install -y sysbench
           "
