@@ -10,11 +10,20 @@
 
 - name: Verify that service with expected name is not connected to pmm server
   shell: |
-    if [ {{ item }} -ge 2 ]; then
-      RANDOM_ID="_$(shuf -i 1-10000 -n 1)"
-    else
-      RANDOM_ID=""
-    fi
+    SERVICE_NAME="{{ container_name }}"
+    echo "Checking service: $SERVICE_NAME"
+    
+    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
+  register: service_exists
+  ignore_errors: yes
+
+- name: Display service name
+  debug:
+    var: service_exists.stdout
+
+- name: Create a new service name that is not connected to pmm server
+  shell: |
+    RANDOM_ID="_$(shuf -i 1-10000 -n 1)"
     
     SERVICE_NAME="{{ container_name }}$RANDOM_ID"
     echo "Checking service: $SERVICE_NAME"
@@ -24,11 +33,11 @@
   ignore_errors: yes
   retries: 5
   until: service_exists.rc == 1
-  loop: "{{ range(1, 5 + 1) | list }}"
+  when: service_exists.rc == 0
 
 - name: Display service name
   debug:
-    var: grep_result.stdout
+    var: service_exists.stdout
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
