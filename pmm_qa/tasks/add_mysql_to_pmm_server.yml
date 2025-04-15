@@ -1,7 +1,3 @@
-- name: Display container name
-  debug:
-    var: container_name
-
 - name: Install and add pmm client
   include_tasks: ./install_pmm_client_centos.yml
 
