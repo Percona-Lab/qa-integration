@@ -20,11 +20,11 @@
     echo "Checking service: $SERVICE_NAME"
     
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
-    register: service_exists
-    ignore_errors: yes
-    retries: 5
-    until: service_exists.rc != 0
-    loop: "{{ range(1, 5 + 1) | list }}"
+  register: service_exists
+  ignore_errors: yes
+  retries: 5
+  until: service_exists.rc != 0
+  loop: "{{ range(1, 5 + 1) | list }}"
 
 - name: Display service name
   debug:
