@@ -23,7 +23,7 @@
   register: service_exists
   ignore_errors: yes
   retries: 5
-  until: service_exists.rc != 0
+  until: service_exists.rc == 1
   loop: "{{ range(1, 5 + 1) | list }}"
 
 - name: Display service name
