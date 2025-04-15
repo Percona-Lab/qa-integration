@@ -1,0 +1,29 @@
+- name: Install and add pmm client.
+  include_tasks: ./install_pmm_client_centos.yml
+  vars:
+    container_name: container_name
+
+- name: Install required software
+  shell: apt-get install -y jq
+
+- name: Verify that service with expected name is not connected to pmm server
+  shell: |
+    if [ {{ item }} -ge 2 ]; then
+      RANDOM_ID="_$(shuf -i 1-10000 -n 1)"
+    else
+      RANDOM_ID=""
+    fi
+    
+    SERVICE_NAME="{{ container_name }}"
+    echo "Checking service: $SERVICE_NAME"
+    
+    curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
+    register: service_exists
+    ignore_errors: yes
+    retries: 5
+    until: service_exists.rc != 0
+    loop: "{{ range(1, 5 + 1) | list }}"
+
+- name: Display service name
+  debug:
+    var: grep_result.stdout
