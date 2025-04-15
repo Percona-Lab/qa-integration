@@ -39,7 +39,7 @@
 - name: Set correct service name in pmm server
   set_fact:
     service_name: "{{ service_exists_new.stdout }}"
-  when: service_exists_old.rc == 0
+  when: service_exists_old.rc == 1
 
 - name: Set correct service name in pmm server
   set_fact:
