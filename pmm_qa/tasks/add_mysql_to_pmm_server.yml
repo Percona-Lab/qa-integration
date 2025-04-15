@@ -16,7 +16,7 @@
       RANDOM_ID=""
     fi
     
-    SERVICE_NAME="{{ container_name }}"
+    SERVICE_NAME="{{ container_name }}$RANDOM_ID"
     echo "Checking service: $SERVICE_NAME"
     
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
