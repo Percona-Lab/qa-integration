@@ -11,8 +11,6 @@
 - name: Verify that service with expected name is not connected to pmm server
   shell: |
     SERVICE_NAME="{{ container_name }}"
-    echo "Checking service: $SERVICE_NAME"
-    
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
   register: service_exists
   ignore_errors: yes
@@ -24,10 +22,7 @@
 - name: Create a new service name that is not connected to pmm server
   shell: |
     RANDOM_ID="_$(shuf -i 1-10000 -n 1)"
-    
     SERVICE_NAME="{{ container_name }}$RANDOM_ID"
-    echo "Checking service: $SERVICE_NAME"
-    
     curl -u admin:{{ admin_password }} --location 'http://{{ pmm_server_ip}}/v1/management/services' | jq -r '.services[].service_name' | grep $SERVICE_NAME
   register: service_exists
   ignore_errors: yes
@@ -39,16 +34,18 @@
   debug:
     var: service_exists.stdout
 
+- name: Set correct pmm server address
+  set_fact:
+    service_name: "{{ service_exists.stdout }}"
+
 - name: Add service to pmm server
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
-    command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+    container: "{{ container_name }}"
+    command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication {{ service_name }} --debug 127.0.0.1:3306
   when: setup_type == "gr"
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
-    command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+    container: "{{ container_name }}"
+    command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev {{ service_name }} --debug 127.0.0.1:3306
   when: setup_type != "gr"
