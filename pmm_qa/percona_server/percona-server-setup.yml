@@ -149,25 +149,25 @@
           - "{{ data_dir }}/node1/init.sql:/docker-entrypoint-initdb.d/init.sql"
       when: setup_type == "replication"
 
-    - name: Start Percona Server slave containers with replication
-      community.docker.docker_container:
-        name: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
-        image: "percona/percona-server:{{ ps_version }}"
-        restart_policy: always
-        state: started
-        networks:
-          - name: "{{ network_name }}"
-        env:
-          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
-        ports:
-          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
-          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
-        volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-          - "{{ data_dir }}/node{{ item }}/slave.cnf:/etc/mysql/conf.d/slave.cnf"
-          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-      when: setup_type == "replication"
+#    - name: Start Percona Server slave containers with replication
+#      community.docker.docker_container:
+#        name: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+#        image: "percona/percona-server:{{ ps_version }}"
+#        restart_policy: always
+#        state: started
+#        networks:
+#          - name: "{{ network_name }}"
+#        env:
+#          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+#        ports:
+#          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+#          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
+#        volumes:
+#          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+#          - "{{ data_dir }}/node{{ item }}/slave.cnf:/etc/mysql/conf.d/slave.cnf"
+#          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#      when: setup_type == "replication"
 
 #    - name: Start Percona Server containers
 #      community.docker.docker_container:
