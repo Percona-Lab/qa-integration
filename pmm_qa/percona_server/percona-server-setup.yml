@@ -228,7 +228,7 @@
         container: "ps_pmm_replication_{{ ps_version }}_1"
         command: >
           mysql -uroot -p{{ root_password }} -e "
-          CREATE USER 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass';
+          CREATE USER 'repl'@'%' IDENTIFIED BY 'replpass';
           GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
           FLUSH PRIVILEGES;
 
