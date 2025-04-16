@@ -54,6 +54,19 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
+    - name: Generate master.cnf.j2 for replication
+      template:
+        src: master.cnf.j2
+        dest: "{{ data_dir }}/node_1/master.cnf.j2"
+      when: setup_type == "replication"
+
+    - name: Create slave.cnf for replication
+      template:
+        src: slave.cnf.j2
+        dest: "{{ data_dir }}/node{{ item }}/slave.cnf"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+      when: setup_type == "replication"
+
     - name: Remove old percona server containers
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -63,13 +76,33 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
+    - name: Remove old percona server containers
+      community.docker.docker_container:
+        name: "ps_pmm_gr_{{ ps_version }}_{{ item }}"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: absent
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      ignore_errors: yes
+      when: setup_type == "gr"
+
+    - name: Remove old percona server containers
+      community.docker.docker_container:
+        name: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: absent
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      ignore_errors: yes
+      when: setup_type == "replication"
+
     - name: Recursively change ownership of a directory
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Start Percona Server containers with group replication
       community.docker.docker_container:
-        name: "ps_pmm_{{ ps_version }}_{{ item }}"
+        name: "ps_pmm_gr_{{ ps_version }}_{{ item }}"
         image: "percona/percona-server:{{ ps_version }}"
         restart_policy: always
         state: started
@@ -87,6 +120,45 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
+    - name: Start Percona Server master container with replication
+      community.docker.docker_container:
+        name: "ps_pmm_replication_{{ ps_version }}_1"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: started
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+        ports:
+          - "{{ mysql_port }}:{{ mysql_listen_port }}"
+          - "{{ group_seeds_port }}:{{ group_seeds_port }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+          - "{{ data_dir }}/node{{ item }}/master.cnf:/etc/mysql/conf.d/master.cnf"
+          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      when: setup_type == "replication"
+
+    - name: Start Percona Server slave containers with replication
+      community.docker.docker_container:
+        name: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: started
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+        ports:
+          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+          - "{{ data_dir }}/node{{ item }}/slave.cnf:/etc/mysql/conf.d/slave.cnf"
+          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+      when: setup_type == "replication"
+
     - name: Start Percona Server containers
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -103,7 +175,7 @@
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Wait for MySQL to be available
       wait_for:
@@ -151,6 +223,21 @@
       retries: 5
       delay: 10
 
+    - name: Bootstrap first node in the replication cluster
+      community.docker.docker_container_exec:
+        container: "ps_pmm_replication_{{ ps_version }}_1"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          CREATE USER 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'replpass';
+          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+          FLUSH PRIVILEGES;
+
+          FLUSH TABLES WITH READ LOCK;
+          SHOW MASTER STATUS;"
+      when: setup_type == "replication"
+      retries: 5
+      delay: 10
+
     - name: Wait 5 seconds for bootstrap to complete
       pause:
         seconds: 5
@@ -163,6 +250,24 @@
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
+
+    - name: Start replication on other nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+        command: >
+          mysql -uroot -p{{ root_password }} -e "
+          CHANGE MASTER TO
+          MASTER_HOST='ps_pmm_replication_{{ ps_version }}_1',
+          MASTER_USER='repl',
+          MASTER_PASSWORD='replpass',
+          MASTER_LOG_FILE='mysql-bin.000001',
+          MASTER_LOG_POS=154;
+
+          START SLAVE;
+          SHOW SLAVE STATUS\G"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+      ignore_errors: yes
+      when: setup_type == "replication"
 
     - name: Wait 10 seconds for the other nodes to join
       pause:
