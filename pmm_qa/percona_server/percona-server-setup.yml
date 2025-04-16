@@ -229,8 +229,9 @@
         command: >
           mysql -uroot -p{{ root_password }} -e "
           CREATE USER 'repl'@'localhost' IDENTIFIED BY 'replpass';
+          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'localhost';
           CREATE USER 'repl'@'127.0.0.1' IDENTIFIED BY 'replpass';
-          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'127.0.0.1';
           FLUSH PRIVILEGES;
 
           FLUSH TABLES WITH READ LOCK;
