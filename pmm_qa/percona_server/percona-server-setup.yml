@@ -211,244 +211,245 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: query_source == "slowlog"
 
-    - name: Bootstrap first node in the cluster
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          SET GLOBAL group_replication_bootstrap_group=ON;
-          START GROUP_REPLICATION;
-          SET GLOBAL group_replication_bootstrap_group=OFF;"
-      when: setup_type == "gr"
-      retries: 5
-      delay: 10
-
-    - name: Bootstrap first node in the replication cluster
-      community.docker.docker_container_exec:
-        container: "ps_pmm_replication_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          CREATE USER 'repl'@'%' IDENTIFIED BY 'replpass';
-          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
-          FLUSH PRIVILEGES;
-
-          FLUSH TABLES WITH READ LOCK;
-          SHOW MASTER STATUS;
-          "
-      when: setup_type == "replication"
-      retries: 5
-      delay: 10
-
-    - name: Wait 5 seconds for bootstrap to complete
-      pause:
-        seconds: 5
-      when: setup_type == "gr"
-
-    - name: Start group replication on other nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-      ignore_errors: yes
-      when: setup_type == "gr"
-
-    - name: Start replication on other nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          CHANGE MASTER TO
-          MASTER_HOST='ps_pmm_replication_{{ ps_version }}_1',
-          MASTER_USER='repl',
-          MASTER_PASSWORD='replpass',
-          MASTER_LOG_FILE='mysql-bin.000001',
-          MASTER_LOG_POS=154;
-
-          START SLAVE;
-          SHOW SLAVE STATUS\G"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-      ignore_errors: yes
-      when: setup_type == "replication"
-
-    - name: Wait 10 seconds for the other nodes to join
-      pause:
-        seconds: 10
-      when: setup_type == "gr"
-
-    - name: Create and seed a test database on primary
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password}} -e "
-          CREATE DATABASE testdb;
-          USE testdb;
-          CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
-          INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
-      when: setup_type == "gr"
-
-    - name: Check replication status on first node
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
-      register: replication_status
-      when: setup_type == "gr"
-
-    - name: Display replication status
-      debug:
-        var: replication_status.stdout
-      when: setup_type == "gr"
-
-    - name: Check replication group members count
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
-      register: member_count
-      when: setup_type == "gr"
-
-    - name: Display member count
-      debug:
-        var: member_count.stdout
-      when: setup_type == "gr"
-
-    - name: Set verification instructions
-      set_fact:
-        verification_msg: |
-          MySQL Cluster setup complete!
-
-          To verify replication is working:
-          1. Connect to the first node:
-             docker exec -it ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }}
-
-          2. Insert data in the test database:
-             USE testdb;
-             INSERT INTO testdb VALUES (100, 'Test replication');
-
-          3. Connect to other nodes and verify data is replicated:
-             docker exec -it ps_pmm_{{ ps_version }}_2 mysql -uroot -p{{ root_password }}
-             USE testdb;
-             SELECT * FROM testdb;
-      when: setup_type == "gr"
-
-    - name: Display verification instructions
-      debug:
-        msg: "{{ verification_msg | split('\n') }}"
-      when: setup_type == "gr"
-
-    - name: Install and add pmm client.
-      include_tasks: ../tasks/install_pmm_client_centos.yml
-      vars:
-        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "gr"
-
-    - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
-
-    - name: Install sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        user: "root"
-        command: >
-          /bin/sh -c "
-          wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
-          rpm -i epel-release.rpm &&
-          microdnf install -y sysbench
-          "
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Prepare sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          SET GLOBAL super_read_only = OFF;
-          SET GLOBAL read_only = OFF;
-          "
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Prepare sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          CREATE DATABASE sbtest;
-          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
-          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
-          CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';
-          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
-          FLUSH PRIVILEGES;
-          "
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
-
-    - name: Prepare sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          CREATE DATABASE sbtest;
-          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
-          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
-          CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';
-          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
-          FLUSH PRIVILEGES;
-          "
-      when: setup_type == "gr"
-
-    - name: Prepare data for sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            prepare
-      when: setup_type != "gr"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Prepare data for sysbench inside of first percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            prepare
-      when: setup_type == "gr"
-
-    - name: Run load for sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            --threads=16 
-            --time=60 
-            run
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#    - name: Bootstrap first node in the cluster
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          SET GLOBAL group_replication_bootstrap_group=ON;
+#          START GROUP_REPLICATION;
+#          SET GLOBAL group_replication_bootstrap_group=OFF;"
+#      when: setup_type == "gr"
+#      retries: 5
+#      delay: 10
+#
+#    - name: Bootstrap first node in the replication cluster
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_replication_{{ ps_version }}_1"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          CREATE USER 'repl'@'%' IDENTIFIED BY 'replpass';
+#          GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+#          FLUSH PRIVILEGES;
+#
+#          FLUSH TABLES WITH READ LOCK;
+#          SHOW MASTER STATUS;
+#          "
+#      when: setup_type == "replication"
+#      retries: 5
+#      delay: 10
+#
+#    - name: Wait 5 seconds for bootstrap to complete
+#      pause:
+#        seconds: 5
+#      when: setup_type == "gr"
+#
+#    - name: Start group replication on other nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#      ignore_errors: yes
+#      when: setup_type == "gr"
+#
+#    - name: Start replication on other nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          CHANGE MASTER TO
+#          MASTER_HOST='ps_pmm_replication_{{ ps_version }}_1',
+#          MASTER_USER='repl',
+#          MASTER_PASSWORD='replpass',
+#          MASTER_LOG_FILE='mysql-bin.000001',
+#          MASTER_LOG_POS=154;
+#
+#          START SLAVE;
+#          SHOW SLAVE STATUS\G"
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#      ignore_errors: yes
+#      when: setup_type == "replication"
+#
+#    - name: Wait 10 seconds for the other nodes to join
+#      pause:
+#        seconds: 10
+#      when: setup_type == "gr"
+#
+#    - name: Create and seed a test database on primary
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: >
+#          mysql -uroot -p{{ root_password}} -e "
+#          CREATE DATABASE testdb;
+#          USE testdb;
+#          CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
+#          INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
+#      when: setup_type == "gr"
+#
+#    - name: Check replication status on first node
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
+#      register: replication_status
+#      when: setup_type == "gr"
+#
+#    - name: Display replication status
+#      debug:
+#        var: replication_status.stdout
+#      when: setup_type == "gr"
+#
+#    - name: Check replication group members count
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
+#      register: member_count
+#      when: setup_type == "gr"
+#
+#    - name: Display member count
+#      debug:
+#        var: member_count.stdout
+#      when: setup_type == "gr"
+#
+#    - name: Set verification instructions
+#      set_fact:
+#        verification_msg: |
+#          MySQL Cluster setup complete!
+#
+#          To verify replication is working:
+#          1. Connect to the first node:
+#             docker exec -it ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }}
+#
+#          2. Insert data in the test database:
+#             USE testdb;
+#             INSERT INTO testdb VALUES (100, 'Test replication');
+#
+#          3. Connect to other nodes and verify data is replicated:
+#             docker exec -it ps_pmm_{{ ps_version }}_2 mysql -uroot -p{{ root_password }}
+#             USE testdb;
+#             SELECT * FROM testdb;
+#      when: setup_type == "gr"
+#
+#    - name: Display verification instructions
+#      debug:
+#        msg: "{{ verification_msg | split('\n') }}"
+#      when: setup_type == "gr"
+#
+#    - name: Install and add pmm client.
+#      include_tasks: ../tasks/install_pmm_client_centos.yml
+#      vars:
+#        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#    - name: Add service to pmm server
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type == "gr"
+#
+#    - name: Add service to pmm server
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type != "gr"
+#
+#    - name: Install sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        user: "root"
+#        command: >
+#          /bin/sh -c "
+#          wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
+#          rpm -i epel-release.rpm &&
+#          microdnf install -y sysbench
+#          "
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#    - name: Prepare sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          SET GLOBAL super_read_only = OFF;
+#          SET GLOBAL read_only = OFF;
+#          "
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#    - name: Prepare sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          CREATE DATABASE sbtest;
+#          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
+#          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
+#          CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';
+#          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
+#          FLUSH PRIVILEGES;
+#          "
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type != "gr"
+#
+#    - name: Prepare sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: >
+#          mysql -uroot -p{{ root_password }} -e "
+#          CREATE DATABASE sbtest;
+#          CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';
+#          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost';
+#          CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';
+#          GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
+#          FLUSH PRIVILEGES;
+#          "
+#      when: setup_type == "gr"
+#
+#    - name: Prepare data for sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: >
+#          sysbench /usr/share/sysbench/oltp_read_write.lua
+#            --mysql-host=127.0.0.1
+#            --mysql-port=3306
+#            --mysql-user=sbtest
+#            --mysql-password=password
+#            --mysql-db=sbtest
+#            --tables=10
+#            --table-size=100000
+#            prepare
+#      when: setup_type != "gr"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#    - name: Prepare data for sysbench inside of first percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_1"
+#        command: >
+#          sysbench /usr/share/sysbench/oltp_read_write.lua
+#            --mysql-host=127.0.0.1
+#            --mysql-port=3306
+#            --mysql-user=sbtest
+#            --mysql-password=password
+#            --mysql-db=sbtest
+#            --tables=10
+#            --table-size=100000
+#            prepare
+#      when: setup_type == "gr"
+#
+#    - name: Run load for sysbench inside of all percona server nodes
+#      community.docker.docker_container_exec:
+#        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+#        command: >
+#          sysbench /usr/share/sysbench/oltp_read_write.lua
+#            --mysql-host=127.0.0.1
+#            --mysql-port=3306
+#            --mysql-user=sbtest
+#            --mysql-password=password
+#            --mysql-db=sbtest
+#            --tables=10
+#            --table-size=100000
+#            --threads=16
+#            --time=60
+#            run
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
