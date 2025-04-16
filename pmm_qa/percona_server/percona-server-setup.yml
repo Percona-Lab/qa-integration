@@ -134,9 +134,9 @@
           - "{{ mysql_port }}:{{ mysql_listen_port }}"
           - "{{ group_seeds_port }}:{{ group_seeds_port }}"
         volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-          - "{{ data_dir }}/node{{ item }}/master.cnf:/etc/mysql/conf.d/master.cnf"
-          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+          - "{{ data_dir }}/node1/data:/var/lib/mysql"
+          - "{{ data_dir }}/node1/master.cnf:/etc/mysql/conf.d/master.cnf"
+          - "{{ data_dir }}/node1/init.sql:/docker-entrypoint-initdb.d/init.sql"
       when: setup_type == "replication"
 
     - name: Start Percona Server slave containers with replication
