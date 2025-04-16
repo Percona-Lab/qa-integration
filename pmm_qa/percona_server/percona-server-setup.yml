@@ -56,14 +56,14 @@
 
     - name: Generate master.cnf.j2 for replication
       template:
-        src: master.cnf.j2
-        dest: "{{ data_dir }}/replication/node_1/master.cnf.j2"
+        src: replication/master.cnf.j2
+        dest: "{{ data_dir }}/node_1/master.cnf.j2"
       when: setup_type == "replication"
 
     - name: Create slave.cnf for replication
       template:
-        src: slave.cnf.j2
-        dest: "{{ data_dir }}/replication/node{{ item }}/slave.cnf"
+        src: replication/slave.cnf.j2
+        dest: "{{ data_dir }}/node{{ item }}/slave.cnf"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
       when: setup_type == "replication"
 
