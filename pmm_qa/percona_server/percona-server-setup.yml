@@ -76,7 +76,7 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
-    - name: Remove old percona server containers
+    - name: Remove old percona server group replication containers
       community.docker.docker_container:
         name: "ps_pmm_gr_{{ ps_version }}_{{ item }}"
         image: "percona/percona-server:{{ ps_version }}"
@@ -85,6 +85,16 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       ignore_errors: yes
       when: setup_type == "gr"
+
+    - name: Remove old percona server replication containers
+      community.docker.docker_container:
+        name: "ps_pmm_replication_{{ ps_version }}_{{ item }}"
+        image: "percona/percona-server:{{ ps_version }}"
+        restart_policy: always
+        state: absent
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      ignore_errors: yes
+      when: setup_type == "replication"
 
     - name: Remove old percona server containers
       community.docker.docker_container:
