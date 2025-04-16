@@ -235,7 +235,8 @@
           FLUSH PRIVILEGES;
 
           FLUSH TABLES WITH READ LOCK;
-          SHOW MASTER STATUS;"
+          SHOW MASTER STATUS;
+          "
       when: setup_type == "replication"
       retries: 5
       delay: 10
