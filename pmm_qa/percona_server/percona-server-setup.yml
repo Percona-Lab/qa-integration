@@ -107,7 +107,7 @@
       when: setup_type == "replication"
 
     - name: Recursively change ownership of a directory
-      shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
+      shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Start Percona Server containers with group replication
