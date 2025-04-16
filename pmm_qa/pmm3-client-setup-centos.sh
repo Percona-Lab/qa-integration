@@ -112,7 +112,7 @@ if [[ -z "$upgrade" ]]; then
     sleep 10
 else    
    pid=`ps -ef | grep pmm-agent | grep -v grep | awk -F ' ' '{print $2}'`
-   if [[ ! -z "$pid" ]]; then
+   if [ -n "$pid" ]; then
        kill -9 $pid
        echo "Killing and restarting pmm agent...."
        pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml >> pmm-agent.log 2>&1 &

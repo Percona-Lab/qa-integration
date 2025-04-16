@@ -228,25 +228,13 @@
         msg: "{{ verification_msg | split('\n') }}"
       when: setup_type == "gr"
 
-    - name: Install and add pmm client.
-      include_tasks: ../tasks/install_pmm_client_centos.yml
+    - name: Install pmm client and connect to pmm server
+      include_tasks: ../tasks/add_mysql_to_pmm_server.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "gr"
 
-    - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
 
     - name: Install sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -254,7 +242,7 @@
         user: "root"
         command: >
           /bin/sh -c "
-          wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
+          wget -O epel-release.rpm -nv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
           rpm -i epel-release.rpm &&
           microdnf install -y sysbench
           "

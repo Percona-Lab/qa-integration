@@ -1,4 +1,4 @@
-- name: Set correct pmm server address
+- name: Get PMM server address
   shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
   register: pmm_server_ip_output
   when: pmm_server_ip == "127.0.0.1"
