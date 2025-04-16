@@ -57,7 +57,7 @@
     - name: Generate master.cnf.j2 for replication
       template:
         src: replication/master.cnf.j2
-        dest: "{{ data_dir }}/node1/master.cnf.j2"
+        dest: "{{ data_dir }}/node1/master.cnf"
       when: setup_type == "replication"
 
     - name: Create slave.cnf for replication
