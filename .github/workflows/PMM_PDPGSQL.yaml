@@ -77,7 +77,7 @@ jobs:
       working-directory: pmm-qa/pmm-tests
     
     - name: Checkout the repo and install node packages
-      run: git clone https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
+      run: git clone -b PMM-7-fix-playwright-tests https://github.com/percona/pmm-ui-tests.git && cd pmm-ui-tests && npm ci
 
     - name: Install npx dependencies
       run: npx playwright install --with-deps && npx codeceptjs def pr.codecept.js
