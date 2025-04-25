@@ -92,10 +92,12 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     playbook_path = script_dir + "/" + playbook_filename
     verbosity_level = 1
 
-    print(f"Run ansible playbook args are: {args.verbosity_level}")
+
 
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
+
+    print(f"Run ansible playbook args are: {verbosity_level}")
 
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
