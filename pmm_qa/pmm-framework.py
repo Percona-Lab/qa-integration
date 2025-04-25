@@ -900,7 +900,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
     args = parser.parse_args()
 
-    if not args.verbosity_level.isnumeric():
+    if args.verbosity_level is not None and not args.verbosity_level.isnumeric():
         print(f"Option {args.verbosity_level} is valid verbosity level option, please provide number 1-5")
         exit(1)
 
