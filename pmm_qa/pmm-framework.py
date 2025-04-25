@@ -101,6 +101,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
         suppress_env_files=True,
+        verbosity=5,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -888,7 +889,10 @@ if __name__ == "__main__":
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
+    parser.add_argument("--verbosity-level", action='store_true', help='Display verbose information level')
     args = parser.parse_args()
+
+    print(f"Args are: {args}")
 
     # Parse arguments
     try:
