@@ -27,7 +27,9 @@
     - name: Chance to correct nodes count for group replication
       set_fact:
         nodes_count: 3
-      when: nodes_count | int < 3 and setup_type = "gr"
+      when:
+        - nodes_count | int < 3
+        - setup_type = "gr"
 
     - name: Create Docker network
       community.docker.docker_network:
