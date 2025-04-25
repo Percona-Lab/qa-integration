@@ -90,8 +90,12 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_path = os.path.abspath(sys.argv[0])
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
+    verbosity_level = 1
 
     print(f"Run ansible playbook args are: {args.verbosity_level}")
+
+    if args.verbosity_level is not None:
+        verbosity_level = int(args.verbosity_level)
 
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
@@ -103,7 +107,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
         cmdline='-l localhost, --connection=local',
         envvars=env_vars,
         suppress_env_files=True,
-        verbosity=int(args.verbosity_level),
+        verbosity=verbosity_level,
     )
 
     print(f'{playbook_filename} playbook execution {r.status}')
@@ -894,10 +898,8 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
     args = parser.parse_args()
 
-    print(f"Args are: {args.verbosity_level}")
-
     if not args.verbosity_level.isnumeric():
-        print(f"Option {args.verbosity_level} is valid verbosity level option, please provide number 0-5")
+        print(f"Option {args.verbosity_level} is valid verbosity level option, please provide number 1-5")
         exit(1)
 
     # Parse arguments
