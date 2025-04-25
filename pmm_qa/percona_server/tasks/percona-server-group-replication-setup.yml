@@ -1,3 +1,8 @@
+- name: Chance to correct nodes count for group replication
+  set_fact:
+    nodes_count: 3
+  when: nodes_count < 3
+
 - name: Generate my.cnf for each node
   template:
     src: my.cnf.j2
