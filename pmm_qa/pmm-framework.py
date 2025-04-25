@@ -889,7 +889,7 @@ if __name__ == "__main__":
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
-    parser.add_argument("--verbosity-level", action='store_true', help='Display verbose information level')
+    parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
     args = parser.parse_args()
 
     print(f"Args are: {args}")
