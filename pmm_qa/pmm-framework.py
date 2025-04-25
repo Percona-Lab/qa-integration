@@ -91,7 +91,7 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
 
-    print(f"Run ansible playbook args are: {args}")
+    print(f"Run ansible playbook args are: {args.verbosity_level}")
 
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
@@ -894,7 +894,7 @@ if __name__ == "__main__":
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
     args = parser.parse_args()
 
-    print(f"Args are: {args}")
+    print(f"Args are: {args.verbosity_level}")
 
     # Parse arguments
     try:
