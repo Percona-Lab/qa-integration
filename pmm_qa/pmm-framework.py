@@ -896,7 +896,7 @@ if __name__ == "__main__":
 
     print(f"Args are: {args.verbosity_level}")
 
-    if not args.verbosity_level.isnumberic():
+    if not args.verbosity_level.isnumeric():
         print(f"Option {args.verbosity_level} is valid verbosity level option, please provide number 0-5")
         exit(1)
 
