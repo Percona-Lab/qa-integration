@@ -91,6 +91,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
 
+    print(f"Run ansible playbook args are: {args}")
+
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
 
