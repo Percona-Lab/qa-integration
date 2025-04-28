@@ -145,7 +145,7 @@
           FLUSH PRIVILEGES;
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr" nad setup_type != "replication"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
