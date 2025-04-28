@@ -108,9 +108,8 @@
         - name: Loop through percona servers
           debug:
             msg: "Percona Server with name: ps_pmm_{{ ps_version }}_{{ item }} already connected to pmm server"
-            loop: "{{ range(1, nodes_count | int + 1) | list }}"
-            when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
-
+          loop: "{{ range(1, nodes_count | int + 1) | list }}"
+          when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
 #random_service_name_value
 
     - name: Add service to pmm server
