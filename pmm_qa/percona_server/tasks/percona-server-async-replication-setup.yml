@@ -28,6 +28,14 @@
       - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Wait for MySQL to be available
+  wait_for:
+    host: localhost
+    port: "{{ mysql_port + item - 1 }}"
+    delay: 10
+    timeout: 300
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Reset configuration for all nodes
   community.docker.docker_container_exec:
     container: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -36,7 +44,7 @@
       RESET BINARY LOGS AND GTIDS;
       RESET REPLICA ALL;
       "
-  loop: "{{ range(1, nodes_count + 1) | list }}"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
   ignore_errors: yes
 
 - name: Get primary ps_pmm_{{ ps_version }}_1 binary log status
@@ -69,7 +77,7 @@
       GET_SOURCE_PUBLIC_KEY=1;
       START REPLICA;
       "
-  loop: "{{ range(2, nodes_count + 1) | list }}"
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Create and seed a test database on primary
   community.docker.docker_container_exec:
@@ -86,13 +94,13 @@
     container: "ps_pmm_{{ ps_version }}_{{ item }}"
     command: mysql -uroot -p{{ root_password }} -e "SHOW REPLICA STATUS\G"
   register: replication_status
-  loop: "{{ range(2, nodes_count + 1) | list }}"
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
   changed_when: false
 
 - name: Display replication status for each replica
   debug:
     msg: "{{ replication_status.results[item - 2].stdout_lines }}"
-  loop: "{{ range(2, nodes_count + 1) | list }}"
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Set verification instructions
   set_fact:
