@@ -22,7 +22,7 @@ disabled_storage_engines="MyISAM,BLACKHOLE,FEDERATED,ARCHIVE,MEMORY"
 lower_case_table_names=2
 
 # MySQL 8.4 compatibility settings
-report_host={{ containter_prefix }}{{ item }}
+report_host=ps_pmm_{{ ps_version }}_{{ item }}
 
 # Replica configuration - applies to all nodes except primary (they'll be able to become replicas)
 {% if item != 1 %}
@@ -33,7 +33,7 @@ replica_preserve_commit_order=1
 {% endif %}
 
 # Crash-safe replication settings
-relay-log={{ containter_prefix }}{{ item }}-relay-bin
+relay-log=ps_pmm_{{ ps_version }}_{{ item }}-relay-bin
 relay_log_recovery=ON
 relay_log_purge=ON
 
