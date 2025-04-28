@@ -22,6 +22,16 @@
   debug:
     msg: "{{ pmm_server_ip }} is pmm server IP"
 
+- name: Set correct pmm server port
+  set_fact:
+    pmm_server_port: 80
+  when: pmm_server_ip is ansible.utils.ipv4
+
+- name: Set correct pmm server port
+  set_fact:
+    pmm_server_port: 8080
+  when: pmm_server_ip is not ansible.utils.ipv4
+
 - name: Detect OS inside the container
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
@@ -145,7 +155,7 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:${port} --server-insecure-tls --metrics-mode=${metrics_mode} --server-username=admin --server-password={{ admin_password }}
+    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:${port} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }}
   when: metrics_mode is defined
 
 - name: Connect pmm client to pmm server using metrics mode
