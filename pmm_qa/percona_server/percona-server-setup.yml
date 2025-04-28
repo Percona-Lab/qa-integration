@@ -22,8 +22,19 @@
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('perfschema', true) }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
+    random_service_name_value: ""
 
   tasks:
+    - name: Chance to correct nodes count for group replication
+      set_fact:
+        nodes_count: 3
+      when: nodes_count | int < 3 and setup_type == "gr"
+
+    - name: Chance to correct nodes count for async replication
+      set_fact:
+        nodes_count: 2
+      when: nodes_count | int < 2 and setup_type == "replication"
+
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
@@ -40,20 +51,6 @@
         mode: '0755'
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Generate my.cnf for each node
-      template:
-        src: my.cnf.j2
-        dest: "{{ data_dir }}/node{{ item }}/my.cnf"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "gr"
-
-    - name: Create initialization script for each node
-      template:
-        src: init.sql.j2
-        dest: "{{ data_dir }}/node{{ item }}/init.sql"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "gr"
-
     - name: Remove old percona server containers
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -67,64 +64,17 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Start Percona Server containers with group replication
-      community.docker.docker_container:
-        name: "ps_pmm_{{ ps_version }}_{{ item }}"
-        image: "percona/percona-server:{{ ps_version }}"
-        restart_policy: always
-        state: started
-        networks:
-          - name: "{{ network_name }}"
-        env:
-          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
-        ports:
-          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
-          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
-        volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-          - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
-          - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+    - name: Setup Percona Server group replication
+      include_tasks: ./tasks/percona-server-group-replication-setup.yml
       when: setup_type == "gr"
 
-    - name: Start Percona Server containers
-      community.docker.docker_container:
-        name: "ps_pmm_{{ ps_version }}_{{ item }}"
-        image: "percona/percona-server:{{ ps_version }}"
-        restart_policy: always
-        state: started
-        networks:
-          - name: "{{ network_name }}"
-        env:
-          MYSQL_ROOT_PASSWORD: "{{ root_password }}"
-        ports:
-          - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
-          - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
-        volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
+    - name: Setup Percona Server with async replication
+      include_tasks: ./tasks/percona-server-async-replication-setup.yml
+      when: setup_type == "replication"
 
-    - name: Wait for MySQL to be available
-      wait_for:
-        host: localhost
-        port: "{{ mysql_port + item - 1 }}"
-        delay: 10
-        timeout: 300
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Reset configuration for all nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          RESET BINARY LOGS AND GTIDS;
-          RESET REPLICA ALL;
-          SET GLOBAL gtid_purged='';
-          "
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      ignore_errors: yes
-      when: setup_type == "gr"
+    - name: Setup Percona Server
+      include_tasks: ./tasks/percona-server-setup.yml
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
@@ -139,102 +89,48 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: query_source == "slowlog"
 
-    - name: Bootstrap first node in the cluster
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          SET GLOBAL group_replication_bootstrap_group=ON;
-          START GROUP_REPLICATION;
-          SET GLOBAL group_replication_bootstrap_group=OFF;"
-      when: setup_type == "gr"
-      retries: 5
-      delay: 10
-
-    - name: Wait 5 seconds for bootstrap to complete
-      pause:
-        seconds: 5
-      when: setup_type == "gr"
-
-    - name: Start group replication on other nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-      ignore_errors: yes
-      when: setup_type == "gr"
-
-    - name: Wait 10 seconds for the other nodes to join
-      pause:
-        seconds: 10
-      when: setup_type == "gr"
-
-    - name: Create and seed a test database on primary
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          mysql -uroot -p{{ root_password}} -e "
-          CREATE DATABASE testdb;
-          USE testdb;
-          CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
-          INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
-      when: setup_type == "gr"
-
-    - name: Check replication status on first node
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
-      register: replication_status
-      when: setup_type == "gr"
-
-    - name: Display replication status
-      debug:
-        var: replication_status.stdout
-      when: setup_type == "gr"
-
-    - name: Check replication group members count
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
-      register: member_count
-      when: setup_type == "gr"
-
-    - name: Display member count
-      debug:
-        var: member_count.stdout
-      when: setup_type == "gr"
-
-    - name: Set verification instructions
-      set_fact:
-        verification_msg: |
-          MySQL Cluster setup complete!
-
-          To verify replication is working:
-          1. Connect to the first node:
-             docker exec -it ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }}
-
-          2. Insert data in the test database:
-             USE testdb;
-             INSERT INTO testdb VALUES (100, 'Test replication');
-
-          3. Connect to other nodes and verify data is replicated:
-             docker exec -it ps_pmm_{{ ps_version }}_2 mysql -uroot -p{{ root_password }}
-             USE testdb;
-             SELECT * FROM testdb;
-      when: setup_type == "gr"
-
-    - name: Display verification instructions
-      debug:
-        msg: "{{ verification_msg | split('\n') }}"
-      when: setup_type == "gr"
-
-    - name: Install pmm client and connect to pmm server
-      include_tasks: ../tasks/add_mysql_to_pmm_server.yml
+    - name: Install and add pmm client.
+      include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+    - name: Get already connected services to pmm server
+      shell: curl --location --insecure -u"admin:admin" -s --request GET "http://172.105.74.90/v1/management/services" | jq -r '.services[].service_name'
+      register: pmm_server_services
 
+    - name: Display already connected services to pmm server
+      debug:
+        msg: "{{ pmm_server_services.stdout | split('\n') }}"
+
+    - name: Find out if service is already connected to pmm server
+      block:
+        - name: Loop through percona servers
+          set_fact:
+            random_service_name_value: "_{{ 9999 | random + 1 }}"
+          loop: "{{ range(1, nodes_count | int + 1) | list }}"
+          when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type == "gr"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type == "replication"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Install sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -242,7 +138,7 @@
         user: "root"
         command: >
           /bin/sh -c "
-          wget -O epel-release.rpm -nv https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
+          wget -O epel-release.rpm --progress=dot:giga https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm &&
           rpm -i epel-release.rpm &&
           microdnf install -y sysbench
           "
@@ -271,7 +167,7 @@
           FLUSH PRIVILEGES;
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -285,7 +181,7 @@
           GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
           FLUSH PRIVILEGES;
           "
-      when: setup_type == "gr"
+      when: setup_type == "gr" or setup_type == "replication"
 
     - name: Prepare data for sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -300,7 +196,7 @@
             --tables=10 
             --table-size=100000 
             prepare
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare data for sysbench inside of first percona server nodes
@@ -316,7 +212,7 @@
             --tables=10 
             --table-size=100000 
             prepare
-      when: setup_type == "gr"
+      when: setup_type == "gr" or setup_type == "replication"
 
     - name: Run load for sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
