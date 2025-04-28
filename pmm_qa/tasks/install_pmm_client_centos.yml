@@ -149,4 +149,4 @@
 - name: Connect pmm client to pmm server using metrics mode
   user: "root"
   command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:${port} --server-insecure-tls --server-username=admin --server-password={{ admin_password }}
-  when: metrics_mode is not defined
+  when: metrics_mode is undefined
