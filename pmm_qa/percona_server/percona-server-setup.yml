@@ -98,7 +98,8 @@
     - name: Get already connected services to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_1"
-        command: curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}/v1/management/services" | jq -r '.services[].service_name'
+        command: >
+          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:8080/v1/management/services" | jq -r ".services[].service_name"'
       register: pmm_server_services
 
     - name: Display already connected services to pmm server
