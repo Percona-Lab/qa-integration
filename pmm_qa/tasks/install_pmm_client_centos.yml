@@ -28,13 +28,37 @@
     user: "root"
     command: bash -x /pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 
-- name: Install dependencies
-  package:
-    name:
-      - wget
-      - gnupg2
-      - jq
-    state: present
+- name: Detect OS inside the container
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: cat /etc/os-release
+  register: container_os_info
+
+- name: Set distro family (debian/rhel)
+  set_fact:
+    distro_family: >-
+      {% if 'debian' in container_os_info.stdout | lower %}
+        debian
+      {% elif 'rhel' in container_os_info.stdout | lower or 'centos' in container_os_info.stdout | lower or 'fedora' in container_os_info.stdout | lower %}
+        rhel
+      {% else %}
+        unknown
+      {% endif %}
+
+- name: Install wget inside docker container
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: >
+      apt-get install -y wget gnupg2 jq
+  when: distro_family == "debian"
+
+- name: Install wget on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: |
+      microdnf install -y wget gnupg2 jq
+  when: distro_family == "rhel"
+
 - name: Download a file from URL
   get_url:
     url: "https://example.com/myfile.tar.gz"
