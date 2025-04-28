@@ -26,4 +26,4 @@
       - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
       - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
       - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
-  loop: "{{ range(1, number_of_nodes + 1) | list }}"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
