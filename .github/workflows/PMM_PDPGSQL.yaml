@@ -21,7 +21,7 @@ on:
 
 jobs:
   PMM_PDPGSQL_TEST:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       PDPGSQL_VERSION: ${{ github.event.inputs.pdpgsql_version || 'perconalab/percona-distribution-postgresql:16.0' }}
