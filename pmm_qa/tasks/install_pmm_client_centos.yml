@@ -123,3 +123,20 @@
     command: >
       microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "pmm3-latest"
+
+- name: Install pmm client released version on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      wget -O pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_${client_version}-7.$(lsb_release -sc)_amd64.deb
+      dpkg -i pmm-client.deb
+  when: "'{{ client_version }}' | regex_match('^3\\.[0-9]+\\.[0-9]+$') and distro_family == 'debian'"
+
+- name: Install pmm client released version on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      microdnf install -y pmm-client
+  when: "'{{ client_version }}' | regex_match('^3\\.[0-9]+\\.[0-9]+$') and distro_family == 'rhel'"
