@@ -89,15 +89,15 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: query_source == "slowlog"
 
+    - name: Get already connected services to pmm server
+      shell: curl --location --insecure -u"admin:admin" -s --request GET "http://{{ pmm_server_ip }}/v1/management/services" | jq -r '.services[].service_name'
+      register: pmm_server_services
+
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client_centos.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Get already connected services to pmm server
-      shell: curl --location --insecure -u"admin:admin" -s --request GET "http://172.105.74.90/v1/management/services" | jq -r '.services[].service_name'
-      register: pmm_server_services
 
     - name: Display already connected services to pmm server
       debug:
