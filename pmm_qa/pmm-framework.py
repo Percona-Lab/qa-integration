@@ -97,8 +97,6 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
 
-    print(f"Run ansible playbook args are: {verbosity_level}")
-
     if args.verbose:
         print(f'Options set after considering Defaults: {env_vars}')
 

@@ -125,4 +125,3 @@
 - name: Display verification instructions
   debug:
     msg: "{{ verification_msg | split('\n') }}"
-
