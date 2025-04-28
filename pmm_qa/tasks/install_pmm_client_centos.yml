@@ -84,8 +84,8 @@
     container: "{{ container_name }}"
     user: "root"
     command: >
-      percona-release enable-only pmm3-client experimental
-      apt-get update
+      percona-release enable-only pmm3-client experimental &&
+      apt-get update &&
       apt-get -y install pmm-client
   when: distro_family == "debian" and client_version == "3-dev-latest"
 
@@ -94,7 +94,7 @@
     container: "{{ container_name }}"
     user: "root"
     command: >
-      percona-release enable-only pmm3-client experimental
+      percona-release enable-only pmm3-client experimental &&
       microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "3-dev-latest"
 
