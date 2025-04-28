@@ -62,9 +62,13 @@
       include_tasks: ./tasks/percona-server-group-replication-setup.yml
       when: setup_type == "gr"
 
+    - name: Setup Percona Server with async replication
+      include_tasks: ./tasks/percona-server-async-replication-setup.yml
+      when: setup_type == "replication"
+
     - name: Setup Percona Server
       include_tasks: ./tasks/percona-server-setup.yml
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:

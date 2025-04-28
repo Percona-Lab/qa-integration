@@ -1,0 +1,29 @@
+- name: Generate my.cnf for each node
+  template:
+    src: ./data/my-async-replication.cnf.j2
+    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Create initialization script for each node
+  template:
+    src: ./data/init-async-replication.sql.j2
+    dest: "{{ data_dir }}/node{{ item }}/init.sql"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start Percona Server containers with async replication
+  community.docker.docker_container:
+    name: "ps_pmm_{{ ps_version }}_{{ item }}"
+    image: "percona/percona-server:{{ ps_version }}"
+    restart_policy: always
+    state: started
+    networks:
+      - name: "{{ network_name }}"
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+    ports:
+      - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+    volumes:
+      - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+      - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
+      - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+  loop: "{{ range(1, number_of_nodes + 1) | list }}"
