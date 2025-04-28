@@ -22,6 +22,7 @@
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('perfschema', true) }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
+    random_service_name_value: ""
 
   tasks:
     - name: Chance to correct nodes count for group replication
@@ -102,6 +103,16 @@
       debug:
         msg: "{{ pmm_server_services.stdout | split('\n') }}"
 
+    - name: Find out if service is already connected to pmm server
+      tasks:
+        - name: Loop through percona servers
+          debug:
+            msg: "Percona Server with name: ps_pmm_{{ ps_version }}_{{ item }} already connected to pmm server"
+            loop: "{{ range(1, nodes_count | int + 1) | list }}"
+            when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
+
+#random_service_name_value
+
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -112,7 +123,7 @@
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replicaiton-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Add service to pmm server
