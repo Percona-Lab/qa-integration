@@ -99,9 +99,16 @@
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replicaiton-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type == "replications"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
 
     - name: Install sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -138,7 +145,7 @@
           FLUSH PRIVILEGES;
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr"
+      when: setup_type != "gr" nad setup_type != "replication"
 
     - name: Prepare sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -152,7 +159,7 @@
           GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';
           FLUSH PRIVILEGES;
           "
-      when: setup_type == "gr"
+      when: setup_type == "gr" or setup_type == "replication"
 
     - name: Prepare data for sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
@@ -167,7 +174,7 @@
             --tables=10 
             --table-size=100000 
             prepare
-      when: setup_type != "gr"
+      when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare data for sysbench inside of first percona server nodes
@@ -183,7 +190,7 @@
             --tables=10 
             --table-size=100000 
             prepare
-      when: setup_type == "gr"
+      when: setup_type == "gr" or setup_type == "replication"
 
     - name: Run load for sysbench inside of all percona server nodes
       community.docker.docker_container_exec:
