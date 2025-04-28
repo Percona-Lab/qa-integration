@@ -94,6 +94,14 @@
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+    - name: Get already connected services to pmm server
+      shell: curl --location --insecure -u"admin:admin" -s --request GET "http://172.105.74.90/v1/management/services" | jq -r '.services[].service_name'
+      register: pmm_server_services
+
+    - name: Display already connected services to pmm server
+      debug:
+        msg: "{{ pmm_server_services.stdout | split('\n') }}"
+
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
