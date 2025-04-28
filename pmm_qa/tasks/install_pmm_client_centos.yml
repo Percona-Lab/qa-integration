@@ -67,7 +67,7 @@
 
 - name: Print expected client version
   debug:
-    msg: "{{ client_version }}"
+    msg: "{{ metrics_mode }}"
 
 - name: Install pmm client experimental on RHEL-family containers
   community.docker.docker_container_exec:
