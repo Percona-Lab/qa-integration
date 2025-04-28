@@ -45,7 +45,7 @@ if [[  "$pmm_server_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
   port=443
 fi
 
-microdnf install -y wget gnupg2
+microdnf install -y wget gnupg2 jq
 wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 rpm -i ./percona-release-latest.noarch.rpm
 export PMM_AGENT_SETUP_NODE_NAME=client_container_$(echo $((1 + $RANDOM % 9999)))
