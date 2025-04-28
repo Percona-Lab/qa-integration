@@ -31,13 +31,13 @@
 - name: Set distro family (debian/rhel)
   set_fact:
     distro_family: >-
-      {% if 'debian' in container_os_info.stdout | lower %}
-        debian
-      {% elif 'rhel' in container_os_info.stdout | lower or 'centos' in container_os_info.stdout | lower or 'fedora' in container_os_info.stdout | lower %}
-        rhel
-      {% else %}
-        unknown
-      {% endif %}
+      {{
+        (
+          'debian' if 'debian' in container_os_info.stdout | lower else
+          'rhel' if 'rhel' in container_os_info.stdout | lower or 'centos' in container_os_info.stdout | lower or 'fedora' in container_os_info.stdout | lower
+          else 'unknown'
+        )
+      }} | trim
 
 - name: Install wget inside Debian-family container
   community.docker.docker_container_exec:
