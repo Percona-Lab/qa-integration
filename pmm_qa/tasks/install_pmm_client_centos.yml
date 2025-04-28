@@ -123,9 +123,3 @@
     command: >
       microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "pmm3-latest"
-
-- name: Install pmm-client
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: bash -x /pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
