@@ -107,7 +107,7 @@
       block:
         - name: Loop through percona servers
           set_fact:
-            random_service_name_value: "{{ 9999 | random + 1 }}"
+            random_service_name_value: "_{{ 9999 | random + 1 }}"
           loop: "{{ range(1, nodes_count | int + 1) | list }}"
           when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
 
