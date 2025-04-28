@@ -106,6 +106,8 @@
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replicaiton-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      register: command_results_add_replication_pmm_server
+      failed_when: "'failed' in command_results_add_replication_pmm_server.results | map(attribute='status') | list"
       when: setup_type == "replication"
 
     - name: Add service to pmm server
