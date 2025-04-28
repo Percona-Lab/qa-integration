@@ -42,15 +42,13 @@
 - name: Install wget inside Debian-family container
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: >
-      apt-get install -y wget gnupg2 jq
+    command: apt-get install -y wget gnupg2 jq
   when: distro_family == "debian"
 
 - name: Install wget on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: |
-      microdnf install -y wget gnupg2 jq
+    command: microdnf install -y wget gnupg2 jq
   when: distro_family == "rhel"
 
 - name: Download percona release on RHEL based OS
