@@ -25,7 +25,7 @@
     random_service_name_value: ""
 
   tasks:
-    - name: Chance to correct nodes count for group replication
+    - name: Mofidy the node count for group replication
       set_fact:
         nodes_count: 3
       when: nodes_count | int < 3 and setup_type == "gr"
