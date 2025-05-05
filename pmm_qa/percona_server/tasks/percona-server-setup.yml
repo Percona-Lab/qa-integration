@@ -18,6 +18,7 @@
       - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
       - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
     volumes:
+      - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
       - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
