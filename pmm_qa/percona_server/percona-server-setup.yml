@@ -26,7 +26,7 @@
     random_service_name_value: ""
 
   tasks:
-    - name: Chance to correct nodes count for group replication
+    - name: Mofidy the node count for group replication
       set_fact:
         nodes_count: 3
       when: nodes_count | int < 3 and setup_type == "gr"
@@ -100,7 +100,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_1"
         command: >
-          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:8080/v1/management/services" | jq -r ".services[].service_name"'
+          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
       register: pmm_server_services
 
     - name: Display already connected services to pmm server
