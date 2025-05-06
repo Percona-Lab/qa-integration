@@ -67,7 +67,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         yum update --refresh -y && \
         yum -y install pmm-client ; \
     else \
-        if [[ "$PMM_CLIENT_VERSION" =~ '^([3-9]\.[1-9][0-9]*|[4-9]\.[0-9][0-9]+|[5-9](\.[0-9]+)?|[0-9]{2,}(\.[0-9]+)?)$' ]]; then \
+        if [[ "$PMM_CLIENT_VERSION" =~ ^([3-9])\.([1-9][0-9]*)\.([0-9]+)$ ]]; then \
             yum -y install pmm-client-${PMM_CLIENT_VERSION}-7.el9 ; \
         else \
             yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
