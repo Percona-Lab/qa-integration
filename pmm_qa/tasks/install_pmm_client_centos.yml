@@ -177,4 +177,5 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > pmm-agent.log 2>&1 &
+    detach: true
+    command: pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml
