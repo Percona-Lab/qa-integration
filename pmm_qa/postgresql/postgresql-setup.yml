@@ -106,7 +106,7 @@
         recreate: true
         command: >
           bash -c "
-            PGPASSWORD={{ replication_password }} until pg_basebackup -h pgsql_pmm_{{ pg_version }}_1 -D $PGDATA -U {{ replication_user }} -Fp -Xs -P -R
+            until PGPASSWORD={{ replication_password }} pg_basebackup -h pgsql_pmm_{{ pg_version }}_1 -D $PGDATA -U {{ replication_user }} -Fp -Xs -P -R
             do
             echo 'Waiting for primary to connect...'
             sleep 1s
