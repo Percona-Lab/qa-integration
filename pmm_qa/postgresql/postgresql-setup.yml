@@ -144,7 +144,7 @@
 
     - name: Create PostgreSQL user 'pmm' with password
       community.docker.docker_container_exec:
-        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
           psql -U postgres -d {{ db_name | default('postgres') }} -c
