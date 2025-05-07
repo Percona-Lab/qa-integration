@@ -76,7 +76,7 @@
 
 - name: Set lsb_release
   set_fact:
-    lsb_release: lsb_release.stdout
+    lsb_release: "{{ lsb_release.stdout }}"
 
 - name: Download percona release on debian based OS
   get_url:
