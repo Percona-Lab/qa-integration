@@ -69,7 +69,7 @@
         volumes:
           - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
           - "./data/pg-primary-conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
-          - "{{ data_dir }}/node1/pg_hba.conf.j2:/etc/postgresql/pg_hba.conf.j2:ro"
+          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
         ports:
           - "5432:5432"
