@@ -67,12 +67,16 @@
     user: "root"
   when: distro_family == "rhel"
 
-- name: get lsb_release
+- name: Get lsb_release
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     command: lsb_release -sc
     user: "root"
     register: lsb_release
+
+- name: Set lsb_release
+  set_fact:
+    lsb_release: lsb_release.stdout
 
 - name: Download percona release on debian based OS
   get_url:
