@@ -55,7 +55,7 @@
     command: >
       sh -c '
       apt-get update &&
-      apt-get install -y wget gnupg2 jq
+      apt-get install -y wget gnupg2 jq lsb
       '
     user: "root"
   when: distro_family == "debian"
