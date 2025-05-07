@@ -158,7 +158,7 @@
         command: >
           bash -c '
             psql -U postgres -d {{ db_name | default("postgres") }} -c "
-              CREATE USER pmm WITH PASSWORD 'pmm';
+              CREATE USER pmm WITH PASSWORD '\''pmm'\'';
               GRANT pg_monitor TO pmm;
             "
           '
