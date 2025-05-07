@@ -17,12 +17,12 @@
         ) | trim
       }}
 
-- name: Create custom database for pgbench
-  community.docker.docker_container_exec:
-    container: "{{ node_name }}"
-    user: postgres
-    command: >
-      psql -U postgres -c "CREATE DATABASE pgbench;"
+#- name: Create custom database for pgbench
+#  community.docker.docker_container_exec:
+#    container: "{{ node_name }}"
+#    user: postgres
+#    command: >
+#      psql -U postgres -c "CREATE DATABASE pgbench;"
 
 - name: Ensure pgbench is installed (Debian-based container)
   community.docker.docker_container_exec:
@@ -49,12 +49,26 @@
     command: >
       pgbench -i -s {{ pgbench_scale }} pgbench
 
+- name: Copy populate script into container
+  community.docker.docker_container_copy_into:
+    container: "{{ node_name }}"
+    path: ./data/sample_data.sql
+    container_path: /populate_sample_data.sql
+
+- name: Populate pgbench tables with sample data
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: postgres
+    command: >
+      psql -U postgres -d pgbench -f /sample_data.sql
+
 - name: Run pgbench benchmark
   community.docker.docker_container_exec:
     container: "{{ node_name }}"
     user: postgres
     command: >
-      pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} pgbench
+      pgbench -f /tmp/sample_data.sql
+            -c {{ pgbench_clients }} -T {{ pgbench_time }} pgbench
   register: pgbench_result
 
 - name: Print pgbench results
