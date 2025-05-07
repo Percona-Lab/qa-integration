@@ -164,7 +164,7 @@
         command: >
           bash -c '
             PGPASSWORD="{{ root_password }}" psql -h /tmp -U postgres -d {{ db_name | default("postgres") }} -c "
-              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD 'pmm';
+              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD '\''pmm'\'';
               GRANT pg_monitor TO pmm;
             "
           '
