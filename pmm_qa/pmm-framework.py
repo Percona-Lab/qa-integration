@@ -53,7 +53,7 @@ database_configs = {
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": ""}
     },
     "SSL_PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
@@ -310,23 +310,44 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+    print(f"Setup type is {setup_type_value}")
 
-    # Define environment variables for playbook
-    env_vars = {
-        'PGSTAT_MONITOR_BRANCH': 'main',
-        'PDPGSQL_VERSION': pdpgsql_version,
-        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
-        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-        'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PDPGSQL_PGSM_PORT': 5447,
-        'DISTRIBUTION': '',
-        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
-    }
+    if setup_type_value in ("replication", "replica"):
+        # Define environment variables for playbook
+        env_vars = {
+            'PGSTAT_MONITOR_BRANCH': 'main',
+            'PDPGSQL_VERSION': pdpgsql_version,
+            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+            'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'PDPGSQL_PGSM_PORT': 5447,
+            'DISTRIBUTION': '',
+            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
+            'SETUP_TYPE': setup_type_value
+        }
 
-    # Ansible playbook filename
-    playbook_filename = 'pdpgsql_pgsm_setup.yml'
+        # Ansible playbook filename
+        playbook_filename = './postgresql/percona-distribution-postgres-setup.yml'
+    else:
+        # Define environment variables for playbook
+        env_vars = {
+            'PGSTAT_MONITOR_BRANCH': 'main',
+            'PDPGSQL_VERSION': pdpgsql_version,
+            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+            'PDPGSQL_PGSM_CONTAINER': 'pdpgsql_pgsm_pmm_' + str(pdpgsql_version),
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'PDPGSQL_PGSM_PORT': 5447,
+            'DISTRIBUTION': '',
+            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+        }
+
+        # Ansible playbook filename
+        playbook_filename = 'pdpgsql_pgsm_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
