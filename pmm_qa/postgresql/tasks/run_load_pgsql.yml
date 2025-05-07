@@ -65,7 +65,6 @@
     user: postgres
     command: >
       pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} -j 4 pgbench
-#      -f /workload.sql pgbench
   register: pgbench_result
 
 - name: Print pgbench results
