@@ -105,8 +105,8 @@
         state: started
         command:  >
           bash -c "
-            sleep infinity && 
-            postgres -c config_file=/etc/postgresql/postgresql.conf
+            postgres -c config_file=/etc/postgresql/postgresql.conf &&
+            sleep infinity
           "
         networks:
           - name: "{{ network_name }}"
