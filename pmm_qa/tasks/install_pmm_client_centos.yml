@@ -144,7 +144,7 @@
     user: "root"
     command: >
       sh -c '
-        wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.bullseye_amd64.deb &&
+        wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb &&
         dpkg -i /pmm-client.deb
       '
   when:
@@ -157,7 +157,7 @@
     user: "root"
     command: >
       sh -c '
-        yum install -y https://repo.percona.com/pmm3-client/yum/release/7/x86_64/pmm-client-{{ client_version }}-7.el7.x86_64.rpm
+        dnf install -y https://repo.percona.com/pmm3-client/yum/release/7/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm
       '
   when:
     - distro_family == 'rhel'
