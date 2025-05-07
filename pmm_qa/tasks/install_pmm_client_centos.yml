@@ -158,7 +158,7 @@
     command: >
       sh -c '
         wget -O /pmm-client.rpm https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm &&
-        microdnf install -y /pmm-client.rpm
+        rpm -i /pmm-client.rpm
       '
   when:
     - distro_family == 'rhel'
