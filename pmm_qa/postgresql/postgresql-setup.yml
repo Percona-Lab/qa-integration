@@ -70,7 +70,7 @@
     - name: Create replication user
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_1"
-#        user: postgres
+        user: postgres
         command: >
           psql -c "
           CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';
