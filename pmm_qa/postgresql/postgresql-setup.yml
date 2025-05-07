@@ -106,7 +106,7 @@
         recreate: true
         command: >
           bash -c "
-            until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=pgsql_pmm_{{ pg_version }}_1 -U {{ replication_user }} --port=5432
+            until pg_basebackup --pgdata=/var/lib/postgresql/data -R --host=pgsql_pmm_{{ pg_version }}_1 -U {{ replication_user }} --port=5432
             do
             echo 'Waiting for primary to connect...'
             sleep 1s

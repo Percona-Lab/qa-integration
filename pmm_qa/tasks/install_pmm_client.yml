@@ -179,20 +179,7 @@
     - distro_family == 'rhel'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
 
-- name: Install tarball PMM client version on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /pmm-client.tar.gz "{{ client_version }}" &&
-        dpkg -i /pmm-client.deb
-      '
-  when:
-    - distro_family == 'debian'
-    - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
-
-- name: Install tarball PMM client version on RHEL-family containers
+- name: Install tarball PMM client version
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
@@ -216,7 +203,6 @@
         pmm-admin --version
       '
   when:
-    - distro_family == 'rhel'
     - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
 
 - name: Connect pmm client to pmm server using metrics mode
