@@ -77,7 +77,7 @@
     - name: Wait for PgSQL to be available
       wait_for:
         host: localhost
-        port: "5432"
+        port: "{{ pdpgsql_port }}"
         delay: 10
         timeout: 300
     - name: Create replication user
