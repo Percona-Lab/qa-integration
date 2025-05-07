@@ -139,7 +139,7 @@
         name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql-primary.conf
+        command: -c config_file=/etc/postgresql/postgresql-replica.conf
         networks:
           - name: "{{ network_name }}"
         env:
