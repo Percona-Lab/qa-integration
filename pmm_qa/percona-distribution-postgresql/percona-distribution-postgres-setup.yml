@@ -176,7 +176,6 @@
         user: postgres
         command: >
           psql -U postgres -d 'postgres' -c " 
-            CREATE DATABASE contrib_regression;
             CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
           "
 
