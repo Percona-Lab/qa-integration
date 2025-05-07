@@ -22,7 +22,13 @@
     container: "{{ node_name }}"
     user: postgres
     command: >
-      psql -U postgres -c "CREATE DATABASE pgbench;"
+      psql -U postgres -c "
+        CREATE DATABASE pgbench;
+        GRANT CONNECT ON DATABASE pgbench TO pmm;
+        GRANT USAGE ON SCHEMA public TO pmm;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;"
+      "
 
 - name: Ensure pgbench is installed (Debian-based container)
   community.docker.docker_container_exec:
