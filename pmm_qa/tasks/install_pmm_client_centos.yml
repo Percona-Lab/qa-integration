@@ -163,8 +163,45 @@
   when:
     - distro_family == 'rhel'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
-#https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-3.1.0-7.el9.x86_64.rpm
-#https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-3.1.0-7.el9.x86_64.rpm
+
+- name: Install tarball PMM client version on Debian-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      sh -c '
+        wget -O /pmm-client.tar.gz "{{ client_version }}" &&
+        dpkg -i /pmm-client.deb
+      '
+  when:
+    - distro_family == 'debian'
+    - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
+
+- name: Install tarball PMM client version on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      sh -c '
+        wget -O /pmm-client.tar.gz "{{ client_version }}" &&
+        tar -zxpf /pmm-client.tar.gz &&
+        PMM_CLIENT=`ls -1td pmm-client* 2>/dev/null | grep -v ".tar" | grep -v ".sh" | head -n1` &&
+        echo ${PMM_CLIENT} &&
+        rm -rf pmm-client &&
+        mv ${PMM_CLIENT} pmm-client &&
+        rm -rf /usr/local/bin/pmm-client &&
+        mv -f pmm-client /usr/local/bin &&
+        pushd /usr/local/bin/pmm-client &&
+        ## only setting up all binaries in default path /usr/local/percona/pmm &&
+        bash -x ./install_tarball ${upgrade} &&
+        pwd &&
+        popd &&
+        pmm-admin --version &&
+      '
+  when:
+    - distro_family == 'rhel'
+    - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
+
 - name: Connect pmm client to pmm server using metrics mode
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
