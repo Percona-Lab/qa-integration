@@ -120,7 +120,7 @@
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
-        container_name: "ps_pmm_{{ pg_version }}_{{ item }}"
+        container_name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Get already connected services to pmm server
