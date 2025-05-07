@@ -53,7 +53,7 @@
   community.docker.docker_container_copy_into:
     container: "{{ node_name }}"
     path: ./data/sample_data.sql
-    container_path: /populate_sample_data.sql
+    container_path: /sample_data.sql
 
 - name: Populate pgbench tables with sample data
   community.docker.docker_container_exec:
@@ -61,6 +61,12 @@
     user: postgres
     command: >
       psql -U postgres -d pgbench -f /sample_data.sql
+
+- name: Copy realistic workload SQL into container
+  community.docker.docker_container_copy_into:
+    container: "{{ node_name }}"
+    path: ./data/workload.sql
+    container_path: /workload.sql
 
 - name: Run pgbench benchmark
   community.docker.docker_container_exec:
