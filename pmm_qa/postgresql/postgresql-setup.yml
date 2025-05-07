@@ -101,20 +101,9 @@
       community.docker.docker_container:
         name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         image: "postgres:{{ pg_version }}-bookworm"
-        restart_policy: always
+        restart_policy: "no"
         state: started
-        recreate: true
-        command: >
-          bash -c "
-            until pg_basebackup --pgdata=/var/lib/postgresql/data -R --host=pgsql_pmm_{{ pg_version }}_1 -U {{ replication_user }} --port=5432
-            do
-            echo 'Waiting for primary to connect...'
-            sleep 1s
-            done
-            echo 'Backup done, starting replica...'
-            chmod 0700 /var/lib/postgresql/data
-            postgres
-          "
+        command: sleep infinity
         networks:
           - name: "{{ network_name }}"
         env:
@@ -123,6 +112,23 @@
           PGPASSWORD: "{{ replication_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Wipe replica data directory before basebackup
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: root
+        command: rm -rf /var/lib/postgresql/data/*
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Run pg_basebackup from primary to replica
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: postgres
+        command: >
+          pg_basebackup --pgdata=/var/lib/postgresql/data -R
+          --host=pgsql_pmm_{{ pg_version }}_1 --port=5432
+          -U {{ replication_user }}
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 #    - name: Create pg_stat_statements extension if not exists
