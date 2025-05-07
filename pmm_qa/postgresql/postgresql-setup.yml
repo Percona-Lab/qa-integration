@@ -119,7 +119,7 @@
 
     - name: Create pg_stat_statements extension if not exists
       community.docker.docker_container_exec:
-        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
           psql -d {{ db_name | default('postgres') }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
