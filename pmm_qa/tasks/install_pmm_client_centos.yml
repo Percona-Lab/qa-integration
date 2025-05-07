@@ -196,7 +196,7 @@
         bash -x ./install_tarball ${upgrade} &&
         pwd &&
         popd &&
-        pmm-admin --version &&
+        pmm-admin --version
       '
   when:
     - distro_family == 'rhel'
