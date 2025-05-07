@@ -369,21 +369,39 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     pgsql_version = os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
 
-    # Define environment variables for playbook
-    env_vars = {
-        'PGSQL_VERSION': pgsql_version,
-        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
-        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-        'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PGSQL_PGSS_PORT': 5448,
-        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
-    }
+    if setup_type_value in ("replication", "replica"):
+        # Define environment variables for playbook
+        env_vars = {
+            'PGSQL_VERSION': pgsql_version,
+            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+            'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'PGSQL_PGSS_PORT': 5448,
+            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
+            'SETUP_TYPE': setup_type_value
+        }
 
-    # Ansible playbook filename
-    playbook_filename = 'pgsql_pgss_setup.yml'
+        # Ansible playbook filename
+        playbook_filename = 'postgresql/postgresql-setup.yml'
+    else:
+        # Define environment variables for playbook
+        env_vars = {
+            'PGSQL_VERSION': pgsql_version,
+            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+            'PGSQL_PGSS_CONTAINER': 'pgsql_pgss_pmm_' + str(pgsql_version),
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'USE_SOCKET': get_value('USE_SOCKET', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'PGSQL_PGSS_PORT': 5448,
+            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+        }
+
+        # Ansible playbook filename
+        playbook_filename = 'pgsql_pgss_setup.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)

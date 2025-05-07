@@ -1,0 +1,41 @@
+---
+# Postgresql Replication
+- name: Setup Postgresql replication
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    pg_version: "{{ lookup('env', 'PGSQL_VERSION') | default('17', true) }}"
+#    cluster_name: "mysql_cluster"
+#    replication_user: "repl_user"
+#    replication_password: "GRgrO9301RuF"
+    root_password: "GRgrO9301RuF"
+#    mysql_port: 33066
+#    mysql_listen_port: 3306
+#    group_seeds_port: 34061
+#    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('3', true)) | int }}"
+#    network_name: "pmm-qa"
+#    data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
+#    server_id_start: 1
+#    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+#    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
+#    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
+#    query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('perfschema', true) }}"
+#    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
+#    setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
+#    random_service_name_value: ""
+
+- name: Start PostgreSQL primary container
+  community.docker.docker_container:
+    name: "pgsql_pmm_{{ ps_version }}_1"
+    image: "postgres:{{ pg_version }}-bookworm"
+    restart_policy: always
+    state: started
+    networks:
+      - name: "{{ network_name }}"
+    env:
+      POSTGRES_PASSWORD: root_password
+    volumes:
+      - pg_primary_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
