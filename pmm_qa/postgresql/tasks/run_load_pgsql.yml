@@ -73,10 +73,7 @@
     container: "{{ node_name }}"
     user: postgres
     command: >
-      pgbench -c {{ pgbench_clients }}
-            -T {{ pgbench_time }} 
-            -f /workload.sql 
-      pgbench
+      pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} -f /workload.sql pgbench
   register: pgbench_result
 
 - name: Print pgbench results
