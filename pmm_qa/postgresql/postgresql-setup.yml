@@ -117,26 +117,6 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-#    - name: Stop PostgreSQL replica temporarily
-#      community.docker.docker_container:
-#        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-#        state: stopped
-#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-#
-#    - name: Clear replica data directory
-#      ansible.builtin.shell: >
-#        rm -rf {{ data_dir }}/node{{ item }}/data/*
-#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-#      become: true
-
-#    - name: Perform base backup from primary to replica
-#      community.docker.docker_container_exec:
-#        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-#        user: postgres
-#        command: >
-#          bash -c "PGPASSWORD={{ replication_password }} pg_basebackup -h pgsql_pmm_{{ pg_version }}_1 -D $PGDATA -U {{ replication_user }} -Fp -Xs -P -R"
-#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
     - name: Check replication status on primary
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_1"
@@ -147,3 +127,7 @@
       include_tasks: ./tasks/run_load_pgsql.yml
       vars:
         node_name: "pgsql_pmm_{{ pg_version }}_1"
+        pgbench_clients: 10
+        pgbench_time: 60
+        pgbench_scale: 10
+        pgbench_db: postgres
