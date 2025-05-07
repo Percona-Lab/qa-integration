@@ -7,8 +7,8 @@
   vars:
     pg_version: "{{ lookup('env', 'PGSQL_VERSION') | default('17', true) }}"
 #    cluster_name: "mysql_cluster"
-#    replication_user: "repl_user"
-#    replication_password: "GRgrO9301RuF"
+    replication_user: "repl_user"
+    replication_password: "GRgrO9301RuF"
     root_password: "GRgrO9301RuF"
 #    mysql_port: 33066
 #    mysql_listen_port: 3306
@@ -66,3 +66,16 @@
         port: "5432"
         delay: 10
         timeout: 300
+
+    - name: Create replication user
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_1"
+#        user: postgres
+        command: >
+          psql -c "
+          CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';
+          "
+    - name: Restart PostgreSQL primary
+      community.docker.docker_container:
+        container: "pgsql_pmm_{{ pg_version }}_1"
+        state: restarted
