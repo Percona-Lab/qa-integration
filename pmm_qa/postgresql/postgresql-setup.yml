@@ -111,7 +111,7 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgresql-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
+          - "./data/postgresql-replica.conf:/etc/postgresql/postgresql.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
