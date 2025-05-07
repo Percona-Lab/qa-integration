@@ -120,3 +120,8 @@
         container: "pgsql_pmm_{{ pg_version }}_1"
         user: postgres
         command: psql -c "SELECT * FROM pg_stat_replication;"
+
+    - name: Run load on primary node.
+      include_tasks: ./tasks/run_load_pgsql.yml
+      vars:
+        node_name: "pgsql_pmm_{{ pg_version }}_1"
