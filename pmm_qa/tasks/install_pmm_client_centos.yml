@@ -169,9 +169,9 @@
     command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }}
   when: metrics_mode | length == 0
 
-- name: Wait 10 seconds for connection to complete
+- name: Wait 5 seconds for connection to complete
   pause:
-    seconds: 10
+    seconds: 5
 
 - name: Start pmm client
   community.docker.docker_container_exec:
@@ -179,3 +179,7 @@
     user: "root"
     detach: true
     command: pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml
+
+- name: Wait 5 seconds for start to complete
+  pause:
+    seconds: 5
