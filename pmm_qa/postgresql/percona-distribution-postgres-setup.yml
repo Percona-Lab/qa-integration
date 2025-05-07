@@ -155,7 +155,7 @@
         user: postgres
         command: >
           bash -c '
-            psql -h 127.0.0.1 -U postgres -d {{ db_name | default("postgres") }} -c "
+            PGPASSWORD="{{ root_password }}" psql -h 127.0.0.1 -U postgres -d {{ db_name | default("postgres") }} -c "
             DO \$$
             BEGIN
               IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''pmm'\'') THEN
