@@ -17,6 +17,13 @@
         ) | trim
       }}
 
+- name: Create custom database for pgbench
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: postgres
+    command: >
+      psql -U postgres -c "CREATE DATABASE pgbench;"
+
 - name: Ensure pgbench is installed (Debian-based container)
   community.docker.docker_container_exec:
     container: "{{ node_name }}"
@@ -40,14 +47,14 @@
     container: "{{ node_name }}"
     user: postgres
     command: >
-      pgbench -i -s {{ pgbench_scale }} {{ pgbench_db }}
+      pgbench -i -s {{ pgbench_scale }} pgbench
 
 - name: Run pgbench benchmark
   community.docker.docker_container_exec:
     container: "{{ node_name }}"
     user: postgres
     command: >
-      pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} {{ pgbench_db }}
+      pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} pgbench
   register: pgbench_result
 
 - name: Print pgbench results

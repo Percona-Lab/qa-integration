@@ -213,7 +213,6 @@
         pgbench_clients: 10
         pgbench_time: 60
         pgbench_scale: 10
-        pgbench_db: postgres
 
     - name: Check replication status on primary
       community.docker.docker_container_exec:
