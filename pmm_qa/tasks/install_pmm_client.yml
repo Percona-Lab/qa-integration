@@ -70,7 +70,8 @@
 - name: Get lsb_release
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: cat /etc/os-release | grep '^ID=' | awk -F'"' '{print $2}'
+    command: >
+      bash -c "grep '^ID=' /etc/os-release | cut -d '=' -f2 | tr -d '\"'"
     user: "root"
   register: lsb_release
 
