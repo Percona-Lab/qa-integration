@@ -1,0 +1,37 @@
+# This ansible file run load on docker container of pgsql with variable name node_name
+
+- name: Ensure pgbench is installed (Debian-based container)
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: root
+    command: apt-get update && apt-get install -y postgresql-contrib
+    when: >
+      "'Debian' in (lookup('community.docker.docker_container_info', container_name).container.Config.Image | default('')).title()"
+
+- name: Ensure pgbench is installed (RHEL-based container)
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: root
+    command: microdnf install -y postgresql-contrib
+  when: >
+    "'Centos' in (lookup('community.docker.docker_container_info', container_name).container.Config.Image | default('')).title() or
+    'Redhat' in (lookup('community.docker.docker_container_info', container_name).container.Config.Image | default('')).title()"
+
+- name: Initialize pgbench database
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: postgres
+    command: >
+      pgbench -i -s {{ pgbench_scale }} {{ pgbench_db }}
+
+- name: Run pgbench benchmark
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: postgres
+    command: >
+      pgbench -c {{ pgbench_clients }} -T {{ pgbench_time }} {{ pgbench_db }}
+  register: pgbench_result
+
+- name: Print pgbench results
+  debug:
+    var: pgbench_result.stdout_lines
