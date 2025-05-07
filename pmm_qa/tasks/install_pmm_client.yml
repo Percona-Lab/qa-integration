@@ -72,7 +72,7 @@
     container: "{{ container_name }}"
     command: lsb_release -sc
     user: "root"
-    register: lsb_release
+  register: lsb_release
 
 - name: Set lsb_release
   set_fact:
