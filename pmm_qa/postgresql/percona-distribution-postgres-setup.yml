@@ -49,8 +49,8 @@
 
     - name: Remove old Percona Distribution PostgreSQL primary container
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_1"
-        image: "postgres:{{ pg_version }}-bookworm"
+        name: "pdpgsql_pmm_{{ pg_version }}_1"
+        image: "percona/percona-distribution-postgresql:{{ pg_version }}"
         restart_policy: always
         state: absent
       ignore_errors: yes
@@ -82,7 +82,7 @@
         timeout: 300
     - name: Create replication user
       community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_1"
+        container: "pdpgsql_pmm_{{ pg_version }}_1"
         user: postgres
         command: >
           psql -c "
@@ -176,7 +176,7 @@
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
-        container_name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        container_name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Get already connected services to pmm server
