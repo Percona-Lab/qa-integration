@@ -106,6 +106,7 @@
       '
   when:
     - distro_family == 'rhel'
+  ignore_errors: true
 
 - name: Install pmm client experimental on Debian-family containers
   community.docker.docker_container_exec:
