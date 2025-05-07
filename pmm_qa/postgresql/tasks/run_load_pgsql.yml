@@ -57,7 +57,7 @@
 
 - name: Populate pgbench tables with sample data
   community.docker.docker_container_exec:
-    container: "{{ container_name }}"
+    container: "{{ node_name }}"
     user: postgres
     command: >
       psql -U postgres -d pgbench -f /sample_data.sql
