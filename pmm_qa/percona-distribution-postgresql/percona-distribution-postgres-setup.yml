@@ -232,13 +232,14 @@
 
     - name: Create pg_stat_statements extension
       community.docker.docker_container_exec:
-        container: "pdpgsql_pmm_{{ pg_version }}_1"
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
           psql -U postgres -d 'postgres' -c " 
             CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
             SELECT pg_stat_monitor_version();
           "
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
