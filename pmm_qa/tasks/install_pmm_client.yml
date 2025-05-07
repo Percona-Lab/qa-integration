@@ -71,7 +71,7 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     command: >
-      bash -c "grep '^ID=' /etc/os-release | cut -d '=' -f2 | tr -d '\"'"
+      bash -c "grep '^VERSION_CODENAME=' /etc/os-release | cut -d '=' -f2 | tr -d '\"'"
     user: "root"
   register: lsb_release
 
