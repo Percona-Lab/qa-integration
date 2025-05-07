@@ -203,6 +203,37 @@
             random_service_name_value: "_{{ 9999 | random + 1 }}"
           loop: "{{ range(1, nodes_count | int + 1) | list }}"
           when: "('pgsql_pmm_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
+    - name: Set distro family (debian/rhel)
+      set_fact:
+        distro_family: >-
+          {{
+            (
+              'debian' if 'debian' in container_os_info.stdout | lower else
+              'rhel' if 'rhel' in container_os_info.stdout | lower or 'centos' in container_os_info.stdout | lower or 'fedora' in container_os_info.stdout | lower
+              else 'unknown'
+            ) | trim
+          }}
+
+    - name: Install dependencies inside Debian-family container
+      community.docker.docker_container_exec:
+        container: "{{ container_name }}"
+        command: >
+          sh -c '
+          apt-get update &&
+          apt-get install percona-pg-stat-monitor{{ pg_version }}
+          '
+        user: "root"
+      when: distro_family == "debian"
+
+    - name: Install dependencies inside Debian-family container
+      community.docker.docker_container_exec:
+        container: "{{ container_name }}"
+        command: >
+          sh -c '
+            microdnf install percona-pg-stat-monitor{{ pg_version }}
+          '
+        user: "root"
+      when: distro_family == "rhel"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
