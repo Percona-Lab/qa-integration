@@ -53,7 +53,7 @@
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
-          - "{{ data_dir }}/node1/data:/var/lib/postgresql"
+          - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
         ports:
           - "5432:5432"
 
