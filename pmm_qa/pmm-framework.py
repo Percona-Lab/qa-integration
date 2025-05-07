@@ -48,7 +48,8 @@ database_configs = {
     },
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
-        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
+        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "",
+                           "SETUP_TYPE": ""}
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
@@ -370,6 +371,8 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     pgsql_version = os.getenv('PGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+
+    print(f"Setup type is {setup_type_value}")
 
     if setup_type_value in ("replication", "replica"):
         # Define environment variables for playbook
