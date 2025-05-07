@@ -63,14 +63,14 @@
 - name: Install dependencies on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: microdnf install -y wget gnupg2 jq curl-minimal redhat-lsb-core
+    command: microdnf install -y wget gnupg2 jq curl-minimal
     user: "root"
   when: distro_family == "rhel"
 
 - name: Get lsb_release
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: lsb_release -sc
+    command: cat /etc/os-release | grep '^ID=' | awk -F'"' '{print $2}'
     user: "root"
   register: lsb_release
 

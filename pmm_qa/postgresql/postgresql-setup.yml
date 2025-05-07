@@ -205,7 +205,7 @@
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-        command: pmm-admin add postgresql --username=pmm --password=pmm pgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+        command: pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatements pgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Run load on primary node.
