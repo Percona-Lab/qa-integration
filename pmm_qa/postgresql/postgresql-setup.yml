@@ -125,10 +125,7 @@
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         user: root
-        command: >
-          pg_basebackup --pgdata=/var/lib/postgresql/data -R
-          --host=pgsql_pmm_{{ pg_version }}_1 --port=5432
-          -U {{ replication_user }}
+        command: pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -P --host=pgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Restart PostgreSQL container with custom command
