@@ -13,7 +13,7 @@
 #    mysql_port: 33066
 #    mysql_listen_port: 3306
 #    group_seeds_port: 34061
-    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default(2, true)) | int }}"
+    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('2', true)) | int }}"
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/pgsql_cluster_data"
 #    server_id_start: 1
