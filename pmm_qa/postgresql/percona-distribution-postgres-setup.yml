@@ -74,7 +74,7 @@
         ports:
           - "{{ pdpgsql_port }}:5432"
 
-    - name: Wait for PgSQL to be available
+    - name: Wait for Percona Distribution PgSQL to be available
       wait_for:
         host: localhost
         port: "{{ pdpgsql_port }}"
@@ -144,7 +144,8 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/pdpgsql.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/pdpgsql_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         ports:
           - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
