@@ -10,7 +10,7 @@
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
     root_password: "GRgrO9301RuF"
-#    mysql_port: 33066
+    pdpgsql_port: 5432
 #    mysql_listen_port: 3306
 #    group_seeds_port: 34061
     nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('2', true)) | int }}"
@@ -72,7 +72,7 @@
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
         ports:
-          - "5432:5432"
+          - "{{ pdpgsql_port }}:5432"
 
     - name: Wait for PgSQL to be available
       wait_for:
@@ -145,6 +145,8 @@
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+        ports:
+          - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Create PostgreSQL user 'pmm' with password
