@@ -103,7 +103,11 @@
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: "no"
         state: started
-        command: sleep infinity && postgres -c config_file=/etc/postgresql/postgresql.conf
+        command:  >
+          bash -c "
+            sleep infinity && 
+            postgres -c config_file=/etc/postgresql/postgresql.conf
+          "
         networks:
           - name: "{{ network_name }}"
         env:
