@@ -193,7 +193,9 @@
         mv -f pmm-client /usr/local/bin &&
         pushd /usr/local/bin/pmm-client &&
         ## only setting up all binaries in default path /usr/local/percona/pmm &&
-        bash -x ./install_tarball ${upgrade} &&
+        bash -x ./install_tarball &&
+        ln -sf /usr/local/percona/pmm/bin/pmm-admin /usr/local/bin/pmm-admin &&
+        ln -sf /usr/local/percona/pmm/bin/pmm-agent /usr/local/bin/pmm-agent &&
         pwd &&
         popd &&
         pmm-admin --version
