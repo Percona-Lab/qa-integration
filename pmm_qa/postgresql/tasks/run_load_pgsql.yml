@@ -4,7 +4,11 @@
   community.docker.docker_container_exec:
     container: "{{ node_name }}"
     user: root
-    command: apt-get update && apt-get install -y postgresql-contrib
+    command: >
+      /bin/sh -c "
+      apt-get update &&
+      apt-get install -y postgresql-contrib
+      "
   when: >
     "'Debian' in (lookup('community.docker.docker_container_info', container_name).container.Config.Image | default('')).title()"
 
