@@ -103,7 +103,7 @@
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: "no"
         state: started
-        command: sleep infinity
+        command: sleep infinity && -c config_file=/etc/postgresql/postgresql.conf
         networks:
           - name: "{{ network_name }}"
         env:
@@ -112,6 +112,7 @@
           PGPASSWORD: "{{ replication_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+          - "./data/pg-primary-conf/postgresql-replica.conf:/etc/postgresql/postgresql.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
@@ -130,6 +131,21 @@
           --host=pgsql_pmm_{{ pg_version }}_1 --port=5432
           -U {{ replication_user }}
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Create PostgreSQL user 'pmm' with password
+      community.docker.docker_container_exec:
+        container: "{{ container_name }}"
+        user: postgres
+        command: >
+          psql -U postgres -d {{ db_name | default('postgres') }} -c
+          "DO \$\$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
+              CREATE ROLE pmm LOGIN PASSWORD 'pmm';
+            END IF;
+          END
+          \$\$;"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
