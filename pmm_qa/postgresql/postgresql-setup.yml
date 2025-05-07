@@ -117,13 +117,13 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-    - name: Create pg_stat_statements extension if not exists
-      community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-        user: postgres
-        command: >
-          psql -d {{ db_name | default('postgres') }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#    - name: Create pg_stat_statements extension if not exists
+#      community.docker.docker_container_exec:
+#        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+#        user: postgres
+#        command: >
+#          psql -d {{ db_name | default('postgres') }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
