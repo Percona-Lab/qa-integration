@@ -153,6 +153,10 @@
           - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
+    - name: Wait 10 for server to restart
+      pause:
+        seconds: 10
+
     - name: Create PostgreSQL user 'pmm' with password
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
