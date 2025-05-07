@@ -94,7 +94,23 @@
   debug:
     msg: "{{ metrics_mode }}"
 
-- name: Install pmm client experimental on RHEL-family containers
+- name: Install percona release on Debian-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: dpkg -i /percona-release_latest.{{ lsb_release }}_all.deb
+  when:
+    - distro_family == 'debian'
+
+- name: Install specific PMM client version on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: rpm -i /percona-release-latest.noarch.rpm
+  when:
+    - distro_family == 'rhel'
+
+- name: Install pmm client experimental on Debian-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
