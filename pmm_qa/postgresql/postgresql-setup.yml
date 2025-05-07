@@ -14,7 +14,7 @@
 #    mysql_listen_port: 3306
 #    group_seeds_port: 34061
 #    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('3', true)) | int }}"
-#    network_name: "pmm-qa"
+    network_name: "pmm-qa"
 #    data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
 #    server_id_start: 1
 #    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
