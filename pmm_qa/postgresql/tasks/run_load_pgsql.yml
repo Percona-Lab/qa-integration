@@ -74,7 +74,7 @@
     user: postgres
     command: >
       pgbench -f /tmp/sample_data.sql
-            -c {{ pgbench_clients }} -T {{ pgbench_time }} pgbench
+            -c {{ pgbench_clients }} -T {{ pgbench_time }} -f /workload.sql pgbench
   register: pgbench_result
 
 - name: Print pgbench results
