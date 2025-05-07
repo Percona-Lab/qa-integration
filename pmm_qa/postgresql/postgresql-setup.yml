@@ -106,7 +106,7 @@
         recreate: true
         command: >
           bash -c "
-            until PGPASSWORD={{ replication_password }} pg_basebackup -h pgsql_pmm_{{ pg_version }}_1 -D $PGDATA -U {{ replication_user }} -Fp -Xs -P -R
+            until pg_basebackup -h pgsql_pmm_{{ pg_version }}_1 -D $PGDATA -U {{ replication_user }} -Fp -Xs -P -R
             do
             echo 'Waiting for primary to connect...'
             sleep 1s
@@ -120,6 +120,7 @@
         env:
           POSTGRES_INITDB_SKIP: "yes"
           POSTGRES_PASSWORD: "{{ root_password }}"
+          PGPASSWORD: "{{ replication_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
