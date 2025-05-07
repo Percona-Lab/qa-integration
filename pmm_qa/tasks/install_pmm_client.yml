@@ -78,18 +78,6 @@
   set_fact:
     lsb_release: "{{ lsb_release.stdout }}"
 
-- name: Download percona release on debian based OS
-  get_url:
-    url: "https://repo.percona.com/apt/percona-release_latest.{{ lsb_release }}_all.deb"
-    dest: "/percona-release_latest.{{ lsb_release }}_all.deb"
-  when: distro_family == "debian"
-
-- name: Download percona release on RHEL based OS
-  get_url:
-    url: "https://repo.percona.com/yum/percona-release-latest.noarch.rpm"
-    dest: "/percona-release-latest.noarch.rpm"
-  when: distro_family == "rhel"
-
 - name: Print expected client version
   debug:
     msg: "{{ metrics_mode }}"
@@ -98,7 +86,11 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: dpkg -i /percona-release_latest.{{ lsb_release }}_all.deb
+    command: >
+      sh -c '
+        wget -O /percona-release_latest.{{ lsb_release }}_all.deb https://repo.percona.com/apt/percona-release_latest.{{ lsb_release }}_all.deb &&
+        dpkg -i /percona-release_latest.{{ lsb_release }}_all.deb
+      '
   when:
     - distro_family == 'debian'
 
@@ -106,7 +98,11 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: rpm -i /percona-release-latest.noarch.rpm
+    command: >
+      sh -c '
+        wget -O /percona-release-latest.noarch.rpm https://repo.percona.com/yum/percona-release-latest.noarch.rpm &&
+        rpm -i /percona-release-latest.noarch.rpm
+      '
   when:
     - distro_family == 'rhel'
 
