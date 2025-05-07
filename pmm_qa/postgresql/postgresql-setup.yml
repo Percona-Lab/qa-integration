@@ -112,6 +112,13 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
+    - name: Clear replica data directory before base backup
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: root
+        command: rm -rf /var/lib/postgresql/data/*
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
     - name: Perform base backup from primary to replica
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
