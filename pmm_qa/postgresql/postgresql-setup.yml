@@ -77,5 +77,5 @@
           "
     - name: Restart PostgreSQL primary
       community.docker.docker_container:
-        container: "pgsql_pmm_{{ pg_version }}_1"
+        name: "pgsql_pmm_{{ pg_version }}_1"
         state: restarted
