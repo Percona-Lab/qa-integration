@@ -103,17 +103,12 @@
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: "no"
         state: started
-        command:  >
-          bash -c "
-            postgres -c config_file=/etc/postgresql/postgresql.conf &&
-            sleep infinity
-          "
+        command: sleep infinity
         networks:
           - name: "{{ network_name }}"
         env:
           POSTGRES_INITDB_SKIP: "yes"
           POSTGRES_PASSWORD: "{{ root_password }}"
-          PGPASSWORD: "{{ replication_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
           - "./data/pg-primary-conf/postgresql-replica.conf:/etc/postgresql/postgresql.conf:ro"
