@@ -99,6 +99,8 @@
         restart_policy: always
         state: started
         recreate: true
+        networks:
+          - name: "{{ network_name }}"
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
