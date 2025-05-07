@@ -3,8 +3,29 @@
 \set bid random(1, 10)
 \set tid random(1, 50)
 
-ALTER TABLE pgbench_branches ADD COLUMN bname TEXT DEFAULT 'Main Branch';
-ALTER TABLE pgbench_tellers ADD COLUMN tname TEXT DEFAULT 'Teller X';
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'pgbench_branches'
+      AND column_name = 'bname'
+  ) THEN
+    ALTER TABLE pgbench_branches ADD COLUMN bname TEXT DEFAULT 'Branch';
+  END IF;
+END$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'pgbench_tellers'
+      AND column_name = 'tname'
+  ) THEN
+    ALTER TABLE pgbench_tellers ADD COLUMN tname TEXT DEFAULT 'Teller';
+  END IF;
+END$$;
 
 BEGIN;
 
