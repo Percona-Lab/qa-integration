@@ -49,7 +49,7 @@
         ) | trim
       }}
 
-- name: Install wget inside Debian-family container
+- name: Install dependencies inside Debian-family container
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     command: >
@@ -60,10 +60,10 @@
     user: "root"
   when: distro_family == "debian"
 
-- name: Install wget on RHEL-family containers
+- name: Install dependencies on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: microdnf install -y wget gnupg2 jq curl
+    command: microdnf install -y wget gnupg2 jq curl-minimal
     user: "root"
   when: distro_family == "rhel"
 
