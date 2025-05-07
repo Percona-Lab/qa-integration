@@ -124,7 +124,7 @@
     - name: Run pg_basebackup from primary to replica
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-        user: postgres
+        user: root
         command: >
           pg_basebackup --pgdata=/var/lib/postgresql/data -R
           --host=pgsql_pmm_{{ pg_version }}_1 --port=5432
