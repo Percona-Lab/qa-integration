@@ -180,7 +180,7 @@
         user: postgres
         command: >
           psql -U postgres -d 'postgres' -c " 
-            CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+            CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
           "
 
     - name: Install and add pmm client.
