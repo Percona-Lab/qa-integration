@@ -154,14 +154,16 @@
         container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
-          psql -U postgres -d {{ db_name | default('postgres') }} -c
-          "DO \$\$
-          BEGIN
-            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
-              CREATE ROLE pmm LOGIN PASSWORD 'pmm';
-            END IF;
-          END
-          \$\$;"
+          bash -c '
+            psql -U postgres -d {{ db_name | default("postgres") }} -c "
+            DO \$$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''pmm'\'') THEN
+                CREATE ROLE pmm LOGIN PASSWORD '\''pmm'\'';
+              END IF;
+            END
+            \$$;"
+          '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Install and add pmm client.
