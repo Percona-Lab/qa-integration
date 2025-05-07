@@ -139,14 +139,14 @@
         name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql-replica.conf
+        command: -c config_file=/etc/postgresql/postgresql.conf
         networks:
           - name: "{{ network_name }}"
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
         ports:
           - "{{ pgsql_port + item - 1 }}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
