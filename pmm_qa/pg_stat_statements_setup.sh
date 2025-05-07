@@ -71,7 +71,7 @@ export PATH="/usr/lib/postgresql/${pgsql_version}/bin:$PATH"
 echo $PATH
 cp /usr/lib/postgresql/${pgsql_version}/bin/pg_config /usr/bin
 
-# Stop server and edit postgresql.conf to load pg_stat_sstatement library with required configurations
+# Stop server and edit postgresql-primary.conf to load pg_stat_sstatement library with required configurations
 service postgresql stop
 echo "shared_preload_libraries = 'pg_stat_statements'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf

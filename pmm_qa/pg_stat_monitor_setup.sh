@@ -95,7 +95,7 @@ make USE_PGXS=1
 # Install built PGSM library into server
 make USE_PGXS=1 install
 
-# Stop server and edit postgresql.conf to load PGSM library with required configurations
+# Stop server and edit postgresql-primary.conf to load PGSM library with required configurations
 service postgresql stop
 echo "shared_preload_libraries = 'pg_stat_monitor'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
 echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf

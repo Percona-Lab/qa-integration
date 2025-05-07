@@ -68,9 +68,9 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
-          - "./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/postgresql-primary.conf:/etc/postgresql/postgresql-primary.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
-        command: -c config_file=/etc/postgresql/postgresql.conf
+        command: -c config_file=/etc/postgresql/postgresql-primary.conf
         ports:
           - "{{ pdpgsql_port }}:5432"
 
@@ -109,7 +109,7 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
@@ -139,14 +139,14 @@
         image: "percona/percona-distribution-postgresql:{{ pg_version }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql.conf
+        command: -c config_file=/etc/postgresql/postgresql-primary.conf
         networks:
           - name: "{{ network_name }}"
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         ports:
           - "{{ pdpgsql_port + item - 1}}:5432"

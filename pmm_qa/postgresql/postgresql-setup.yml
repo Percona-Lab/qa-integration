@@ -44,7 +44,7 @@
 
     - name: Generate pg_hba.conf for primary node
       template:
-        src: ./data/pg-primary-conf/pg_hba.conf.j2
+        src: data/pg_hba.conf.j2
         dest: "{{ data_dir }}/node1/pg_hba.conf"
 
     - name: Remove old PostgreSQL primary container
@@ -68,9 +68,9 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
-          - "./data/pg-primary-conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/pg-primary-conf/postgresql-primary.conf:/etc/postgresql/postgresql-primary.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
-        command: -c config_file=/etc/postgresql/postgresql.conf
+        command: -c config_file=/etc/postgresql/postgresql-primary.conf
         ports:
           - "{{ pgsql_port }}:5432"
 
@@ -111,7 +111,7 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/pg-primary-conf/postgresql-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/pg-primary-conf/postgresql-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
@@ -139,14 +139,14 @@
         name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql.conf
+        command: -c config_file=/etc/postgresql/postgresql-primary.conf
         networks:
           - name: "{{ network_name }}"
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql-primary.conf:ro"
         ports:
           - "{{ pgsql_port + item - 1 }}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
