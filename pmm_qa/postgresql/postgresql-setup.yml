@@ -42,6 +42,11 @@
         mode: '0755'
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+    - name: Generate my.cnf for each node
+      template:
+        src: ./data/pg-primary-conf/pg_hba.conf.j2
+        dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
+
     - name: Remove old PostgreSQL primary container
       community.docker.docker_container:
         name: "pgsql_pmm_{{ pg_version }}_1"
@@ -64,7 +69,7 @@
         volumes:
           - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
           - "./data/pg-primary-conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
-          - "./data/pg-primary-conf/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+          - "./data/pg-primary-conf/pg_hba.conf.j2:/etc/postgresql/pg_hba.conf.j2:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
         ports:
           - "5432:5432"
