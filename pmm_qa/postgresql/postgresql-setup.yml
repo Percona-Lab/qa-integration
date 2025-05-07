@@ -23,7 +23,7 @@
     query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('pgstatements', true) }}"
     metrics_mode: "auto"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
-#    random_service_name_value: ""
+    random_service_name_value: ""
 
   tasks:
     - name: Create Docker network
@@ -97,22 +97,22 @@
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
-    - name: Start PostgreSQL replica container
-      community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-        image: "postgres:{{ pg_version }}-bookworm"
-        restart_policy: "no"
-        state: started
-        command: sleep infinity
-        networks:
-          - name: "{{ network_name }}"
-        env:
-          POSTGRES_INITDB_SKIP: "yes"
-          POSTGRES_PASSWORD: "{{ root_password }}"
-          PGPASSWORD: "{{ replication_password }}"
-        volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#    - name: Start PostgreSQL replica container
+#      community.docker.docker_container:
+#        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+#        image: "postgres:{{ pg_version }}-bookworm"
+#        restart_policy: "no"
+#        state: started
+#        command: sleep infinity
+#        networks:
+#          - name: "{{ network_name }}"
+#        env:
+#          POSTGRES_INITDB_SKIP: "yes"
+#          POSTGRES_PASSWORD: "{{ root_password }}"
+#          PGPASSWORD: "{{ replication_password }}"
+#        volumes:
+#          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
       community.docker.docker_container_exec:
@@ -131,13 +131,18 @@
           -U {{ replication_user }}
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-#    - name: Create pg_stat_statements extension if not exists
-#      community.docker.docker_container_exec:
-#        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-#        user: postgres
-#        command: >
-#          psql -d {{ db_name | default('postgres') }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+    - name: Start replica with PostgreSQL server
+      community.docker.docker_container:
+        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        image: "postgres:{{ pg_version }}-bookworm"
+        state: started
+        restart_policy: always
+        env:
+          POSTGRES_PASSWORD: "{{ root_password }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+        networks:
+          - name: "{{ network_name }}"
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
