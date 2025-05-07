@@ -52,7 +52,11 @@
 - name: Install wget inside Debian-family container
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: apt-get install -y wget gnupg2 jq
+    command: >
+      sh -c '
+      apt-get update &&
+      apt-get install -y wget gnupg2 jq
+      '
     user: "root"
   when: distro_family == "debian"
 
