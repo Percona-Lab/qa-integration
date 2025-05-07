@@ -24,18 +24,18 @@
 #    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
 #    setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
 #    random_service_name_value: ""
-
-- name: Start PostgreSQL primary container
-  community.docker.docker_container:
-    name: "pgsql_pmm_{{ ps_version }}_1"
-    image: "postgres:{{ pg_version }}-bookworm"
-    restart_policy: always
-    state: started
-    networks:
-      - name: "{{ network_name }}"
-    env:
-      POSTGRES_PASSWORD: "{{ root_password }}"
+  tasks:
+    - name: Start PostgreSQL primary container
+      community.docker.docker_container:
+        name: "pgsql_pmm_{{ ps_version }}_1"
+        image: "postgres:{{ pg_version }}-bookworm"
+        restart_policy: always
+        state: started
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          POSTGRES_PASSWORD: "{{ root_password }}"
 #    volumes:
 #      - pg_primary_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+        ports:
+          - "5432:5432"
