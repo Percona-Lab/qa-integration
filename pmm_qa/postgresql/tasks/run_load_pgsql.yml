@@ -32,6 +32,7 @@
         ALTER DEFAULT PRIVILEGES IN SCHEMA public
           GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
         \" | psql -U postgres -v
+      "
 
 - name: Ensure pgbench is installed (Debian-based container)
   community.docker.docker_container_exec:
