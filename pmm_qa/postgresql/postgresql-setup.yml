@@ -34,8 +34,8 @@
     networks:
       - name: "{{ network_name }}"
     env:
-      POSTGRES_PASSWORD: root_password
-    volumes:
-      - pg_primary_data:/var/lib/postgresql/data
+      POSTGRES_PASSWORD: "{{ root_password }}"
+#    volumes:
+#      - pg_primary_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
