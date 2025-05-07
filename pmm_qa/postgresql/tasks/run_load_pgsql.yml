@@ -31,7 +31,7 @@
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
         ALTER DEFAULT PRIVILEGES IN SCHEMA public
           GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
-        \" | psql -U postgres -v
+        \" | psql -U postgres -v ON_ERROR_STOP=1
       "
 
 - name: Ensure pgbench is installed (Debian-based container)
