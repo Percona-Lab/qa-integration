@@ -164,6 +164,17 @@
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+    - name: Create PostgreSQL user 'pmm' with password
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_1"
+        user: postgres
+        command: >
+          bash -c '
+            psql -U postgres -d {{ db_name | default("postgres") }} -c "
+              GRANT pg_monitor TO pmm;
+            "
+          '
+
     - name: Create pg_stat_statements extension
       community.docker.docker_container_exec:
         container: "pgsql_pmm_{{ pg_version }}_1"
