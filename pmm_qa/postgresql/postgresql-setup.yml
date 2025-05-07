@@ -15,7 +15,7 @@
 #    group_seeds_port: 34061
 #    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('3', true)) | int }}"
     network_name: "pmm-qa"
-#    data_dir: "{{ lookup('env', 'HOME') }}/mysql_cluster_data"
+    data_dir: "{{ lookup('env', 'HOME') }}/pgsql_cluster_data"
 #    server_id_start: 1
 #    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
 #    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
@@ -43,7 +43,14 @@
           - name: "{{ network_name }}"
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
-#    volumes:
-#      - pg_primary_data:/var/lib/postgresql/data
+        volumes:
+          - "{{ data_dir }}/node1/data:/var/lib/postgresql"
         ports:
           - "5432:5432"
+
+    - name: Wait for PgSQL to be available
+      wait_for:
+        host: localhost
+        port: "5432"
+        delay: 10
+        timeout: 300
