@@ -157,7 +157,7 @@
     user: "root"
     command: >
       sh -c '
-        dnf install -y https://repo.percona.com/pmm3-client/yum/release/7/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm
+        microdnf install -y https://repo.percona.com/pmm3-client/yum/release/7/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm
       '
   when:
     - distro_family == 'rhel'
