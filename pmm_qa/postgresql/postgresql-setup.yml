@@ -120,12 +120,12 @@
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
-        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container_name: "ps_pmm_{{ pg_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Get already connected services to pmm server
       community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ ps_version }}_1"
+        container: "pgsql_pmm_{{ pg_version }}_1"
         command: >
           sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
       register: pmm_server_services
@@ -144,8 +144,8 @@
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add postgresql --username=pmm --password=pmm ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        command: pmm-admin add postgresql --username=pmm --password=pmm ps_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Run load on primary node.
