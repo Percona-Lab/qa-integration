@@ -164,13 +164,9 @@
         command: >
           bash -c '
             PGPASSWORD="{{ root_password }}" psql -h /tmp -U postgres -d {{ db_name | default("postgres") }} -c "
-            DO \$$
-            BEGIN
-              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''pmm'\'') THEN
-                CREATE ROLE pmm LOGIN PASSWORD '\''pmm'\'';
-              END IF;
-            END
-            \$$;"
+              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD 'pmm';
+              GRANT pg_monitor TO pmm;
+            "
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -180,6 +176,7 @@
         user: postgres
         command: >
           psql -U postgres -d 'postgres' -c " 
+            CREATE DATABASE contrib_regression;
             CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
           "
 
