@@ -330,7 +330,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         }
 
         # Ansible playbook filename
-        playbook_filename = './postgresql/percona-distribution-postgres-setup.yml'
+        playbook_filename = 'percona-distribution-postgresql/percona-distribution-postgres-setup.yml'
     else:
         # Define environment variables for playbook
         env_vars = {

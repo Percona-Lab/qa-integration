@@ -44,7 +44,7 @@
 
     - name: Generate pg_hba.conf for primary node
       template:
-        src: ./data/pg-primary-conf/pg_hba.conf.j2
+        src: ./data/pg_hba.conf.j2
         dest: "{{ data_dir }}/node1/pg_hba.conf"
 
     - name: Remove old Percona Distribution PostgreSQL primary container
@@ -68,7 +68,7 @@
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
-          - "./data/pg-primary-conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
+          - "./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
         ports:
