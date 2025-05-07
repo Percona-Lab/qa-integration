@@ -117,11 +117,11 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-    - name: Check replication status on primary
-      community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_1"
-        user: postgres
-        command: psql -c "SELECT * FROM pg_stat_replication;"
+    - name: Install and add pmm client.
+      include_tasks: ../tasks/install_pmm_client.yml
+      vars:
+        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Run load on primary node.
       include_tasks: ./tasks/run_load_pgsql.yml
@@ -131,3 +131,9 @@
         pgbench_time: 60
         pgbench_scale: 10
         pgbench_db: postgres
+
+    - name: Check replication status on primary
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_1"
+        user: postgres
+        command: psql -c "SELECT * FROM pg_stat_replication;"
