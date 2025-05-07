@@ -17,12 +17,12 @@
         ) | trim
       }}
 
-#- name: Create custom database for pgbench
-#  community.docker.docker_container_exec:
-#    container: "{{ node_name }}"
-#    user: postgres
-#    command: >
-#      psql -U postgres -c "CREATE DATABASE pgbench;"
+- name: Create custom database for pgbench
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: postgres
+    command: >
+      psql -U postgres -c "CREATE DATABASE pgbench;"
 
 - name: Ensure pgbench is installed (Debian-based container)
   community.docker.docker_container_exec:
