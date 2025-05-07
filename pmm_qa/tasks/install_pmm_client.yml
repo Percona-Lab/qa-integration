@@ -67,10 +67,17 @@
     user: "root"
   when: distro_family == "rhel"
 
-- name: Download percona release on RHEL based OS
+- name: get lsb_release
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    command: lsb_release -sc
+    user: "root"
+    register: lsb_release
+
+- name: Download percona release on debian based OS
   get_url:
-    url: "https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb"
-    dest: "/percona-release_latest.$(lsb_release -sc)_all.deb"
+    url: "https://repo.percona.com/apt/percona-release_latest.{{ lsb_release }}_all.deb"
+    dest: "/percona-release_latest.{{ lsb_release }}_all.deb"
   when: distro_family == "debian"
 
 - name: Download percona release on RHEL based OS
