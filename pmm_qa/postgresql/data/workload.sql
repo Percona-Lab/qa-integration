@@ -3,6 +3,9 @@
 \set bid random(1, 10)
 \set tid random(1, 50)
 
+ALTER TABLE pgbench_branches ADD COLUMN bname TEXT DEFAULT 'Main Branch';
+ALTER TABLE pgbench_tellers ADD COLUMN tname TEXT DEFAULT 'Teller X';
+
 BEGIN;
 
 SELECT abalance
