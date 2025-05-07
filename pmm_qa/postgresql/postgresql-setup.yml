@@ -25,6 +25,15 @@
 #    setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
 #    random_service_name_value: ""
   tasks:
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: "{{ network_name }}"
+        state: present
+      ignore_errors: yes
+
+    - name: "Remove old data folders"
+      shell: 'rm -fr {{ data_dir }}'
+
     - name: Remove old PostgreSQL primary container
       community.docker.docker_container:
         name: "pgsql_pmm_{{ pg_version }}_1"
