@@ -77,7 +77,7 @@
     - name: Wait for PgSQL to be available
       wait_for:
         host: localhost
-        port: "5432"
+        port: "{{ pgsql_port }}"
         delay: 10
         timeout: 300
 
