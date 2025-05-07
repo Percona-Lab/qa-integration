@@ -17,9 +17,9 @@
     network_name: "pmm-qa"
     data_dir: "{{ lookup('env', 'HOME') }}/pgsql_cluster_data"
 #    server_id_start: 1
-#    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
-#    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
-#    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
+    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
+    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
 #    query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('perfschema', true) }}"
 #    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
@@ -121,6 +121,31 @@
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Get already connected services to pmm server
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ ps_version }}_1"
+        command: >
+          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
+      register: pmm_server_services
+
+    - name: Display already connected services to pmm server
+      debug:
+        msg: "{{ pmm_server_services.stdout | split('\n') }}"
+
+    - name: Find out if service is already connected to pmm server
+      block:
+        - name: Loop through percona servers
+          set_fact:
+            random_service_name_value: "_{{ 9999 | random + 1 }}"
+          loop: "{{ range(1, nodes_count | int + 1) | list }}"
+          when: "('pgsql_pmm_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ ps_version }}_{{ item }}"
+        command: pmm-admin add postgresql --username=pmm --password=pmm ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Run load on primary node.
