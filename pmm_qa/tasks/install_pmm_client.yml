@@ -224,14 +224,14 @@
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --node-name={{ container_name }} --server-username=admin --server-password={{ admin_password }}
+    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }} {{ container_name }}
   when: metrics_mode | length > 0
 
 - name: Connect pmm client to pmm server using metrics mode
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
-    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --node-name={{ container_name }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }}
+    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }} {{ container_name }}
   when: metrics_mode | length == 0
 
 - name: Wait 5 seconds for connection to complete
