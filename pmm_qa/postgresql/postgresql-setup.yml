@@ -25,9 +25,17 @@
 #    setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
 #    random_service_name_value: ""
   tasks:
+    - name: Remove old PostgreSQL primary container
+      community.docker.docker_container:
+        name: "pgsql_pmm_{{ pg_version }}_1"
+        image: "postgres:{{ pg_version }}-bookworm"
+        restart_policy: always
+        state: absent
+      ignore_errors: yes
+
     - name: Start PostgreSQL primary container
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ ps_version }}_1"
+        name: "pgsql_pmm_{{ pg_version }}_1"
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: always
         state: started
