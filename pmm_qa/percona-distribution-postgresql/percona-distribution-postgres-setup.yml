@@ -114,6 +114,37 @@
           - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
+    - name: Create custom database for pgbench
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: postgres
+        command: >
+          bash -c "
+            echo \"
+            CREATE DATABASE pgbench;
+            \\c pgbench
+            GRANT CONNECT ON DATABASE pgbench TO pmm;
+            GRANT USAGE ON SCHEMA public TO pmm;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+            \" | psql -U postgres -v ON_ERROR_STOP=1
+          "
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Create Percona Distribution PostgreSQL user 'pmm' with password
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: postgres
+        command: >
+          bash -c '
+            PGPASSWORD="{{ root_password }}" psql -h /tmp -U postgres -d {{ db_name | default("postgres") }} -c "
+              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD '\''pmm'\'';
+              GRANT pg_monitor TO pmm;
+            "
+          '
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
     - name: Wipe replica data directory before basebackup
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
@@ -156,19 +187,6 @@
     - name: Wait 10 seconds for server to restart
       pause:
         seconds: 10
-
-    - name: Create Percona Distribution PostgreSQL user 'pmm' with password
-      community.docker.docker_container_exec:
-        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        user: postgres
-        command: >
-          bash -c '
-            PGPASSWORD="{{ root_password }}" psql -h /tmp -U postgres -d {{ db_name | default("postgres") }} -c "
-              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD '\''pmm'\'';
-              GRANT pg_monitor TO pmm;
-            "
-          '
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 
 
