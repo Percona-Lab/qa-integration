@@ -105,7 +105,7 @@
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: "no"
         state: started
-        command: sleep infinity
+#        command: sleep infinity
         networks:
           - name: "{{ network_name }}"
         env:
@@ -183,8 +183,6 @@
         ports:
           - "{{ pgsql_port + item - 1 }}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
-
 
     - name: Create pg_stat_statements extension
       community.docker.docker_container_exec:
