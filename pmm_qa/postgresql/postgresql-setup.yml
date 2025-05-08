@@ -109,7 +109,7 @@
         networks:
           - name: "{{ network_name }}"
         env:
-          POSTGRES_INITDB_SKIP: "yes"
+#          POSTGRES_INITDB_SKIP: "yes"
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
