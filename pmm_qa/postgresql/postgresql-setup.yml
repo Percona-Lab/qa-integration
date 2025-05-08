@@ -97,6 +97,24 @@
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
+    - name: Create custom database for pgbench
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: postgres
+        command: >
+          bash -c "
+            echo \"
+            CREATE DATABASE pgbench;
+            \\c pgbench
+            GRANT CONNECT ON DATABASE pgbench TO pmm;
+            GRANT USAGE ON SCHEMA public TO pmm;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+            \" | psql -U postgres -v ON_ERROR_STOP=1
+          "
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
     - name: Start PostgreSQL replica container
       community.docker.docker_container:
         name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
@@ -120,6 +138,19 @@
         user: root
         command: rm -rf /var/lib/postgresql/data/*
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Create PostgreSQL user 'pmm' with password
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: postgres
+        command: >
+          bash -c '
+            psql -U postgres -d {{ db_name | default("postgres") }} -c "
+              CREATE USER pmm WITH PASSWORD '\''pmm'\'';
+              GRANT pg_monitor TO pmm;
+            "
+          '
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Run pg_basebackup from primary to replica
       community.docker.docker_container_exec:
@@ -151,17 +182,7 @@
           - "{{ pgsql_port + item - 1 }}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-    - name: Create PostgreSQL user 'pmm' with password
-      community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_1"
-        user: postgres
-        command: >
-          bash -c '
-            psql -U postgres -d {{ db_name | default("postgres") }} -c "
-              CREATE USER pmm WITH PASSWORD '\''pmm'\'';
-              GRANT pg_monitor TO pmm;
-            "
-          '
+
 
     - name: Create pg_stat_statements extension
       community.docker.docker_container_exec:
