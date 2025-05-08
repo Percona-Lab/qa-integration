@@ -188,8 +188,6 @@
       pause:
         seconds: 10
 
-
-
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
