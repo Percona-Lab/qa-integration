@@ -114,6 +114,13 @@
           - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
+    - name: Wipe replica data directory before basebackup
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: root
+        command: rm -rf /var/lib/postgresql/data/*
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
     - name: Create custom database for pgbench
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
@@ -144,13 +151,6 @@
             "
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Wipe replica data directory before basebackup
-      community.docker.docker_container_exec:
-        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        user: root
-        command: rm -rf /var/lib/postgresql/data/*
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Run pg_basebackup from primary to replica
       community.docker.docker_container_exec:
