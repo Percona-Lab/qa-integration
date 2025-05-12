@@ -1,6 +1,6 @@
 ---
-# Percona Server 8.4 and higher single instance and also Cluster with Group Replication
-- name: Setup Percona Server 8.4 and higher. Cluster with Group Replication in Docker
+# MySQL 8.4 and higher single instance and also Cluster with Group Replication
+- name: Setup MySQL 8.4 and higher. Cluster with Group Replication in Docker
   hosts: localhost
   connection: local
   gather_facts: yes
@@ -52,10 +52,10 @@
         mode: '0755'
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Remove old percona server containers
+    - name: Remove old MySQL containers
       community.docker.docker_container:
         name: "ps_pmm_{{ ps_version }}_{{ item }}"
-        image: "percona/percona-server:{{ ps_version }}"
+        image: "mysql:{{ ps_version }}"
         restart_policy: always
         state: absent
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -65,16 +65,16 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Setup Percona Server group replication
+    - name: Setup MySQL group replication
       include_tasks: ./tasks/percona-server-group-replication-setup.yml
       when: setup_type == "gr"
 
-    - name: Setup Percona Server with async replication
+    - name: Setup MySQL with async replication
       include_tasks: ./tasks/percona-server-async-replication-setup.yml
       when: setup_type == "replication"
 
-    - name: Setup Percona Server
-      include_tasks: tasks/percona-server-setup-single.yml
+    - name: Setup MySQL
+      include_tasks: tasks/mysql-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
     - name: Create slowlog configuration for mysql nodes
@@ -109,7 +109,7 @@
 
     - name: Find out if service is already connected to pmm server
       block:
-        - name: Loop through percona servers
+        - name: Loop through MySQL databases
           set_fact:
             random_service_name_value: "_{{ 9999 | random + 1 }}"
           loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -136,7 +136,7 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
-    - name: Install sysbench inside of all percona server nodes
+    - name: Install sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         user: "root"
@@ -148,7 +148,7 @@
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare sysbench inside of all percona server nodes
+    - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
@@ -158,7 +158,7 @@
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare sysbench inside of all percona server nodes
+    - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
@@ -173,7 +173,7 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
-    - name: Prepare sysbench inside of all percona server nodes
+    - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_1"
         command: >
@@ -187,7 +187,7 @@
           "
       when: setup_type == "gr" or setup_type == "replication"
 
-    - name: Prepare data for sysbench inside of all percona server nodes
+    - name: Prepare data for sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
@@ -203,7 +203,7 @@
       when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare data for sysbench inside of first percona server nodes
+    - name: Prepare data for sysbench inside of first MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_1"
         command: >
@@ -218,7 +218,7 @@
             prepare
       when: setup_type == "gr" or setup_type == "replication"
 
-    - name: Run load for sysbench inside of all percona server nodes
+    - name: Run load for sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
