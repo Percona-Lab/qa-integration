@@ -160,6 +160,7 @@
     user: "root"
     command: >
       sh -c '
+        percona-release enable-only pmm3-client release &&
         apt-get update &&
         apt-get -y install pmm-client
       '
