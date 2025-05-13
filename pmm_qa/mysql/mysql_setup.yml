@@ -5,7 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
-    ms_version: "{{ lookup('env', 'ms_vERSION') | default('8.4', true) }}"
+    ms_version: "{{ lookup('env', 'MS_VERSION') | default('8.4', true) }}"
     cluster_name: "mysql_cluster"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
