@@ -6,8 +6,8 @@
 
 - name: Start MySQL containers
   community.docker.docker_container:
-    name: "ps_pmm_{{ ps_version }}_{{ item }}"
-    image: "mysql:{{ ps_version }}"
+    name: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    image: "mysql:{{ ms_version }}"
     restart_policy: always
     state: started
     networks:
