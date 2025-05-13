@@ -5,7 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
-    ps_version: "{{ lookup('env', 'PS_VERSION') | default('8.4', true) }}"
+    ms_version: "{{ lookup('env', 'ms_vERSION') | default('8.4', true) }}"
     cluster_name: "mysql_cluster"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
@@ -54,8 +54,8 @@
 
     - name: Remove old MySQL containers
       community.docker.docker_container:
-        name: "ps_pmm_{{ ps_version }}_{{ item }}"
-        image: "mysql:{{ ps_version }}"
+        name: "mysql_pmm_{{ ms_version }}_{{ item }}"
+        image: "mysql:{{ ms_version }}"
         restart_policy: always
         state: absent
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -79,7 +79,7 @@
 
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL slow_query_log='ON';
@@ -93,12 +93,12 @@
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
       vars:
-        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container_name: "mysql_pmm_{{ ms_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Get already connected services to pmm server
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
+        container: "mysql_pmm_{{ ms_version }}_1"
         command: >
           sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
       register: pmm_server_services
@@ -113,32 +113,32 @@
           set_fact:
             random_service_name_value: "_{{ 9999 | random + 1 }}"
           loop: "{{ range(1, nodes_count | int + 1) | list }}"
-          when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
+          when: "('mysql_pmm_' ~ ms_version ~ '_' ~ item) in pmm_server_services.stdout"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "replication"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
     - name: Install sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         user: "root"
         command: >
           /bin/sh -c "
@@ -150,7 +150,7 @@
 
     - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL super_read_only = OFF;
@@ -160,7 +160,7 @@
 
     - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           CREATE DATABASE sbtest;
@@ -175,7 +175,7 @@
 
     - name: Prepare sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
+        container: "mysql_pmm_{{ ms_version }}_1"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           CREATE DATABASE sbtest;
@@ -189,7 +189,7 @@
 
     - name: Prepare data for sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         command: >
           sysbench /usr/share/sysbench/oltp_read_write.lua 
             --mysql-host=127.0.0.1 
@@ -205,7 +205,7 @@
 
     - name: Prepare data for sysbench inside of first MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
+        container: "mysql_pmm_{{ ms_version }}_1"
         command: >
           sysbench /usr/share/sysbench/oltp_read_write.lua 
             --mysql-host=127.0.0.1 
@@ -220,7 +220,7 @@
 
     - name: Run load for sysbench inside of all MySQL nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        container: "mysql_pmm_{{ ms_version }}_{{ item }}"
         command: >
           sysbench /usr/share/sysbench/oltp_read_write.lua 
             --mysql-host=127.0.0.1 
