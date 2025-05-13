@@ -66,6 +66,7 @@
     command: microdnf install -y wget gnupg2 jq curl-minimal
     user: "root"
   when: distro_family == "rhel"
+  ignore_errors: true
 
 - name: Get lsb_release
   community.docker.docker_container_exec:
