@@ -1,3 +1,6 @@
+import os
+import ansible_runner
+
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
     script_path = os.path.abspath(sys.argv[0])

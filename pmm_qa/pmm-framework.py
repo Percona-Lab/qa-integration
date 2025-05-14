@@ -2,7 +2,6 @@ import subprocess
 import argparse
 import os
 import sys
-import ansible_runner
 import requests
 import re
 from mysql.setup_mysql import setup_mysql_docker
