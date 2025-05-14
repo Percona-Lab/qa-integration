@@ -118,21 +118,21 @@
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "mysql_pmm_{{ ms_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ms-gr-dev --cluster=ms-gr-dev-cluster --replication-set=ms-gr-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "mysql_pmm_{{ ms_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ms-replication-dev --cluster=ms-replication-dev-cluster --replication-set=ms-async-replication mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "replication"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
         container: "mysql_pmm_{{ ms_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ms-dev mysql_pmm_{{ ms_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
