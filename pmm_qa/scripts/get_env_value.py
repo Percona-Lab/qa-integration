@@ -1,3 +1,5 @@
+import os
+
 def get_value(key, db_type, args, db_config):
     # Check if the variable exists in the environment
     env_value = os.environ.get(key)
