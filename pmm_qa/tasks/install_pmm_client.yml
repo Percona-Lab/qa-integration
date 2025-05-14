@@ -54,7 +54,7 @@
     command: >
       sh -c '
       apt-get update &&
-      apt-get install -y wget gnupg2 jq lsb-base lsb-release curl
+      apt-get install -y wget gnupg2 jq lsb-base lsb-release curl iproute2
       '
     user: "root"
   when: distro_family == "debian"
@@ -62,7 +62,7 @@
 - name: Install dependencies on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: microdnf install -y wget gnupg2 jq
+    command: microdnf install -y wget gnupg2 jq iproute2
     user: "root"
   when: distro_family == "rhel"
 
