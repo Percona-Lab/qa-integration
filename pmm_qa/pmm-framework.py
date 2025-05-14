@@ -252,7 +252,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         no_of_nodes = 2
 
     if ms_version_int >= 84:
-        setup_mysql_docker(db_type, setup_type, ms_version, db_config, args)
+        setup_mysql_docker(db_type, setup_type, ms_version, container_name, db_config, args)
     else:
         # Define environment variables for playbook
         env_vars = {
