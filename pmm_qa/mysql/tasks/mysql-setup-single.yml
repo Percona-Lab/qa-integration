@@ -1,0 +1,31 @@
+- name: Generate my.cnf for each node
+  template:
+    src: ./data/my.cnf.j2
+    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start MySQL containers
+  community.docker.docker_container:
+    name: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    image: "mysql:{{ ms_version }}"
+    restart_policy: always
+    state: started
+    networks:
+      - name: "{{ network_name }}"
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+    ports:
+      - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+      - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
+    volumes:
+      - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
+      - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait for MySQL to be available
+  wait_for:
+    host: localhost
+    port: "{{ mysql_port + item - 1 }}"
+    delay: 10
+    timeout: 300
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"

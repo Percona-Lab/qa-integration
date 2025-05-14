@@ -2,119 +2,12 @@ import subprocess
 import argparse
 import os
 import sys
-import ansible_runner
 import requests
 import re
-
-# Database configurations
-database_configs = {
-    "PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
-                           "TARBALL": ""}
-    },
-    "MLAUNCH_PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
-    },
-    "MLAUNCH_MODB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "TARBALL": ""}
-    },
-    "SSL_MLAUNCH": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
-                           "TARBALL": ""}
-    },
-    "SSL_PSMDB": {
-        "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
-                           "TARBALL": ""}
-    },
-    "MYSQL": {
-        "versions": ["8.4", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": ""}
-    },
-    "PS": {
-        "versions": ["5.7", "8.4", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": "", "NODES_COUNT": 1}
-    },
-    "SSL_MYSQL": {
-        "versions": ["5.7", "8.4", "8.0"],
-        "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": ""}
-    },
-    "PGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16", "17"],
-        "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
-    },
-    "PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16", "17"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
-    },
-    "SSL_PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16", "17"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": ""}
-    },
-    "PXC": {
-        "versions": ["5.7", "8.0"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "QUERY_SOURCE": "perfschema", "TARBALL": ""}
-    },
-    "PROXYSQL": {
-        "versions": ["2"],
-        "configurations": {"PACKAGE": ""}
-    },
-    "HAPROXY": {
-        "versions": [""],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest"}
-    },
-    "EXTERNAL": {
-        "REDIS": {
-            "versions": ["1.14.0", "1.58.0"],
-        },
-        "NODEPROCESS": {
-            "versions": ["0.7.5", "0.7.10"],
-        },
-        "configurations": {"CLIENT_VERSION": "3-dev-latest"}
-    },
-    "DOCKERCLIENTS": {
-        "configurations": {}  # Empty dictionary for consistency
-    },
-}
-
-
-def run_ansible_playbook(playbook_filename, env_vars, args):
-    # Get Script Dir
-    script_path = os.path.abspath(sys.argv[0])
-    script_dir = os.path.dirname(script_path)
-    playbook_path = script_dir + "/" + playbook_filename
-    verbosity_level = 1
-
-
-
-    if args.verbosity_level is not None:
-        verbosity_level = int(args.verbosity_level)
-
-    if args.verbose:
-        print(f'Options set after considering Defaults: {env_vars}')
-
-    r = ansible_runner.run(
-        private_data_dir=script_dir,
-        playbook=playbook_path,
-        inventory='127.0.0.1',
-        cmdline='-l localhost, --connection=local',
-        envvars=env_vars,
-        suppress_env_files=True,
-        verbosity=verbosity_level,
-    )
-
-    print(f'{playbook_filename} playbook execution {r.status}')
-
-    if r.rc != 0:
-        exit(1)
-
+from mysql.setup_mysql import setup_mysql_docker
+from scripts.get_env_value import get_value
+from scripts.database_options import database_options as database_configs
+from scripts.run_ansible_playbook import run_ansible_playbook
 
 def get_running_container_name():
     container_image_name = "pmm-server"
@@ -150,26 +43,6 @@ def get_running_container_name():
         return None
 
     return None
-
-
-def get_value(key, db_type, args, db_config):
-    # Check if the variable exists in the environment
-    env_value = os.environ.get(key)
-    if env_value is not None:
-        return env_value
-
-    # Only for client_version we accept global command line argument
-    if key == "CLIENT_VERSION" and args.client_version is not None:
-        return args.client_version
-
-    # Check if the variable exists in the args config
-    config_value = db_config.get(key)
-    if config_value is not None:
-        return config_value
-
-    # Fall back to default configs value or empty ''
-    return database_configs[db_type]["configurations"].get(key, '')
-
 
 def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -236,6 +109,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    ms_version_int = int(ms_version.replace(".", ""))
 
     # Check Setup Types
     setup_type = ''
@@ -248,26 +122,28 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         setup_type = ''
         no_of_nodes = 2
 
-    # Define environment variables for playbook
-    env_vars = {
-        'GROUP_REPLICATION': setup_type,
-        'MS_NODES': no_of_nodes,
-        'MS_VERSION': ms_version,
-        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-        'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
-        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-        'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-        'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
-        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
-    }
+    if ms_version_int >= 84:
+        setup_mysql_docker(db_type, container_name, db_config, args)
+    else:
+        # Define environment variables for playbook
+        env_vars = {
+            'GROUP_REPLICATION': setup_type,
+            'MS_NODES': no_of_nodes,
+            'MS_VERSION': ms_version,
+            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+            'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
+            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+            'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
+            'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
+            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+        }
 
-    # Ansible playbook filename
-    playbook_filename = 'ms_pmm_setup.yml'
+        # Ansible playbook filename
+        playbook_filename = 'ms_pmm_setup.yml'
 
-    # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_filename, env_vars, args)
-
+        # Call the function to run the Ansible playbook
+        run_ansible_playbook(playbook_filename, env_vars, args)
 
 def setup_ssl_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
