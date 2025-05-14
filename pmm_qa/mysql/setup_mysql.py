@@ -13,4 +13,4 @@ def setup_mysql_docker(db_type, setup_type, ms_version, container_name, db_confi
         'NODES_COUNT': get_value('NODES_COUNT', db_type, args, db_config),
     }
 
-    run_ansible_playbook('./mysql_setup.yml', env_vars, args)
+    run_ansible_playbook('mysql/mysql_setup.yml', env_vars, args)
