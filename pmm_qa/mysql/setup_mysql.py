@@ -1,4 +1,4 @@
-def setup_mysql_docker(db_type, db_config=None, args=None):
+def setup_mysql_docker(db_type, setup_type, ms_version, db_config=None, args=None):
     env_vars = {
         'SETUP_TYPE': setup_type,
         'MS_VERSION': ms_version,
