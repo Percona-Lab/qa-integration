@@ -1,12 +1,12 @@
-import subprocess
-import argparse
-import os
-import sys
-import ansible_runner
-import requests
-import re
-from pmm_qa.mysql.setup_mysql import setup_mysql_docker
-from pmm_qa.scripts.get_env_value import get_value
+# import subprocess
+# import argparse
+# import os
+# import sys
+# import ansible_runner
+# import requests
+# import re
+from mysql.setup_mysql import setup_mysql_docker
+from scripts.get_env_value import get_value
 
 # Database configurations
 database_configs = {
