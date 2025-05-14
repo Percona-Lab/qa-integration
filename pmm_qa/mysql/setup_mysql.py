@@ -1,4 +1,4 @@
-from ..scripts.get_env_value import get_value
+from pmm_qa.scripts.get_env_value import get_value
 
 def setup_mysql_docker(db_type, setup_type, ms_version, container_name, db_config=None, args=None):
     env_vars = {
