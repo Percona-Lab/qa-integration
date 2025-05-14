@@ -1,4 +1,5 @@
 import os
+from database_options import database_options
 
 def get_value(key, db_type, args, db_config):
     # Check if the variable exists in the environment
@@ -16,4 +17,4 @@ def get_value(key, db_type, args, db_config):
         return config_value
 
     # Fall back to default configs value or empty ''
-    return database_configs[db_type]["configurations"].get(key, '')
+    return database_options[db_type]["configurations"].get(key, '')
