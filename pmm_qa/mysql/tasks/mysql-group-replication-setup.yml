@@ -12,7 +12,7 @@
 
 - name: Start MySQL containers with group replication
   community.docker.docker_container:
-    name: "ps_pmm_{{ ms_version }}_{{ item }}"
+    name: "mysql_pmm_{{ ms_version }}_{{ item }}"
     image: "mysql:{{ ms_version }}"
     restart_policy: always
     state: started
@@ -39,7 +39,7 @@
 
 - name: Reset configuration for all nodes
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_{{ item }}"
+    container: "mysql_pmm_{{ ms_version }}_{{ item }}"
     command: >
       mysql -uroot -p{{ root_password }} -e "
       RESET BINARY LOGS AND GTIDS;
@@ -50,7 +50,7 @@
 
 - name: Bootstrap first node in the cluster
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_1"
+    container: "mysql_pmm_{{ ms_version }}_1"
     command: >
       mysql -uroot -p{{ root_password }} -e "
       SET GLOBAL group_replication_bootstrap_group=ON;
@@ -65,7 +65,7 @@
 
 - name: Start group replication on other nodes
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_{{ item }}"
+    container: "mysql_pmm_{{ ms_version }}_{{ item }}"
     command: mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
   ignore_errors: yes
@@ -76,7 +76,7 @@
 
 - name: Create and seed a test database on primary
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_1"
+    container: "mysql_pmm_{{ ms_version }}_1"
     command: >
       mysql -uroot -p{{ root_password}} -e "
       CREATE DATABASE testdb;
@@ -86,7 +86,7 @@
 
 - name: Check replication status on first node
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_1"
+    container: "mysql_pmm_{{ ms_version }}_1"
     command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
   register: replication_status
 
@@ -96,7 +96,7 @@
 
 - name: Check replication group members count
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ms_version }}_1"
+    container: "mysql_pmm_{{ ms_version }}_1"
     command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
   register: member_count
 
@@ -111,14 +111,14 @@
 
       To verify replication is working:
       1. Connect to the first node:
-         docker exec -it ps_pmm_{{ ms_version }}_1 mysql -uroot -p{{ root_password }}
+         docker exec -it mysql_pmm_{{ ms_version }}_1 mysql -uroot -p{{ root_password }}
 
       2. Insert data in the test database:
          USE testdb;
          INSERT INTO testdb VALUES (100, 'Test replication');
 
       3. Connect to other nodes and verify data is replicated:
-         docker exec -it ps_pmm_{{ ms_version }}_2 mysql -uroot -p{{ root_password }}
+         docker exec -it mysql_pmm_{{ ms_version }}_2 mysql -uroot -p{{ root_password }}
          USE testdb;
          SELECT * FROM testdb;
 
