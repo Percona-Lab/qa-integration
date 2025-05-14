@@ -1,0 +1,124 @@
+- name: Generate my.cnf for each node
+  template:
+    src: ./data/my-async-replication.cnf.j2
+    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Create initialization script for each node
+  template:
+    src: ./data/init-async-replication.sql.j2
+    dest: "{{ data_dir }}/node{{ item }}/init.sql"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start Percona Server containers with async replication
+  community.docker.docker_container:
+    name: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    image: "mysql:{{ ms_version }}"
+    restart_policy: always
+    state: started
+    networks:
+      - name: "{{ network_name }}"
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ root_password }}"
+    ports:
+      - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
+    volumes:
+      - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+      - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
+      - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait for MySQL to be available
+  wait_for:
+    host: localhost
+    port: "{{ mysql_port + item - 1 }}"
+    delay: 10
+    timeout: 300
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait 5 seconds for percona server start to complete
+  pause:
+    seconds: 5
+
+- name: Reset configuration for all nodes
+  community.docker.docker_container_exec:
+    container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    command: >
+      mysql -uroot -p{{ root_password }} -e "
+      RESET BINARY LOGS AND GTIDS;
+      RESET REPLICA ALL;
+      "
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  ignore_errors: yes
+
+- name: Get primary mysql_pmm_{{ ms_version }}_1 binary log status
+  community.docker.docker_container_exec:
+    container: "mysql_pmm_{{ ms_version }}_1"
+    command: >
+      mysql -uroot -p{{ root_password }} -e "
+      SHOW BINARY LOG STATUS\G
+      "
+  register: primary_status
+  changed_when: false
+
+
+- name: Display binary log status for primary
+  debug:
+    msg: "{{ primary_status.stdout | split('\n') }}"
+
+- name: Configure replica servers (container2-containerN)
+  community.docker.docker_container_exec:
+    container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    command: >
+      mysql -uroot -p{{ root_password }} -e "
+      CHANGE REPLICATION SOURCE TO 
+      SOURCE_HOST='mysql_pmm_{{ ms_version }}_1', 
+      SOURCE_PORT={{ mysql_listen_port }},
+      SOURCE_USER='{{ replication_user }}', 
+      SOURCE_PASSWORD='{{ replication_password }}',
+      SOURCE_AUTO_POSITION=1,
+      SOURCE_PUBLIC_KEY_PATH='',
+      GET_SOURCE_PUBLIC_KEY=1;
+      START REPLICA;
+      "
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+- name: Create and seed a test database on primary
+  community.docker.docker_container_exec:
+    container: "mysql_pmm_{{ ms_version }}_1"
+    command: >
+      mysql -uroot -p{{ root_password}} -e "
+      CREATE DATABASE testdb;
+      USE testdb;
+      CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
+      INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
+- name: Check replication status on replica nodes
+  community.docker.docker_container_exec:
+    container: "mysql_pmm_{{ ms_version }}_{{ item }}"
+    command: mysql -uroot -p{{ root_password }} -e "SHOW REPLICA STATUS\G"
+  register: replication_status
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+  changed_when: false
+
+- name: Display replication status for each replica
+  debug:
+    msg: "{{ replication_status.results[item - 2].stdout_lines }}"
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+- name: Set verification instructions
+  set_fact:
+    verification_msg: |
+      MySQL Cluster setup complete with asynchronous replication!
+      To verify replication is working:
+        1. Connect to the primary (mysql_pmm_{{ ms_version }}_1):
+            docker exec -it mysql_pmm_{{ ms_version }}_1 mysql -uroot -p{{ root_password }}
+        2. Insert data in the test database:
+           USE testdb;
+           INSERT INTO testdb VALUES (100, 'Test replication');
+        3. Connect to replicas and verify data is replicated:
+            docker exec -it mysql_pmm_{{ ms_version }}_2 mysql -uroot -p{{ root_password }}
+             USE testdb;
+             SELECT * FROM testdb;
+- name: Display verification instructions
+  debug:
+    msg: "{{ verification_msg | split('\n') }}"
