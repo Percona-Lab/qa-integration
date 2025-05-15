@@ -36,10 +36,10 @@ cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-serve
 cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
 
-##Start setup
-#docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
-#docker compose -f docker-compose-pmm-psmdb.yml build
-#docker compose -f docker-compose-pmm-psmdb.yml up -d
+#Start setup
+docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
+docker compose -f docker-compose-pmm-psmdb.yml build
+docker compose -f docker-compose-pmm-psmdb.yml up -d
 #
 ##Add users
 #docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
