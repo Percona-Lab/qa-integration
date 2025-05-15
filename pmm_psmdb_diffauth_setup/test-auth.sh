@@ -29,13 +29,13 @@ git clone https://github.com/OpenVPN/easy-rsa.git
 ./easy-rsa/easyrsa3/easyrsa --req-ou=client --batch build-client-full pmm-test nopass
 openssl dhparam -out certs/dhparam.pem 2048
 
-#cp pki/ca.crt certs/ca-certs.pem
-#cp pki/private/pmm-server.key certs/certificate.key
-#cp pki/issued/pmm-server.crt certs/certificate.crt
-#cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-server.pem
-#cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
-#find certs -type f -exec chmod 644 {} \;
-#
+cp pki/ca.crt certs/ca-certs.pem
+cp pki/private/pmm-server.key certs/certificate.key
+cp pki/issued/pmm-server.crt certs/certificate.crt
+cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-server.pem
+cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
+find certs -type f -exec chmod 644 {} \;
+
 ##Start setup
 #docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 #docker compose -f docker-compose-pmm-psmdb.yml build
