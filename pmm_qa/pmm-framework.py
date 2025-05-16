@@ -703,6 +703,7 @@ def mongo_ssl_setup(script_filename, args):
             with open(compose_file_path) as f:
                 data = yaml.load(f)
 
+            services = data.get('services', {})
             del services['pmm-server']
             del data['services']['psmdb-server']['depends_on']['pmm-server']
 
