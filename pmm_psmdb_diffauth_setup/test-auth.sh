@@ -1,3 +1,4 @@
+WITHOUT_PMM_SERVER=$1
 #!/bin/bash
 
 # REPO - repo for PSMDB/PBM packages, by default - testing
@@ -39,7 +40,12 @@ find certs -type f -exec chmod 644 {} \;
 #Start setup
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
-docker compose -f docker-compose-pmm-psmdb.yml up -d
+if [ "$check" = "without_pmm" ]; then
+    docker compose -f docker-compose-pmm-psmdb.yml up -d --scale pmm-server=0
+else
+    docker compose -f docker-compose-pmm-psmdb.yml up -d
+fi
+
 #
 ##Add users
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF

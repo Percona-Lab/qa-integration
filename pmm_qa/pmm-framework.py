@@ -743,7 +743,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     scripts_folder = "pmm_psmdb_diffauth_setup"
 
-    shell_scripts = ['test-auth.sh']
+    shell_scripts = ['test-auth.sh without_pmm']
     mongo_ssl_setup(shell_scripts[0], args)
 
     # Execute shell scripts
