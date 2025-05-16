@@ -26,47 +26,6 @@ services:
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  psmdb-server:
-    container_name: psmdb-server
-    hostname: psmdb-server
-    image: replica_member/local
-    environment:
-      - PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
-      - PMM_AGENT_SERVER_USERNAME=admin
-      - PMM_AGENT_SERVER_PASSWORD=admin
-      - PMM_AGENT_SERVER_ADDRESS=pmm-server:8443
-      - PMM_AGENT_PORTS_MIN=43000
-      - PMM_AGENT_PORTS_MAX=43020
-    entrypoint:
-      - bash
-      - -c
-      - |
-         cp /mongodb_certs/ca-certs.pem /etc/pki/tls/certs/
-         chown -R mongod:mongod /keytabs
-         exec /usr/sbin/init
-    volumes:
-      - ./conf:/etc/mongod
-      - ./certs:/mongodb_certs
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - 'psmdb-server-data:/data/db'
-      - keytabs:/keytabs
-      - ../pmm_psmdb-pbm_setup/conf/datagen:/etc/datagen:ro
-    privileged: true
-    cgroup: host
-    ports:
-      - "43000-43020:43000-43020"
-    healthcheck:
-      test: |
-       test $$(mongo --quiet --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
-      interval: 5s
-      start_period: 10s
-      retries: 3
-    depends_on:
-      pmm-server:
-        condition: service_healthy
-      kerberos:
-        condition: service_healthy
-
   pmm-server:
     container_name: pmm-server
     hostname: pmm-server
@@ -139,6 +98,47 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
+
+  psmdb-server:
+    container_name: psmdb-server
+    hostname: psmdb-server
+    image: replica_member/local
+    environment:
+      - PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
+      - PMM_AGENT_SERVER_USERNAME=admin
+      - PMM_AGENT_SERVER_PASSWORD=admin
+      - PMM_AGENT_SERVER_ADDRESS=pmm-server:8443
+      - PMM_AGENT_PORTS_MIN=43000
+      - PMM_AGENT_PORTS_MAX=43020
+    entrypoint:
+      - bash
+      - -c
+      - |
+         cp /mongodb_certs/ca-certs.pem /etc/pki/tls/certs/
+         chown -R mongod:mongod /keytabs
+         exec /usr/sbin/init
+    volumes:
+      - ./conf:/etc/mongod
+      - ./certs:/mongodb_certs
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - 'psmdb-server-data:/data/db'
+      - keytabs:/keytabs
+      - ../pmm_psmdb-pbm_setup/conf/datagen:/etc/datagen:ro
+    privileged: true
+    cgroup: host
+    ports:
+      - "43000-43020:43000-43020"
+    healthcheck:
+      test: |
+       test $$(mongo --quiet --eval "try { rs.initiate().ok } catch (_) {} rs.status().ok") -eq 1
+      interval: 5s
+      start_period: 10s
+      retries: 3
+    depends_on:
+      pmm-server:
+        condition: service_healthy
+      kerberos:
+        condition: service_healthy
 
 volumes:
   psmdb-server-data:
