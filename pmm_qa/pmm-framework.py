@@ -703,7 +703,15 @@ def mongo_ssl_setup(script_filename, args):
                             f'{shellscript_file_path}'])
             subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
                             f'{shellscript_file_path}'])
-            subprocess.run(['yq', 'del', '-i', 'services.psmdb-server.depends_on.pmm-server', compose_filename])
+            yaml = YAML()
+            with open(compose_filename) as f:
+                data = yaml.load(f)
+
+            del data['services']['psmdb-server']['depends_on']['pmm-server']
+
+            with open(compose_filename, "w") as f:
+                yaml.dump(data, f)
+
     except subprocess.CalledProcessError as e:
         print(f"Error occurred: {e}")
 
