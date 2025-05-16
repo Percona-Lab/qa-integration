@@ -715,6 +715,7 @@ def mongo_ssl_setup(script_filename, args):
             data['services']['psmdb-server']['networks'].append('pmm-qa')
             services = data.get('services', {})
             del services['pmm-server']
+            del services['kerberos']
             del data['services']['psmdb-server']['depends_on']
 
             entry_script = data['services']['psmdb-server']['entrypoint']
