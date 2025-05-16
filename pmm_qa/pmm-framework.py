@@ -703,6 +703,7 @@ def mongo_ssl_setup(script_filename, args):
                             f'{shellscript_file_path}'])
             subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
                             f'{shellscript_file_path}'])
+            subprocess.run(['yq', 'del', '-i', 'services.psmdb-server.depends_on.pmm-server', compose_filename])
     except subprocess.CalledProcessError as e:
         print(f"Error occurred: {e}")
 
