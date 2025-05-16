@@ -26,23 +26,23 @@ services:
       - ./test:/test
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-#  pmm-server:
-#    container_name: pmm-server
-#    hostname: pmm-server
-#    image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
-#    healthcheck:
-#      test: [ "CMD", "curl", "-f", "http://127.0.0.1:8080/ping" ]
-#      interval: 3s
-#      timeout: 2s
-#      retries: 20
-#    environment:
-#      - "PMM_DEBUG=1"
-#    ports:
-#      - "443:8443"
-#      - "8081:8080"
-#    volumes:
-#      - ./certs:/srv/nginx
-#      - 'pmm-server-data:/srv'
+  pmm-server:
+    container_name: pmm-server
+    hostname: pmm-server
+    image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://127.0.0.1:8080/ping" ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+    environment:
+      - "PMM_DEBUG=1"
+    ports:
+      - "443:8443"
+      - "8081:8080"
+    volumes:
+      - ./certs:/srv/nginx
+      - 'pmm-server-data:/srv'
 
   ldap-server:
     container_name: ldap-server
@@ -104,7 +104,7 @@ services:
     hostname: psmdb-server
     image: replica_member/local
     depends_on:
-      ${INCLUDE_PMM_DEP:-pmm-server}:
+      pmm-server:
         condition: service_healthy
       kerberos:
         condition: service_healthy
