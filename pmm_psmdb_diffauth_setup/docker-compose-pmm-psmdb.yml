@@ -103,6 +103,11 @@ services:
     container_name: psmdb-server
     hostname: psmdb-server
     image: replica_member/local
+    depends_on:
+      pmm-server:
+        condition: service_healthy
+      kerberos:
+        condition: service_healthy
     environment:
       - PBM_MONGODB_URI=mongodb://${PBM_USER:-pbm}:${PBM_PASS:-pbmpass}@127.0.0.1:27017
       - PMM_AGENT_SERVER_USERNAME=admin
@@ -134,11 +139,6 @@ services:
       interval: 5s
       start_period: 10s
       retries: 3
-    depends_on:
-      pmm-server:
-        condition: service_healthy
-      kerberos:
-        condition: service_healthy
 
 volumes:
   psmdb-server-data:
