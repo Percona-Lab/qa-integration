@@ -1,4 +1,3 @@
-WITHOUT_PMM_SERVER=$1
 #!/bin/bash
 
 # REPO - repo for PSMDB/PBM packages, by default - testing
@@ -40,14 +39,8 @@ find certs -type f -exec chmod 644 {} \;
 #Start setup
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
-if [ "$check" = "without_pmm" ]; then
-    docker compose -f docker-compose-pmm-psmdb.yml up -d --scale pmm-server=0
-else
-    export INCLUDE_PMM_DEP=true
-    docker compose -f docker-compose-pmm-psmdb.yml up -d
-fi
+docker compose -f docker-compose-pmm-psmdb.yml up -d
 
-#
 ##Add users
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
