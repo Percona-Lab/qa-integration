@@ -694,11 +694,6 @@ def mongo_ssl_setup(script_filename, args):
             subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])
-            subprocess.run(['sed', '-i',
-                            '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
-                            f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
-
             # Search replace content in-line in shell file
             subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
                             f'{shellscript_file_path}'])
@@ -708,6 +703,7 @@ def mongo_ssl_setup(script_filename, args):
             with open(compose_file_path) as f:
                 data = yaml.load(f)
 
+            del services['pmm-server']
             del data['services']['psmdb-server']['depends_on']['pmm-server']
 
             with open(compose_file_path, "w") as f:
