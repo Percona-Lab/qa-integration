@@ -715,7 +715,29 @@ def mongo_ssl_setup(script_filename, args):
             data['services']['psmdb-server']['networks'].append('pmm-qa')
             services = data.get('services', {})
             del services['pmm-server']
-            del data['services']['psmdb-server']['depends_on']['pmm-server']
+            del data['services']['psmdb-server']['depends_on']
+
+            entry_script = data['services']['psmdb-server']['entrypoint']
+
+            # Check if it's a multi-line bash -c script
+            if isinstance(entry_script, list) and len(entry_script) >= 3 and entry_script[1] == '-c':
+                script_lines = entry_script[2].splitlines()
+                script_lines = [line for line in script_lines if 'chown -R mongod:mongod /keytabs' not in line]
+                data['services']['psmdb-server']['entrypoint'][2] = '\n'.join(script_lines)
+
+            volumes = data['services']['psmdb-server']['volumes']
+
+            # Lines to remove exactly
+            volumes_to_remove = [
+                'keytabs:/keytabs',
+                '../pmm_psmdb-pbm_setup/conf/datagen:/etc/datagen:ro'
+            ]
+
+            # Keep only volumes not in the removal list
+            filtered_volumes = [v for v in volumes if v not in volumes_to_remove]
+
+            # Update the YAML structure
+            data['services']['psmdb-server']['volumes'] = filtered_volumes
 
             with open(compose_file_path, "w") as f:
                 yaml.dump(data, f)
