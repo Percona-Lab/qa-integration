@@ -524,7 +524,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
             print(f'changed directory {os.getcwd()}')
-            result = subprocess.run(['bash', '+x', script], capture_output=True, text=True, check=True)
+            result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
             print("Output:")
             print(result.stdout)
             print(f"Shell script '{script}' executed successfully.")
