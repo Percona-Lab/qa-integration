@@ -687,22 +687,32 @@ def mongo_ssl_setup(script_filename, args):
     try:
         if no_server:
             # Search & Replace content in the temporary compose files
-            subprocess.run(
-                ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
+            subprocess.run(['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
-                            f'{compose_file_path}'])
             # Search replace content in-line in shell file
-            subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
-                            f'{shellscript_file_path}'])
-            subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
-                            f'{shellscript_file_path}'])
+            subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g', f'{shellscript_file_path}'])
+            subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g', f'{shellscript_file_path}'])
+
             yaml = YAML()
+
             with open(compose_file_path) as f:
                 data = yaml.load(f)
 
+            env_list = data['services']['psmdb-server']['environment']
+
+            # Replace the value for PMM_AGENT_SERVER_PASSWORD
+            for i, item in enumerate(env_list):
+                if item.startswith('PMM_AGENT_SERVER_PASSWORD='):
+                    env_list[i] = f'PMM_AGENT_SERVER_PASSWORD={admin_password}'
+                    break
+
+            data['networks'] = data.get('networks', {})
+            data['networks']['pmm-qa'] = {
+                'name': 'pmm-qa',
+                'external': True
+            }
+            data['services']['psmdb-server'].setdefault('networks', [])
+            data['services']['psmdb-server']['networks'].append('pmm-qa')
             services = data.get('services', {})
             del services['pmm-server']
             del data['services']['psmdb-server']['depends_on']['pmm-server']
