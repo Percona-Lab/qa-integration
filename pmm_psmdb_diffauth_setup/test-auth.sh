@@ -43,6 +43,7 @@ docker compose -f docker-compose-pmm-psmdb.yml build
 if [ "$check" = "without_pmm" ]; then
     docker compose -f docker-compose-pmm-psmdb.yml up -d --scale pmm-server=0
 else
+    export INCLUDE_PMM_DEP=true
     docker compose -f docker-compose-pmm-psmdb.yml up -d
 fi
 

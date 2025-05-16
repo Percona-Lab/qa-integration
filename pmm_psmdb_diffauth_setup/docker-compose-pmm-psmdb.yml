@@ -104,8 +104,8 @@ services:
     hostname: psmdb-server
     image: replica_member/local
     depends_on:
-#      pmm-server:
-#        condition: service_healthy
+      ${INCLUDE_PMM_DEP:-pmm-server}:
+        condition: service_healthy
       kerberos:
         condition: service_healthy
     environment:
