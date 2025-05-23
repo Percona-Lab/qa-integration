@@ -102,8 +102,8 @@
   - name: Copy file into container
     community.docker.docker_container_copy_into:
       container: "{{ pdpgsql_pgsm_container}}"
-      src: ./scripts/pgsql_load.sql
-      dest: /pgsql_load.sql
+      path: ./scripts/pgsql_load.sql
+      container_path: /pgsql_load.sql
 
   - name: Create sample load
     community.docker.docker_container_exec:
