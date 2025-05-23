@@ -86,3 +86,6 @@
     include_tasks: ./tasks/run_load_pgbench.yml
     vars:
       node_name: "{{ pdpgsql_pgsm_container }}"
+      pgbench_clients: 10
+      pgbench_time: 120
+      pgbench_scale: 1000
