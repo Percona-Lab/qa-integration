@@ -90,8 +90,8 @@
         bash -c "
           echo \"
             CREATE DATABASE school;
-          \\c pgbench
-          GRANT CONNECT ON DATABASE pgbench TO pmm;
+          \\c school
+          GRANT CONNECT ON DATABASE school TO pmm;
           GRANT USAGE ON SCHEMA public TO pmm;
           GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
           ALTER DEFAULT PRIVILEGES IN SCHEMA public
