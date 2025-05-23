@@ -82,34 +82,34 @@
     with_items:
         - docker exec {{ pdpgsql_pgsm_container }} bash ./pgsm_run_queries.sh &
 
-  - name: Create custom database for sample load
-    community.docker.docker_container_exec:
-      container: "{{ pdpgsql_pgsm_container}}"
-      user: postgres
-      command: >
-        bash -c "
-          echo \"
-            CREATE DATABASE school;
-          \\c school
-          GRANT CONNECT ON DATABASE school TO pmm;
-          GRANT USAGE ON SCHEMA public TO pmm;
-          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
-          ALTER DEFAULT PRIVILEGES IN SCHEMA public
-            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
-          \" | psql -U postgres -v ON_ERROR_STOP=1
-        "
-
-  - name: Copy file into container
-    community.docker.docker_container_copy_into:
-      container: "{{ pdpgsql_pgsm_container}}"
-      path: ./scripts/pgsql_load.sql
-      container_path: /pgsql_load.sql
-
-  - name: Create sample load
-    community.docker.docker_container_exec:
-      container: "{{ pdpgsql_pgsm_container}}"
-      user: postgres
-      command: >
-        bash -c "
-          psql -U postgres -d school -f /pgsql_load.sql
-        "
+#  - name: Create custom database for sample load
+#    community.docker.docker_container_exec:
+#      container: "{{ pdpgsql_pgsm_container}}"
+#      user: postgres
+#      command: >
+#        bash -c "
+#          echo \"
+#            CREATE DATABASE school;
+#          \\c school
+#          GRANT CONNECT ON DATABASE school TO pmm;
+#          GRANT USAGE ON SCHEMA public TO pmm;
+#          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+#          ALTER DEFAULT PRIVILEGES IN SCHEMA public
+#            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+#          \" | psql -U postgres -v ON_ERROR_STOP=1
+#        "
+#
+#  - name: Copy file into container
+#    community.docker.docker_container_copy_into:
+#      container: "{{ pdpgsql_pgsm_container}}"
+#      path: ./scripts/pgsql_load.sql
+#      container_path: /pgsql_load.sql
+#
+#  - name: Create sample load
+#    community.docker.docker_container_exec:
+#      container: "{{ pdpgsql_pgsm_container}}"
+#      user: postgres
+#      command: >
+#        bash -c "
+#          psql -U postgres -d school -f /pgsql_load.sql
+#        "
