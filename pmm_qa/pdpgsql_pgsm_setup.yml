@@ -82,10 +82,28 @@
     with_items:
         - docker exec {{ pdpgsql_pgsm_container }} bash ./pgsm_run_queries.sh &
 
-  - name: Setup Percona Server group replication
-    include_tasks: ./tasks/run_load_pgbench.yml
-    vars:
-      node_name: "{{ pdpgsql_pgsm_container }}"
-      pgbench_clients: 10
-      pgbench_time: 120
-      pgbench_scale: 1000
+  - name: Create custom database for sample load
+    community.docker.docker_container_exec:
+      container: "{{ pdpgsql_pgsm_container}}"
+      user: postgres
+      command: >
+        bash -c "
+          echo \"
+            CREATE DATABASE school;
+          \\c pgbench
+          GRANT CONNECT ON DATABASE pgbench TO pmm;
+          GRANT USAGE ON SCHEMA public TO pmm;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+          \" | psql -U postgres -v ON_ERROR_STOP=1
+        "
+
+  - name: Create sample load
+    community.docker.docker_container_exec:
+      container: "{{ pdpgsql_pgsm_container}}"
+      user: postgres
+      command: >
+        bash -c "
+          psql -U postgres -d school -f ./scripts/pgsql_load.sql
+        "
