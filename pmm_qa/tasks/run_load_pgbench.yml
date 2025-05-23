@@ -1,4 +1,20 @@
 # This ansible file run load on docker container of pgsql with variable name node_name
+- name: Create custom database for pgbench
+  community.docker.docker_container_exec:
+    container: "{{ node_name }}"
+    user: postgres
+    command: >
+      bash -c "
+        echo \"
+        CREATE DATABASE pgbench;
+        \\c pgbench
+        GRANT CONNECT ON DATABASE pgbench TO pmm;
+        GRANT USAGE ON SCHEMA public TO pmm;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+          GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+        \" | psql -U postgres -v ON_ERROR_STOP=1
+      "
 
 - name: Detect OS inside the container
   community.docker.docker_container_exec:
