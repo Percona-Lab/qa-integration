@@ -81,3 +81,8 @@
     shell: "{{ item }}"
     with_items:
         - docker exec {{ pdpgsql_pgsm_container }} bash ./pgsm_run_queries.sh &
+
+  - name: Setup Percona Server group replication
+    include_tasks: ./tasks/run_load_pgbench.yml
+    vars:
+      node_name: "{{ pdpgsql_pgsm_container }}"
