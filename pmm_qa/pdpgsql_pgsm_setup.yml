@@ -99,11 +99,17 @@
           \" | psql -U postgres -v ON_ERROR_STOP=1
         "
 
+  - name: Copy file into container
+    community.docker.docker_container_copy_to:
+      container: "{{ pdpgsql_pgsm_container}}"
+      src: ./scripts/pgsql_load.sql
+      dest: /pgsql_load.sql
+
   - name: Create sample load
     community.docker.docker_container_exec:
       container: "{{ pdpgsql_pgsm_container}}"
       user: postgres
       command: >
         bash -c "
-          psql -U postgres -d school -f ./scripts/pgsql_load.sql
+          psql -U postgres -d school -f /pgsql_load.sql
         "
