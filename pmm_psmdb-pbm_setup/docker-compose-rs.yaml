@@ -182,7 +182,7 @@ services:
     hostname: rs203
 
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     profiles: ["classic", "extra"]
     container_name: minio
     ports:
