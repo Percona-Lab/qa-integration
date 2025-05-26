@@ -104,8 +104,8 @@ services:
     volumes:
       - /tmp/minio/backups:/backups
     environment:
-      - "MINIO_ACCESS_KEY=minio1234"
-      - "MINIO_SECRET_KEY=minio1234"
+      - "MINIO_ROOT_USER=minio1234"
+      - "MINIO_ROOT_PASSWORD=minio1234"
     command: server /backups
     depends_on:
       psmdb-server:
