@@ -92,7 +92,7 @@
     community.docker.docker_container_exec:
       container: "{{ pdpgsql_pgsm_container }}"
       command: >
-        psql -U {{ db_user }} -c "CREATE DATABASE school;"
+        psql -U postgres -c "CREATE DATABASE school;"
 
   - name: Run SQL script using docker exec
     community.docker.docker_container_exec:
