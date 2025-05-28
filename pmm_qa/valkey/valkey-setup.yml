@@ -1,0 +1,29 @@
+---
+# Valkey setup
+- name: Setup Valkey
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('8', true) }}"
+
+  tasks:
+    - name: Run Valkey container
+      community.docker.docker_container:
+        name: "valkey_pmm_{{ valkey_version }}"
+        image: "valkey/valkey:{{ valkey_version }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "6379:6379"
+
+    - name: Install and add pmm client.
+      include_tasks: ../tasks/install_pmm_client_centos.yml
+      vars:
+        container_name: "valkey_pmm_{{ valkey_version }}"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        name: "valkey_pmm_{{ valkey_version }}"
+        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
