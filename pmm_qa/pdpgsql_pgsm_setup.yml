@@ -81,3 +81,21 @@
     shell: "{{ item }}"
     with_items:
         - docker exec {{ pdpgsql_pgsm_container }} bash ./pgsm_run_queries.sh &
+
+  - name: Copy a file into the container
+    community.docker.docker_container_copy_into:
+      container: "{{ pdpgsql_pgsm_container }}"
+      path: ./scripts/pgsql_load.sql
+      container_path: /pgsql_load.sql
+
+  - name: Create database if it doesn't exist
+    community.docker.docker_container_exec:
+      container: "{{ pdpgsql_pgsm_container }}"
+      command: >
+        psql -U postgres -c "CREATE DATABASE school;"
+
+  - name: Run SQL script using docker exec
+    community.docker.docker_container_exec:
+      container: "{{ pdpgsql_pgsm_container }}"
+      command: >
+        psql -U postgres -d school -f /pgsql_load.sql
