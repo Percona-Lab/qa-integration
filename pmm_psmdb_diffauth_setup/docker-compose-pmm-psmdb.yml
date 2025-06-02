@@ -132,6 +132,14 @@ services:
       psmdb-server:
        condition: service_healthy
 
+  createbucket:
+    container_name: createbucket
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " sleep 5; /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
+
 volumes:
   psmdb-server-data:
     driver: local
