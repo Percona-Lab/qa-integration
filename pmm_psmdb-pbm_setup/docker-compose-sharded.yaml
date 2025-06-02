@@ -239,16 +239,6 @@ services:
       - "MINIO_SECRET_KEY=minio1234"
     command: server /backups
 
-  createbucket:
-    container_name: createbucket
-    image: minio/mc
-    networks:
-      - test-network
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
-
   pmm-server:
     image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
     container_name: pmm-server

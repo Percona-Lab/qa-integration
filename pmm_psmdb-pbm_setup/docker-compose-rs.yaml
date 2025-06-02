@@ -202,21 +202,6 @@ services:
       - "MINIO_SECRET_KEY=minio1234"
     command: server /backups
 
-  createbucket:
-    container_name: createbucket
-    image: minio/mc
-    profiles: ["classic", "extra"]
-    networks:
-      - pmm-qa
-      - pmm-ui-tests1
-      - qa-integration
-      - pmm-ui-tests2
-      - pmm-ui-tests3
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
-
 networks:
   qa-integration:
     external: true

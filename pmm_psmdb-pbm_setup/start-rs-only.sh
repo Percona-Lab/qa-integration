@@ -35,3 +35,5 @@ if [ $profile = "extra" ]; then
   fi
   bash -x ./configure-extra-agents.sh
 fi
+
+docker exec minio /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
