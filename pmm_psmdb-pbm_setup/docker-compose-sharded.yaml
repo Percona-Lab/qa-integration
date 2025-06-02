@@ -247,7 +247,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c " sleep 5; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
+      /bin/sh -c " sleep 5; /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
   pmm-server:
     image: ${PMM_IMAGE:-perconalab/pmm-server:3-dev-latest}
