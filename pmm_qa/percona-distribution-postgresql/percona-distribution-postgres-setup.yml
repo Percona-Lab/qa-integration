@@ -111,7 +111,6 @@
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-
     - name: Wipe replica data directory before basebackup
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
@@ -131,27 +130,56 @@
             "
           '
 
-#    - name: Create Docker network
-#      community.docker.docker_network:
-#        name: "{{ network_name }}"
-#        state: present
-#      ignore_errors: yes
-#
-#    - name: Remove old data folders
-#      shell: 'rm -fr {{ data_dir }}'
-#
-#    - name: Create data directories
-#      file:
-#        path: "{{ data_dir }}/node{{ item }}/data"
-#        state: directory
-#        mode: '0755'
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#
-#    - name: Generate pg_hba.conf for primary node
-#      template:
-#        src: ./data/pg_hba.conf.j2
-#        dest: "{{ data_dir }}/node1/pg_hba.conf"
-#
+    - name: Create custom database for pgbench
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_1"
+        user: postgres
+        command: >
+          bash -c "
+            echo \"
+            CREATE DATABASE pgbench;
+            \\c pgbench
+            GRANT CONNECT ON DATABASE pgbench TO pmm;
+            GRANT USAGE ON SCHEMA public TO pmm;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+            \" | psql -U postgres -v ON_ERROR_STOP=1
+          "
+    - name: Run pg_basebackup from primary to replica
+      community.docker.docker_container_exec:
+        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: root
+        command: >
+          bash -c "
+            export PGPASSWORD='{{ replication_password }}' && \
+            timeout 120s \
+            pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -Fp -Xs -P \
+            --host=pgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
+          "
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Restart PostgreSQL container with custom command
+      community.docker.docker_container:
+        name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        image: "{{ docker_repo }}:{{ pg_version }}"
+        restart: true
+        state: started
+        command: -c config_file=/etc/postgresql/postgresql.conf
+        networks:
+          - name: "{{ network_name }}"
+        env:
+          POSTGRES_PASSWORD: "{{ root_password }}"
+        volumes:
+          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+        ports:
+          - "{{ pgsql_port + item - 1 }}:5432"
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+
+
 #    - name: Generate pg_hba.conf for replication node
 #      template:
 #        src: ./data/pg_hba_replica.conf.j2
