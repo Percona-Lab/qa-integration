@@ -111,6 +111,26 @@
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
+
+    - name: Wipe replica data directory before basebackup
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        user: root
+        command: rm -rf /var/lib/postgresql/data/*
+      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+    - name: Create PostgreSQL user 'pmm' with password
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_1"
+        user: postgres
+        command: >
+          bash -c '
+            psql -U postgres -d {{ db_name | default("postgres") }} -c "
+              CREATE USER pmm WITH PASSWORD '\''pmm'\'';
+              GRANT pg_monitor TO pmm;
+            "
+          '
+
 #    - name: Create Docker network
 #      community.docker.docker_network:
 #        name: "{{ network_name }}"
