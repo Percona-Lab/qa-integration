@@ -1,0 +1,59 @@
+---
+# Percona Distribution PostgresSQL replication
+- name: Setup Percona Server 8.4 and higher. Cluster with Group Replication in Docker
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    pdpgsql_version: "{{ lookup('env', 'PS_VERSION') | default('8.4', true) }}"
+    data_dir: "{{ lookup('env', 'HOME') }}/pdpgsql  _cluster_data"
+    primary_container_name: "pdpgsql_primary"
+
+  tasks:
+    - name: Pull Percona Distribution PostgreSQL image
+      community.docker.docker_image:
+        name: "percona/percona-distribution-postgresql"
+        tag: "17"
+        source: pull
+
+    - name: Create initialization script for each node
+      template:
+        src: ./data/primary.conf.j2
+        dest: "{{ data_dir }}/pgsql_primary/postgresql.conf"
+
+    - name: Create replica.conf
+      template:
+        src: ./data/replica.conf.j2
+        dest: "{{ data_dir }}/pgsql_replica/postgresql.conf"
+
+    - name: Start primary container
+      community.docker.docker_container:
+        name: "{{ primary_container_name }}"
+        image: "percona/percona-distribution-postgresql:17"
+        env:
+          POSTGRES_PASSWORD: password
+        volumes:
+          - "{{ data_dir }}/pgsql_primary/:/var/lib/postgresql/data"
+          - "{{ data_dir }}/pgsql_primary/postgresql.conf:/etc/postgresql/postgresql.conf"
+        command: -c config_file=/etc/postgresql/postgresql.conf
+        ports:
+          - "5432:5432"
+        restart_policy: always
+
+    - name: Wait for primary to initialize
+      wait_for:
+        host: "localhost"
+        port: 5432
+        delay: 5
+        timeout: 30
+
+    - name: Run pg_basebackup inside primary container
+      community.docker.docker_container_exec:
+        container: "{{ primary_container_name }}"
+        command: >
+          pg_basebackup -h localhost -U postgres
+          -D /var/lib/postgresql/replica_data
+          -Fp -Xs -P -R
+        environment:
+          PGPASSWORD: password
+      ignore_errors: true
