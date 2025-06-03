@@ -178,7 +178,8 @@
           - "{{ pgsql_port + item - 1 }}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-
+    - name: Install pg stat monitor.
+      include_tasks: ./tasks/install_pg_stat-monitor.yml
 
 #    - name: Generate pg_hba.conf for replication node
 #      template:
