@@ -143,7 +143,7 @@
                 END IF;
               END
               $$;
-            \" | psql -U postgres -v ON_ERROR_STOP=1
+            \" | psql -h localhost -p 5432 -U postgres -v ON_ERROR_STOP=1
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
