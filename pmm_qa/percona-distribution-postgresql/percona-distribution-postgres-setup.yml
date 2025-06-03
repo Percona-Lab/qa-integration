@@ -69,12 +69,12 @@
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
         ports:
-          - "{{ pgsql_port }}:5432"
+          - "{{ pdpgsql_port }}:5432"
 
     - name: Wait for PgSQL to be available
       wait_for:
         host: localhost
-        port: "{{ pgsql_port }}"
+        port: "{{ pdpgsql_port }}"
         delay: 10
         timeout: 300
 
