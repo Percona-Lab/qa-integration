@@ -20,6 +20,7 @@
     metrics_mode: "auto"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
+    docker_repo: "percona/percona-distribution-postgresql"
 
   tasks:
     - name: Create Docker network
@@ -46,7 +47,7 @@
     - name: Remove old PostgreSQL primary container
       community.docker.docker_container:
         name: "pdpgsql_pmm_{{ pg_version }}_1"
-        image: "postgres:{{ pg_version }}-bookworm"
+        image: "{{ docker_repo }}:{{ pg_version }}"
         restart_policy: always
         state: absent
       ignore_errors: yes
@@ -54,7 +55,7 @@
     - name: Start PostgreSQL primary container
       community.docker.docker_container:
         name: "pdpgsql_pmm_{{ pg_version }}_1"
-        image: "percona/percona-distribution-postgresql:{{ pg_version }}"
+        image: "{{ docker_repo }}:{{ pg_version }}"
         restart_policy: always
         state: started
         recreate: true
@@ -96,7 +97,7 @@
     - name: Start PostgreSQL replica container
       community.docker.docker_container:
         name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        image: "percona/percona-distribution-postgresql:{{ pg_version }}"
+        image: "{{ docker_repo }}:{{ pg_version }}"
         restart_policy: "no"
         state: started
         command: sleep infinity
