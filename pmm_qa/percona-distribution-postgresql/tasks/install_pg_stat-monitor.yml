@@ -17,7 +17,7 @@
       apt-get update &&
       apt-get install percona-pg-stat-monitor{{ pg_version }}
       '
-  user: "root"
+    user: "root"
   when: distro_family == "debian"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -28,7 +28,7 @@
       sh -c '
         microdnf install percona-pg-stat-monitor{{ pg_version }}
       '
-  user: "root"
+    user: "root"
   when: distro_family == "rhel"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
