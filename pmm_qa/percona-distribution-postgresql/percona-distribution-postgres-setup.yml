@@ -134,14 +134,16 @@
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
-          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c "
-            DO $$
-            BEGIN
-              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
-                CREATE ROLE pmm LOGIN PASSWORD 'pmm';
-              END IF;
-            END
-            $$;
+          bash -c "
+            echo \"
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
+                  CREATE ROLE pmm LOGIN PASSWORD 'pmm';
+                END IF;
+              END
+              $$;
+            \" | psql -U postgres -v ON_ERROR_STOP=1
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
