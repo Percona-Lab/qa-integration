@@ -134,7 +134,7 @@
             DO \$\$
             BEGIN
               IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
-                CREATE ROLE pmm LOGIN PASSWORD 'securepassword';
+                CREATE ROLE pmm LOGIN PASSWORD 'pmm';
               END IF;
             END
             \$\$;
@@ -156,9 +156,15 @@
         user: postgres
         command: >
           bash -c '
-            PGPASSWORD="{{ root_password }}" psql -h /tmp -U postgres -d {{ db_name | default("postgres") }} -c "
-              CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD '\''pmm'\'';
-              GRANT pg_monitor TO pmm;
+            PGPASSWORD="{{ root_password }}" psql -h localhost -U postgres -d {{ db_name | default("postgres") }} -c "
+              DO \$\$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '\''pmm'\'') THEN
+                  CREATE USER pmm WITH SUPERUSER ENCRYPTED PASSWORD '\''pmm'\'';
+                  GRANT pg_monitor TO pmm;
+                END IF;
+              END
+              \$\$;
             "
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
