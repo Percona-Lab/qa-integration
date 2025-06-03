@@ -131,6 +131,14 @@
         command: >
           bash -c "
             echo \"
+            DO \$\$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
+                CREATE ROLE pmm LOGIN PASSWORD 'securepassword';
+              END IF;
+            END
+            \$\$;
+
             CREATE DATABASE pgbench;
             \\c pgbench
             GRANT CONNECT ON DATABASE pgbench TO pmm;
