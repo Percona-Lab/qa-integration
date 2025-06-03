@@ -45,7 +45,7 @@
 
     - name: Remove old PostgreSQL primary container
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_1"
+        name: "pdpgsql_pmm_{{ pg_version }}_1"
         image: "postgres:{{ pg_version }}-bookworm"
         restart_policy: always
         state: absent
@@ -53,8 +53,8 @@
 
     - name: Start PostgreSQL primary container
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_1"
-        image: "postgres:{{ pg_version }}-bookworm"
+        name: "pdpgsql_pmm_{{ pg_version }}_1"
+        image: "percona/percona-distribution-postgresql:{{ pg_version }}"
         restart_policy: always
         state: started
         recreate: true
@@ -79,7 +79,7 @@
 
     - name: Create replication user
       community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_1"
+        container: "pdpgsql_pmm_{{ pg_version }}_1"
         user: postgres
         command: >
           psql -c "
@@ -88,15 +88,15 @@
 
     - name: Stop and remove replica if exists
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         state: absent
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
       ignore_errors: yes
 
     - name: Start PostgreSQL replica container
       community.docker.docker_container:
-        name: "pgsql_pmm_{{ pg_version }}_{{ item }}"
-        image: "postgres:{{ pg_version }}-bookworm"
+        name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        image: "percona/percona-distribution-postgresql:{{ pg_version }}"
         restart_policy: "no"
         state: started
         command: sleep infinity
@@ -382,6 +382,6 @@
 #
 #    - name: Check replication status on primary
 #      community.docker.docker_container_exec:
-#        container: "pgsql_pmm_{{ pg_version }}_1"
+#        container: "pdpgsql_pmm_{{ pg_version }}_1"
 #        user: postgres
 #        command: psql -c "SELECT * FROM pg_stat_replication;"
