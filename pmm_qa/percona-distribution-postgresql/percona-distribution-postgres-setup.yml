@@ -167,7 +167,7 @@
         image: "{{ docker_repo }}:{{ pg_version }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql-replica.conf
+        command: -c config_file=/etc/postgresql/postgresql.conf
         networks:
           - name: "{{ network_name }}"
         env:
