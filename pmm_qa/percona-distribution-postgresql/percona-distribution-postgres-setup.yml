@@ -131,18 +131,17 @@
 
     - name: Create pmm user on all services
       community.docker.docker_container_exec:
-        container: "pdpgsql_pmm_{{ pg_version }}_1"
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         user: postgres
         command: >
-          bash -c "
-            echo \"
-            DO \$\$
+          psql -U postgres -v ON_ERROR_STOP=1 -c "
+            DO $$
             BEGIN
               IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'pmm') THEN
                 CREATE ROLE pmm LOGIN PASSWORD 'pmm';
               END IF;
             END
-            \$\$;
+            $$;
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
