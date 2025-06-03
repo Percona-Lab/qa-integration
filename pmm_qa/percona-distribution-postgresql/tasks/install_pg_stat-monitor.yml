@@ -1,3 +1,9 @@
+- name: Detect OS inside the container
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_1"
+    command: cat /etc/os-release
+  register: container_os_info
+
 - name: Set distro family (debian/rhel)
   set_fact:
     distro_family: >-

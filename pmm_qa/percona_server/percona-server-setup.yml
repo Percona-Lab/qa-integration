@@ -199,7 +199,6 @@
             --mysql-db=sbtest 
             --tables=10 
             --table-size=100000 
-            --rate=1
             prepare
       when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -216,7 +215,6 @@
             --mysql-db=sbtest 
             --tables=10 
             --table-size=100000 
-            --rate=1
             prepare
       when: setup_type == "gr" or setup_type == "replication"
 
@@ -234,6 +232,5 @@
             --table-size=100000 
             --threads=16 
             --time=60
-            --rate=1
             run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
