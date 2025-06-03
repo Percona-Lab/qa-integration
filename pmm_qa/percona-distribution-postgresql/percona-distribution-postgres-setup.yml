@@ -148,37 +148,37 @@
             \" | psql -U postgres -v ON_ERROR_STOP=1
           "
 
-    - name: Run pg_basebackup from primary to replica
-      community.docker.docker_container_exec:
-        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        user: root
-        command: >
-          bash -c "
-            export PGPASSWORD='{{ replication_password }}' && \
-            timeout 120s \
-            pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -Fp -Xs -P \
-            --host=pdpgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
-          "
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
-    - name: Restart Percona Distribution PostgreSQL container with custom command
-      community.docker.docker_container:
-        name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        image: "{{ docker_repo }}:{{ pg_version }}"
-        restart: true
-        state: started
-        command: -c config_file=/etc/postgresql/postgresql.conf
-        networks:
-          - name: "{{ network_name }}"
-        env:
-          POSTGRES_PASSWORD: "{{ root_password }}"
-        volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
-          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
-        ports:
-          - "{{ pdpgsql_port + item - 1}}:5432"
-      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#    - name: Run pg_basebackup from primary to replica
+#      community.docker.docker_container_exec:
+#        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+#        user: root
+#        command: >
+#          bash -c "
+#            export PGPASSWORD='{{ replication_password }}' && \
+#            timeout 120s \
+#            pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -Fp -Xs -P \
+#            --host=pdpgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
+#          "
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#
+#    - name: Restart Percona Distribution PostgreSQL container with custom command
+#      community.docker.docker_container:
+#        name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+#        image: "{{ docker_repo }}:{{ pg_version }}"
+#        restart: true
+#        state: started
+#        command: -c config_file=/etc/postgresql/postgresql.conf
+#        networks:
+#          - name: "{{ network_name }}"
+#        env:
+#          POSTGRES_PASSWORD: "{{ root_password }}"
+#        volumes:
+#          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+#          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+#          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+#        ports:
+#          - "{{ pdpgsql_port + item - 1}}:5432"
+#      loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 #    - name: Install pg stat monitor.
 #      include_tasks: ./tasks/install_pg_stat-monitor.yml
