@@ -81,6 +81,7 @@
         port: "{{ pdpgsql_port }}"
         delay: 10
         timeout: 300
+
     - name: Create replication user
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_1"
@@ -112,6 +113,8 @@
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+        ports:
+          - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
@@ -186,7 +189,7 @@
 
     - name: Wait 10 seconds for server to restart
       pause:
-        seconds: 10
+        seconds: 30
 
     - name: Install and add pmm client.
       include_tasks: ../tasks/install_pmm_client.yml
