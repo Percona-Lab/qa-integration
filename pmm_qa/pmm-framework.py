@@ -4,7 +4,6 @@ import os
 import sys
 import requests
 import re
-from mysql.setup_mysql import setup_mysql_docker
 from scripts.get_env_value import get_value
 from scripts.database_options import database_options as database_configs
 from scripts.run_ansible_playbook import run_ansible_playbook
@@ -122,28 +121,25 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         setup_type = ''
         no_of_nodes = 2
 
-    if ms_version_int >= 84:
-        setup_mysql_docker(db_type, container_name, db_config, args)
-    else:
-        # Define environment variables for playbook
-        env_vars = {
-            'GROUP_REPLICATION': setup_type,
-            'MS_NODES': no_of_nodes,
-            'MS_VERSION': ms_version,
-            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
-            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-            'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-            'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
-            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
-        }
+    # Define environment variables for playbook
+    env_vars = {
+        'GROUP_REPLICATION': setup_type,
+        'MS_NODES': no_of_nodes,
+        'MS_VERSION': ms_version,
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
+        'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
 
-        # Ansible playbook filename
-        playbook_filename = 'ms_pmm_setup.yml'
+    # Ansible playbook filename
+    playbook_filename = 'ms_pmm_setup.yml'
 
-        # Call the function to run the Ansible playbook
-        run_ansible_playbook(playbook_filename, env_vars, args)
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 def setup_ssl_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
