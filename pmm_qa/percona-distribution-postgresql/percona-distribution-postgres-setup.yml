@@ -155,7 +155,7 @@
             export PGPASSWORD='{{ replication_password }}' && \
             timeout 120s \
             pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -Fp -Xs -P \
-            --host=pgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
+            --host=pdpgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }}
           "
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 

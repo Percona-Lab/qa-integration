@@ -9,22 +9,22 @@
         ) | trim
       }}
 
-#    - name: Install dependencies inside Debian-family container
-#      community.docker.docker_container_exec:
-#        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#        command: >
-#          sh -c '
-#          apt-get update &&
-#          apt-get install percona-pg-stat-monitor{{ pg_version }}
-#          '
-#        user: "root"
-#      when: distro_family == "debian"
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#
-#    - name: Install dependencies inside RHEL-family container
-#      community.docker.docker_container_exec:
-#        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#        command: >
+- name: Install dependencies inside Debian-family container
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    command: >
+      sh -c '
+      apt-get update &&
+      apt-get install percona-pg-stat-monitor{{ pg_version }}
+      '
+  user: "root"
+  when: distro_family == "debian"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install dependencies inside RHEL-family container
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    command: >
 #          sh -c '
 #            microdnf install percona-pg-stat-monitor{{ pg_version }}
 #          '
