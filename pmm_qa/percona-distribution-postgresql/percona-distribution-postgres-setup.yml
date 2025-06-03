@@ -97,23 +97,20 @@
     - name: Start Percona Distribution PostgreSQL replica container
       community.docker.docker_container:
         name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-        image: "postgres:{{ pg_version }}"
+        image: "{{ docker_repo }}:{{ pg_version }}"
         restart_policy: "no"
         state: started
         command: sleep infinity
         networks:
           - name: "{{ network_name }}"
         env:
+          POSTGRES_INITDB_SKIP: "yes"
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
-          - "./data/postgresql-replica.conf:/etc/postgresql/postgresql.conf:ro"
-          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+          - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
+          - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
-    - name: Wait 30 seconds for the nodes to start
-      pause:
-        seconds: 30
 
     - name: Wipe replica data directory before basebackup
       community.docker.docker_container_exec:
@@ -164,13 +161,13 @@
           "
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-    - name: Restart PostgreSQL container with custom command
+    - name: Restart Percona Distribution PostgreSQL container with custom command
       community.docker.docker_container:
         name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         image: "{{ docker_repo }}:{{ pg_version }}"
         restart: true
         state: started
-        command: -c config_file=/etc/postgresql/postgresql.conf
+        command: -c config_file=/etc/postgresql/postgresql-replica.conf
         networks:
           - name: "{{ network_name }}"
         env:
@@ -178,9 +175,9 @@
         volumes:
           - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
-          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+#          - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         ports:
-          - "{{ pdpgsql_port + item - 1 }}:5432"
+          - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 #    - name: Install pg stat monitor.
