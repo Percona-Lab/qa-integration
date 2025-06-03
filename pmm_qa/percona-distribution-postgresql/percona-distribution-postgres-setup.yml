@@ -148,7 +148,7 @@
           "
     - name: Run pg_basebackup from primary to replica
       community.docker.docker_container_exec:
-        container: "pgsql_pmm_{{ pg_version }}_{{ item }}"
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         user: root
         command: >
           bash -c "
