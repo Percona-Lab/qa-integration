@@ -27,10 +27,10 @@
       debug:
         msg: "{{ setup_type }}"
 
-#    - name: Install Percona Distribution for Postgres with Replication
-#      include_tasks: tasks/percona-distribution-postgres-replication-setup.yml
-#      when: setup_type == "replication"
-#
-#    - name: Install Percona Distribution for Postgres with Patroni replication
-#      include_tasks: tasks/percona-distribution-postgres-patroni-setup.yml
-#      when: setup_type == "patroni"
+    - name: Install Percona Distribution for Postgres with Replication
+      include_tasks: tasks/percona-distribution-postgres-replication-setup.yml
+      when: setup_type == "replication"
+
+    - name: Install Percona Distribution for Postgres with Patroni replication
+      include_tasks: tasks/percona-distribution-postgres-patroni-setup.yml
+      when: setup_type == "patroni"
