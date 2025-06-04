@@ -46,7 +46,7 @@
 
     - name: Generate pg_hba.conf for replica node
       template:
-        src: data/pg_hba-replica.conf.j2
+        src: data/pg_hba_replica.conf.j2
         dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
