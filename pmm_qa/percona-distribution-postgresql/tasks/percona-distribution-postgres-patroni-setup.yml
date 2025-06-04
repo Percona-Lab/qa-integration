@@ -173,10 +173,10 @@
 - name: Fix permissions on data directory
   become: true
   file:
-  path: "{{ data_dir }}/node{{ item }}/data"
-  owner: 1001
-  group: 1001
-  recurse: yes
+    path: "{{ data_dir }}/node{{ item }}/data"
+    owner: 1001
+    group: 1001
+    recurse: yes
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Restart Percona Distribution PostgreSQL container with custom command
