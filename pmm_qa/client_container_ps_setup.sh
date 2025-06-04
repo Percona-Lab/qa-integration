@@ -125,7 +125,7 @@ if [[ "$number_of_nodes" == 1 ]];then
       #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-single
       pmm-admin add mysql --query-source=$query_source --username=msandbox --password=msandbox --environment=dev --cluster=dev-cluster --replication-set=repl1 ps-single-${SERVICE_RANDOM_NUMBER} 127.0.0.1:$node_port
       sleep 20
-      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "set long_query_time = 0; INSERT INTO T2033 ( ID, Value ) VALUES (1,1)"
+      mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "set long_query_time = 0; INSERT INTO T2033 ( ID, Value ) VALUES (1,1)" || true
    fi
 else
      dbdeployer deploy multiple ${db_version_sandbox} --sandbox-binary=~/ps${ps_version} --nodes $number_of_nodes --force --remote-access=% --bind-address=0.0.0.0 --my-cnf-options=gtid_mode=ON --my-cnf-options=enforce-gtid-consistency=ON --my-cnf-options=binlog-format=ROW --my-cnf-options=log-slave-updates=ON --my-cnf-options=binlog-checksum=NONE ${my_cnf_options:+--my-cnf-options="$my_cnf_options"}
@@ -175,7 +175,7 @@ else
         #run_workload 127.0.0.1 msandbox msandbox $node_port mysql mysql-multiple-node
         sleep 20
 
-        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "set long_query_time = 0; INSERT INTO T2033 ( ID, Value ) VALUES (1,1)"
+        mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "set long_query_time = 0; INSERT INTO T2033 ( ID, Value ) VALUES (1,1)" || true
     done
 fi
 
