@@ -140,15 +140,15 @@
     user: postgres
     command: >
       bash -c "
-      echo \"
-      CREATE DATABASE pgbench;
-      \\c pgbench
-      GRANT CONNECT ON DATABASE pgbench TO pmm;
-      GRANT USAGE ON SCHEMA public TO pmm;
-      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-        GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
-      \" | psql -U postgres -v ON_ERROR_STOP=1
+        echo \"
+          CREATE DATABASE pgbench;
+          \\c pgbench
+          GRANT CONNECT ON DATABASE pgbench TO pmm;
+          GRANT USAGE ON SCHEMA public TO pmm;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA public
+          GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+        \" | psql -U postgres -v ON_ERROR_STOP=1
       "
 
 - name: Run pg_basebackup from primary to replica
