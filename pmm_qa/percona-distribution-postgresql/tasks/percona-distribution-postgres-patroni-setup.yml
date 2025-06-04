@@ -202,6 +202,13 @@
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
 
+- name: Install dependencies inside the containers
+  community.docker.docker_container_exec:
+    container_name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    command: microdnf install -y percona-patroni etcd etcd-server etcd-client percona-pgbackrest
+    user: "root"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
