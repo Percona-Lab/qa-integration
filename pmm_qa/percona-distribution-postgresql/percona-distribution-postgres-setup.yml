@@ -70,7 +70,7 @@
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
-          - "{{ data_dir }}/node1/data:/var/lib/postgresql/data"
+          - "{{ data_dir }}/node1/data:/data/db"
           - "./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         command: -c config_file=/etc/postgresql/postgresql.conf
@@ -113,7 +113,7 @@
           POSTGRES_INITDB_SKIP: "yes"
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+          - "{{ data_dir }}/node{{ item }}/data:/data/db"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
@@ -122,7 +122,7 @@
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
         user: root
-        command: rm -rf /var/lib/postgresql/data/*
+        command: rm -rf /data/db
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Create PostgreSQL user 'pmm' with password
@@ -162,7 +162,7 @@
           bash -c "
             export PGPASSWORD='{{ replication_password }}' && \
             timeout 120s \
-            pg_basebackup --pgdata=/var/lib/postgresql/data -R -v -Fp -Xs -P \
+            pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
             --host=pdpgsql_pmm_{{ pg_version }}_1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
           "
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
@@ -185,7 +185,7 @@
         env:
           POSTGRES_PASSWORD: "{{ root_password }}"
         volumes:
-          - "{{ data_dir }}/node{{ item }}/data:/var/lib/postgresql/data"
+          - "{{ data_dir }}/node{{ item }}/data:/data/db"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
         ports:
