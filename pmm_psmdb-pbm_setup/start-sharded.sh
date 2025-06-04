@@ -259,3 +259,5 @@ if [ $cleanup != "no" ]; then
     else
     echo "skipping cleanup"
 fi
+
+docker exec minio  /bin/sh -c " sleep 5; /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp-sharded; exit 0; "
