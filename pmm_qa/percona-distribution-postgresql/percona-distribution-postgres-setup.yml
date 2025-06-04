@@ -53,8 +53,8 @@
     - name: Fix permissions on data directory
       file:
         path: "{{ data_dir }}/node1/data"
-        owner: 999
-        group: 999
+        owner: 1001
+        group: 1001
         recurse: yes
 
     - name: Remove old PostgreSQL primary container
