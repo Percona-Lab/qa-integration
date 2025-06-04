@@ -21,6 +21,7 @@
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     query_source: "{{ lookup('env', 'QUERY_SOURCE') | default('perfschema', true) }}"
+    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
 
@@ -40,7 +41,7 @@
         name: "{{ network_name }}"
         state: present
 
-    - name: "Remove old data folders"
+    - name: Remove old data folders
       shell: 'rm -fr {{ data_dir }}'
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -73,7 +74,7 @@
       when: setup_type == "replication"
 
     - name: Setup Percona Server
-      include_tasks: ./tasks/percona-server-setup.yml
+      include_tasks: tasks/percona-server-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
     - name: Create slowlog configuration for mysql nodes
@@ -90,7 +91,7 @@
       when: query_source == "slowlog"
 
     - name: Install and add pmm client.
-      include_tasks: ../tasks/install_pmm_client_centos.yml
+      include_tasks: ../tasks/install_pmm_client.yml
       vars:
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -230,6 +231,6 @@
             --tables=10 
             --table-size=100000 
             --threads=16 
-            --time=60 
+            --time=60
             run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
