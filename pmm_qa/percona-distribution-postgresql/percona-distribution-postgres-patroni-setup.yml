@@ -137,6 +137,7 @@
           - "{{ data_dir }}/node{{ item }}/data:/data/db"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+          - "{{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etc/etcd/etcd.conf.yaml:ro"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
     - name: Wipe replica data directory before basebackup
@@ -218,6 +219,7 @@
           - "{{ data_dir }}/node{{ item }}/data:/data/db"
           - "./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro"
           - "{{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+          - "{{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etc/etcd/etcd.conf.yaml:ro"
         ports:
           - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
