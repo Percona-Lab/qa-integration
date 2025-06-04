@@ -84,6 +84,7 @@ echo "CREATE DATABASE sbtest2;" >> /home/postgres/init.sql
 echo "CREATE USER pmm WITH PASSWORD 'pmm';" >> /home/postgres/init.sql
 echo "GRANT pg_monitor TO pmm;" >> /home/postgres/init.sql
 echo "ALTER USER postgres PASSWORD 'pass+this';" >> /home/postgres/init.sql
+echo "ALTER SYSTEM SET max_locks_per_transaction = 1024;" >> /home/postgres/init.sql
 
 # Start server, run init.sql and Create extension PGSM
 service postgresql start
