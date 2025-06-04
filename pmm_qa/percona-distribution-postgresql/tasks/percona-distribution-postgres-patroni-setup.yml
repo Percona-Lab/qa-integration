@@ -6,6 +6,7 @@
 
 - name: Remove old data folders
   shell: 'rm -fr {{ data_dir }}'
+  become: true
 
 - name: Create data directories
   file:
