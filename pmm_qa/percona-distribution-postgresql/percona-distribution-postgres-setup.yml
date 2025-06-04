@@ -208,48 +208,48 @@
           - "{{ pdpgsql_port + item - 1}}:5432"
       loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-#    - name: Install pg stat monitor.
-#      include_tasks: ./tasks/install_pg_stat-monitor.yml
-#
-#    - name: Install and add pmm client.
-#      include_tasks: ../tasks/install_pmm_client.yml
-#      vars:
-#        container_name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#
-#    - name: Get already connected services to pmm server
-#      community.docker.docker_container_exec:
-#        container: "pdpgsql_pmm_{{ pg_version }}_1"
-#        command: >
-#          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
-#      register: pmm_server_services
-#
-#    - name: Display already connected services to pmm server
-#      debug:
-#        msg: "{{ pmm_server_services.stdout | split('\n') }}"
-#
-#    - name: Find out if service is already connected to pmm server
-#      block:
-#        - name: Loop through percona servers
-#          set_fact:
-#            random_service_name_value: "_{{ 9999 | random + 1 }}"
-#          loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#          when: "('pdpgsql_pmm_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
-#
-#    - name: Add service to pmm server
-#      community.docker.docker_container_exec:
-#        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#        command: pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor pdpgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#
-#    - name: Run load on primary node.
-#      include_tasks: ../postgresql/tasks/run_load_pgsql.yml
-#      vars:
-#        node_name: "pdpgsql_pmm_{{ pg_version }}_1"
-#        pgbench_clients: 10
-#        pgbench_time: 120
-#        pgbench_scale: 1000
-#
+    - name: Install pg stat monitor.
+      include_tasks: ./tasks/install_pg_stat-monitor.yml
+
+    - name: Install and add pmm client.
+      include_tasks: ../tasks/install_pmm_client.yml
+      vars:
+        container_name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Get already connected services to pmm server
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_1"
+        command: >
+          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
+      register: pmm_server_services
+
+    - name: Display already connected services to pmm server
+      debug:
+        msg: "{{ pmm_server_services.stdout | split('\n') }}"
+
+    - name: Find out if service is already connected to pmm server
+      block:
+        - name: Loop through percona servers
+          set_fact:
+            random_service_name_value: "_{{ 9999 | random + 1 }}"
+          loop: "{{ range(1, nodes_count | int + 1) | list }}"
+          when: "('pdpgsql_pmm_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
+
+    - name: Add service to pmm server
+      community.docker.docker_container_exec:
+        container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+        command: pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor pdpgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Run load on primary node.
+      include_tasks: ../postgresql/tasks/run_load_pgsql.yml
+      vars:
+        node_name: "pdpgsql_pmm_{{ pg_version }}_1"
+        pgbench_clients: 10
+        pgbench_time: 120
+        pgbench_scale: 1000
+
     - name: Check replication status on primary
       community.docker.docker_container_exec:
         container: "pdpgsql_pmm_{{ pg_version }}_1"
