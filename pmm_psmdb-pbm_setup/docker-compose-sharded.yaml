@@ -238,7 +238,7 @@ services:
     environment:
       - "MINIO_ACCESS_KEY=minio1234"
       - "MINIO_SECRET_KEY=minio1234"
-    command: server /backups
+    command: server /backups --address 0.0.0.0:9000 --console-address 0.0.0.0:9001
 
   createbucket:
     container_name: createbucket
