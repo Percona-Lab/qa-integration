@@ -261,3 +261,4 @@ if [ $cleanup != "no" ]; then
 fi
 
 docker exec minio  /bin/sh -c " sleep 5; /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp-sharded; exit 0; "
+docker ps -a
