@@ -902,6 +902,7 @@ if __name__ == "__main__":
         exit(1)
 
     print(args)
+    print(f"Buckets are {args.bucket}")
 
     # Parse arguments
     try:
