@@ -14,6 +14,10 @@
       - "9001:9001"
 
   tasks:
+    - name: List running Docker containers
+      community.docker.docker_container_info:
+        gather_facts: false
+
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
