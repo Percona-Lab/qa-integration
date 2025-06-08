@@ -938,7 +938,8 @@ if __name__ == "__main__":
                             if args.verbose:
                                 print(f"Option {key} is not recognised, will be using default option")
                                 continue
-                            # if args
+                            if args.bucket:
+                                print(f"Buckets are: {args.bucket}")
                     except KeyError as e:
                         print(f"Option {key} is not recognised with error {e}, Please check and try again")
                         parser.print_help()
