@@ -10,8 +10,8 @@
     minio_secret_key: minio1234
     minio_volume_name: minio_backups
     minio_ports:
-      - "90000:9000"
-      - "90001:9001"
+      - "9010:9000"
+      - "9001:9001"
 
   tasks:
     - name: Run docker ps with port info
