@@ -894,11 +894,14 @@ if __name__ == "__main__":
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
+    parser.add_argument("--bucket", nargs='?', help='Create MinIO S3 compatible bucket')
     args = parser.parse_args()
 
     if args.verbosity_level is not None and not args.verbosity_level.isnumeric():
         print(f"Option {args.verbosity_level} is invalid verbosity level option, please provide number 1-5")
         exit(1)
+
+    print(args)
 
     # Parse arguments
     try:
