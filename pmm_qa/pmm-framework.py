@@ -92,8 +92,6 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     playbook_path = script_dir + "/" + playbook_filename
     verbosity_level = 1
 
-
-
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
 
@@ -212,7 +210,8 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'PS_NODES': no_of_nodes,
             'PS_VERSION': ps_version,
             'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + ('_replica' if setup_type_value in ("replication", "replica") else ''),
+            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + (
+                '_replica' if setup_type_value in ("replication", "replica") else ''),
             'PS_PORT': 3318 if setup_type_value in ("replication", "replica") else 3317,
             'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
@@ -226,6 +225,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
         # Call the function to run the Ansible playbook
         run_ansible_playbook(playbook_filename, env_vars, args)
+
 
 def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -470,6 +470,7 @@ def setup_mlaunch_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
 
+
 def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -479,7 +480,7 @@ def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     modb_version = os.getenv('MODB_VERSION') or db_version or \
-                    database_configs[db_type]["versions"][-1]
+                   database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
@@ -599,7 +600,6 @@ def get_latest_psmdb_version(psmdb_version):
     # Extract the version number using regular expression
     version_number = [v.split('|')[0] for v in re.findall(r'value="([^"]*)"', response.text)]
 
-
     if version_number:
         # Sort the version numbers and extract the latest one
         latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
@@ -689,7 +689,9 @@ def mongo_ssl_setup(script_filename, args):
             subprocess.run(
                 ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
+            subprocess.run(
+                ['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g',
+                 f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])
@@ -872,9 +874,11 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
 
+
 def setup_bucket(args=None):
     print("Setting up bucket")
     print(args)
+
 
 # Main
 if __name__ == "__main__":
@@ -911,45 +915,46 @@ if __name__ == "__main__":
         if args.bucket:
             print(f"Buckets are: {args.bucket}")
             setup_bucket(args)
-        for db in args.database:
-            db_parts = db[0].split(',')
-            configs = db_parts[0:] if len(db_parts) > 1 else db[0:]
-            db_type = None
-            db_version = None
-            db_config = {}
+        if args.database:
+            for db in args.database:
+                db_parts = db[0].split(',')
+                configs = db_parts[0:] if len(db_parts) > 1 else db[0:]
+                db_type = None
+                db_version = None
+                db_config = {}
 
-            if configs:
-                for config in configs:
-                    if "=" in config:
-                        key, value = config.split('=')
-                    else:
-                        key, value = config, None
-
-                    # Convert all arguments/options only to uppercase
-                    key = key.upper()
-
-                    try:
-                        if key in database_configs:
-                            db_type = key
-                            if "versions" in database_configs[db_type]:
-                                if value in database_configs[db_type]["versions"]:
-                                    db_version = value
-                                else:
-                                    if args.verbose:
-                                        print(
-                                            f"Value {value} is not recognised for Option {key}, will be using Default value")
-                        elif key in database_configs[db_type]["configurations"]:
-                            db_config[key] = value
+                if configs:
+                    for config in configs:
+                        if "=" in config:
+                            key, value = config.split('=')
                         else:
-                            if args.verbose:
-                                print(f"Option {key} is not recognised, will be using default option")
-                                continue
-                    except KeyError as e:
-                        print(f"Option {key} is not recognised with error {e}, Please check and try again")
-                        parser.print_help()
-                        exit(1)
-                # Set up the specified databases
-                setup_database(db_type, db_version, db_config, args)
+                            key, value = config, None
+
+                        # Convert all arguments/options only to uppercase
+                        key = key.upper()
+
+                        try:
+                            if key in database_configs:
+                                db_type = key
+                                if "versions" in database_configs[db_type]:
+                                    if value in database_configs[db_type]["versions"]:
+                                        db_version = value
+                                    else:
+                                        if args.verbose:
+                                            print(
+                                                f"Value {value} is not recognised for Option {key}, will be using Default value")
+                            elif key in database_configs[db_type]["configurations"]:
+                                db_config[key] = value
+                            else:
+                                if args.verbose:
+                                    print(f"Option {key} is not recognised, will be using default option")
+                                    continue
+                        except KeyError as e:
+                            print(f"Option {key} is not recognised with error {e}, Please check and try again")
+                            parser.print_help()
+                            exit(1)
+                    # Set up the specified databases
+                    setup_database(db_type, db_version, db_config, args)
     except argparse.ArgumentError as e:
         print(f"Option is not recognised:", e)
         parser.print_help()
