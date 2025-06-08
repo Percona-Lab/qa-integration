@@ -48,13 +48,20 @@
       debug:
         var: buckets
 
-    - name: Create MinIO buckets
+    - name: Set MinIO alias inside the container
       community.docker.docker_container_exec:
         container: "minio"
         command: >
           /bin/sh -c "
           sleep 5;
           /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234;
-          /usr/bin/mc mb myminio/{{ item }};
           exit 0;"
-      loop: "{{ buckets  }}"
+
+    - name: Create MinIO buckets
+      community.docker.docker_container_exec:
+        container: "minio"
+        command: >
+          /bin/sh -c "
+          /usr/bin/mc mb myminio/{{ item }} || echo 'Bucket {{ item }} already exists';
+          exit 0;"
+      loop: "{{ buckets }}"
