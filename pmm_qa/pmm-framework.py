@@ -877,8 +877,10 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
 def setup_bucket(args=None):
     print("Setting up bucket")
-    print(args)
+    print(args.bucket)
+    env_vars = {}
 
+    run_ansible_playbook('tasks/create_minio_container.yml', env_vars, args)
 
 # Main
 if __name__ == "__main__":
@@ -913,7 +915,6 @@ if __name__ == "__main__":
     # Parse arguments
     try:
         if args.bucket:
-            print(f"Buckets are: {args.bucket}")
             setup_bucket(args)
         if args.database:
             for db in args.database:
