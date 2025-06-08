@@ -4,6 +4,7 @@
   connection: local
   gather_facts: yes
   vars:
+    network_name: "pmm-qa"
     buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) }}"
     minio_access_key: minio1234
     minio_secret_key: minio1234
@@ -13,6 +14,12 @@
       - "9001:9001"
 
   tasks:
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: "{{ network_name }}"
+        state: present
+      ignore_errors: yes
+
     - name: Remove old MinIO docker container
       community.docker.docker_container:
         name: minio
@@ -37,6 +44,8 @@
         image: minio/minio
         restart_policy: unless-stopped
         ports: "{{ minio_ports }}"
+        networks:
+          - name: "{{ network_name }}"
         volumes:
           - "{{ minio_volume_name }}:/backups"
         env:
