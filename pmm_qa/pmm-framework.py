@@ -902,10 +902,11 @@ if __name__ == "__main__":
         exit(1)
 
     print(args)
-    print(f"Buckets are {args.bucket}")
 
     # Parse arguments
     try:
+        if args.bucket:
+            print(f"Buckets are: {args.bucket}")
         for db in args.database:
             db_parts = db[0].split(',')
             configs = db_parts[0:] if len(db_parts) > 1 else db[0:]
@@ -939,8 +940,6 @@ if __name__ == "__main__":
                             if args.verbose:
                                 print(f"Option {key} is not recognised, will be using default option")
                                 continue
-                            if args.bucket:
-                                print(f"Buckets are: {args.bucket}")
                     except KeyError as e:
                         print(f"Option {key} is not recognised with error {e}, Please check and try again")
                         parser.print_help()
