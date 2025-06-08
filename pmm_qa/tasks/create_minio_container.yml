@@ -12,6 +12,20 @@
       - "9001:9001"
 
   tasks:
+    - name: Remove old MinIO docker container
+      community.docker.docker_container:
+        name: minio
+        image: minio/minio
+        restart_policy: always
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove MinIO Docker volume
+      community.docker.docker_volume:
+        name: "{{ minio_volume_name }}"
+        state: absent
+      ignore_errors: true
+
     - name: Create MinIO Docker volume
       community.docker.docker_volume:
         name: "{{ minio_volume_name }}"
