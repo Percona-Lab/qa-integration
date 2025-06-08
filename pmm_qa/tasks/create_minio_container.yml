@@ -10,8 +10,8 @@
     minio_secret_key: minio1234
     minio_volume_name: minio_backups
     minio_ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "90000:9000"
+      - "90001:9001"
 
   tasks:
     - name: Run docker ps with port info
@@ -55,7 +55,7 @@
         env:
           MINIO_ACCESS_KEY: "{{ minio_access_key }}"
           MINIO_SECRET_KEY: "{{ minio_secret_key }}"
-        command: server /backups --address 0.0.0.0:9000 --console-address 0.0.0.0:9001
+        command: server /backups --address 0.0.0.0:90000 --console-address 0.0.0.0:90001
 
     - name: Show the list of buckets
       debug:
@@ -67,7 +67,7 @@
         command: >
           /bin/sh -c "
           sleep 5;
-          /usr/bin/mc alias set myminio http://127.0.0.1:9000 minio1234 minio1234;
+          /usr/bin/mc alias set myminio http://127.0.0.1:90000 minio1234 minio1234;
           exit 0;"
 
     - name: Create MinIO buckets
