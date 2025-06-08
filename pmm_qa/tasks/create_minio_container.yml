@@ -14,9 +14,9 @@
       - "9001:9001"
 
   tasks:
-    - name: List running Docker containers
-      community.docker.docker_container_info:
-        gather_facts: false
+    - name: Run docker ps with port info
+      shell: docker ps -a
+      register: docker_ps_output
 
     - name: Create Docker network
       community.docker.docker_network:
