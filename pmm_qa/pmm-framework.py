@@ -872,6 +872,9 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
 
+def setup_bucket(args=None):
+    print("Setting up bucket")
+    print(args)
 
 # Main
 if __name__ == "__main__":
@@ -907,6 +910,7 @@ if __name__ == "__main__":
     try:
         if args.bucket:
             print(f"Buckets are: {args.bucket}")
+            setup_bucket(args)
         for db in args.database:
             db_parts = db[0].split(',')
             configs = db_parts[0:] if len(db_parts) > 1 else db[0:]
