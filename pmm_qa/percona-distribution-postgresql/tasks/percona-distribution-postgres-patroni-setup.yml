@@ -91,13 +91,13 @@
 - name: Stop postgres service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#    user: root
     command: >
       /bin/sh -c '
         /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
         rm -f /data/db/postmaster.pid
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  ignore_errors: yes
 
 - name: Start etcd service
   community.docker.docker_container_exec:
