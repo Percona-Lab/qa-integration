@@ -66,7 +66,6 @@
         dnf module disable postgresql
         dnf config-manager --set-enabled ol9_codeready_builder
         dnf install perl-IPC-Run -y
-        dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
         dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         dnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
@@ -77,7 +76,7 @@
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-
+#        dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
 - name: Stop postgres service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
