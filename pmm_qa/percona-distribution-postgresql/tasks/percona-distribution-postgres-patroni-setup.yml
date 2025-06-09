@@ -31,8 +31,8 @@
 
 - name: Download postgresqlX.yml files from GitHub
   ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/Percona-QA/ppg-testing/2f4db057bb4cb36783b6f1eb662b2c487556ea70/ppg/pg-17/files/{{ item }}"
-    dest: "./{{ item }}"
+    url: "https://raw.githubusercontent.com/Percona-QA/ppg-testing/main/ppg/pg-{{ pg_version }}/files/{{ item }}"
+    dest: "/{{ item }}"
     mode: '0644'
   loop:
     - postgresql0.yml
