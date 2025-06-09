@@ -33,9 +33,11 @@ bootstrap:
               archive_timeout: 600s
               archive_command: "cp -f %p /home/postgres/archived/%f"
       pg_hba:
-        - local all all peer
-        - host replication replicator 127.0.0.1/32 trust
-        - host replication replicator 172.18.0.0/16 md5
+      - local all all          peer
+      - host replication replicator 127.0.0.1/32 trust
+      - host replication replicator 192.0.0.0/8 scram-sha-256
+      - host replication replicator 172.18.0.0/16 md5
+      - host all all 0.0.0.0/0 scram-sha-256
       recovery_conf:
         restore_command: cp /home/postgres/archived/%f %p
 
@@ -66,7 +68,7 @@ postgresql:
         checkpoint: 'fast'
 
 watchdog:
-  mode: automatic # Allowed values: off, automatic, required
+  mode: required # Allowed values: off, automatic, required
   device: /dev/watchdog
   safety_margin: 5
 
