@@ -86,9 +86,19 @@
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  register: _alias_vc_0
-  async: 120
-  poll: 5
+
+
+- name: Stop postgres service
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+#    user: root
+    command: >
+      /bin/sh -c '
+        /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
+        rm -f /data/db/postmaster.pid
+        for id in $(ipcs -m | awk '/postgres/ {print $2}'); do ipcrm -m $id; done
+      '
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start etcd service
   community.docker.docker_container_exec:
@@ -96,15 +106,11 @@
     user: root
     command: >
       /bin/sh -c '
-        /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
-        rm -f /data/db/postmaster.pid
-        for id in $(ipcs -m | awk '/postgres/ {print $2}'); do ipcrm -m $id; done
         mkdir -p /data/db/logs
         nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
         chown -R postgres:postgres /data/db/logs
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
 
 - name: Wait 5 to etcd to start
   pause:
