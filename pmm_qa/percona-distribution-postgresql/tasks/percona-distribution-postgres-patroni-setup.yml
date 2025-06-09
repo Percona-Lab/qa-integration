@@ -37,17 +37,7 @@
   ignore_errors: yes
 
 - name: Prepare ETCD container
-  include_tasks: install_and_start_etcd.yml
-
-- name: Download postgresqlX.yml files from GitHub
-  ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/Percona-QA/ppg-testing/main/ppg/pg-{{ pg_version }}/files/{{ item }}"
-    dest: "/{{ item }}"
-    mode: '0644'
-  loop:
-    - postgresql0.yml
-    - postgresql1.yml
-    - postgresql2.yml
+  include_tasks: prepare_etcd.yml
 
 - name: Start PostgreSQL containers
   community.docker.docker_container:

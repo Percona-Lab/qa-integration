@@ -11,7 +11,7 @@
     container: "{{ etcd_container_name }}"
     command: >
       /bin/sh -c "
-        curl -LO https://github.com/etcd-io/etcd/releases/latest/download/etcd-linux-amd64.tar.gz &&
+        curl -LO https://github.com/etcd-io/etcd/releases/download/v3.6.1/etcd-v3.6.1-linux-amd64.tar.gz &&
         tar -xzf etcd-linux-amd64.tar.gz &&
         cd etcd-linux-amd64 &&
         sudo mv etcd etcdctl /usr/local/bin/ &&
