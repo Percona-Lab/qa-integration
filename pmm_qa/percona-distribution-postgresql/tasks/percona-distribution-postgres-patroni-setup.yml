@@ -87,17 +87,22 @@
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-
 - name: Start etcd service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-#    user: root
+    user: root
     command: >
       /bin/sh -c '
         mkdir -p /data/db/logs
-        touch /data/db/logs/etcd.log
-        touch /data/db/logs/patroni.log
         nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
+      '
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start patroni service
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    command: >
+      /bin/sh -c '
         nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
