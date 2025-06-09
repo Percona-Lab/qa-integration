@@ -13,10 +13,12 @@
     container: "{{ etcd_container_name }}"
     command: >
       /bin/sh -c "
-        curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep '"browser_download_url":' | grep 'linux-amd64.tar.gz' | sed -E 's/.*"browser_download_url": *"(.*)"/\1/'
+        DOWNLOAD_URL = $(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep '"browser_download_url":' | grep 'linux-amd64.tar.gz' | sed -E 's/.*"browser_download_url": *"(.*)"/\1/')
+        echo DOWNLOAD_URL
+        basename "$DOWNLOAD_URL" .tar.gz
         curl -L -o etcd-latest.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.6.1/etcd-v3.6.1-linux-amd64.tar.gz &&
         mkdir -p /etcd-latest
-        tar -xzf etcd-latest.tar.gz -C /etcd-latest &&
+        tar -xzf etcd-latest.tar.gz &&
         ls &&
         ls /etcd-latest &&
         cd etcd-latest &&
