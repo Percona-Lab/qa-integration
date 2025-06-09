@@ -94,6 +94,7 @@
 #    user: root
     command: >
       /bin/sh -c '
+        mkdir -p /home/postgres/logs
         touch /home/postgres/logs/etcd.log
         touch /home/postgres/logs/patroni.log
         nohup etcd --config-file /etcd.conf.yaml > /home/postgres/logs/etcd.log 2>&1 &
