@@ -62,6 +62,7 @@
     user: root
     command: >
       /bin/sh -c '
+        percona-release enable ppg-{{ pg_version }}
         microdnf install -y percona-postgresql{{ pg_version }}-patroni python3-etcd 
         patroni --version
       '
