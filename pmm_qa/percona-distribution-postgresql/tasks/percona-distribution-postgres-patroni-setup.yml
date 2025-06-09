@@ -110,6 +110,7 @@
 - name: Start patroni service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    user: postgres
     command: >
       /bin/sh -c '
         nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &
