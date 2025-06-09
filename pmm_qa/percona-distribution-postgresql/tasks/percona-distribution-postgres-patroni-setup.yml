@@ -96,7 +96,6 @@
       /bin/sh -c '
         /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
         rm -f /data/db/postmaster.pid
-#        for id in $(ipcs -m | awk '/postgres/ {print $2}'); do ipcrm -m $id; done
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
