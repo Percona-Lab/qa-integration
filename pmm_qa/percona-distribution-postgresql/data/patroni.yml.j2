@@ -1,13 +1,13 @@
 namespace: percona_lab
 scope: cluster_1
-name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+name: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
 
 restapi:
     listen: 0.0.0.0:8008
-    connect_address: "pdpgsql_pmm_{{ pg_version }}_{{ item }}:8008"
+    connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
 
 etcd3:
-    host: "pdpgsql_pmm_{{ pg_version }}_{{ item }}:2379"
+    host: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:2379"
 
 bootstrap:
   # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
@@ -48,7 +48,7 @@ bootstrap:
 postgresql:
     cluster_name: cluster_1
     listen: 0.0.0.0:5432
-    connect_address: "pdpgsql_pmm_{{ pg_version }}_{{ item }}:5432"
+    connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:5432"
     data_dir: /data/db
     bin_dir: /usr/pgsql-{{ pg_version }}/bin
     pgpass: /tmp/pgpass0
