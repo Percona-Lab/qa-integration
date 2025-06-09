@@ -1,6 +1,8 @@
 - name: Set correct nodes count for patroni setup
   set_fact:
     nodes_count: 3
+  when: nodes_count < 3
+
 - name: Remove old data folders
   shell: 'rm -fr {{ data_dir }}'
 
