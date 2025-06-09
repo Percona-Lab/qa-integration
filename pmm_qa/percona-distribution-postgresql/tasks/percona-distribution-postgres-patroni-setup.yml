@@ -65,7 +65,7 @@
       /bin/sh -c '
         dnf module disable postgresql
         dnf config-manager --set-enabled ol9_codeready_builder
-      sudo dnf install perl-IPC-Run -y
+        dnf install perl-IPC-Run -y
         dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
         dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         dnf config-manager --set-enabled crb
@@ -73,7 +73,6 @@
         percona-release setup ppg-{{ pg_version }}
         dnf install -y python3-pip python3-devel binutils python3-click
         dnf install -y percona-postgresql{{ pg_version }}-server percona-patroni etcd python3-python-etcd percona-pgbackrest
-        /usr/pgsql-{{ pg_version }}/bin/postgresql-{{ pg_version }}-setup initdb
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -84,14 +83,9 @@
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     command: >
       /bin/sh -c '
-        /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
-        kill 1
+        ps aux
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Wait 5 to postgres to stop
-  pause:
-    seconds: 5
 
 - name: Start etcd service
   community.docker.docker_container_exec:
@@ -109,6 +103,9 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 
+- name: Wait 5 seconds to etcd to start
+  pause:
+    seconds: 5
 
 - name: Start patroni service
   community.docker.docker_container_exec:
@@ -118,3 +115,11 @@
         nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Log Patroni cluster
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    command: >
+      /bin/sh -c '
+        patronictl -c /etc/patroni/patroni.yml list
+      '
