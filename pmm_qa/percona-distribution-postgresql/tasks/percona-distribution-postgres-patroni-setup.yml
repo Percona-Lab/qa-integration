@@ -14,6 +14,7 @@
     image: rockylinux:9
     state: started
     restart_policy: always
+    command: sleep infinity
 
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
