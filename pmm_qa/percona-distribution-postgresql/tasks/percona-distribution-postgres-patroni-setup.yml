@@ -2,6 +2,10 @@
   set_fact:
     patroni_container_name: patroni_container
 
+- name: Set correct nodes count for patroni setup
+  set_fact:
+    nodes_count: 3
+
 - name: Create Docker network
   community.docker.docker_network:
     name: "{{ network_name }}"
@@ -38,3 +42,23 @@
     - postgresql0.yml
     - postgresql1.yml
     - postgresql2.yml
+
+- name: Start PostgreSQL containers
+  community.docker.docker_container:
+    name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    image: "{{ docker_repo }}:{{ pg_version }}"
+    restart_policy: always
+    state: started
+    recreate: true
+    networks:
+      - name: "{{ network_name }}"
+    env:
+      POSTGRES_PASSWORD: "{{ root_password }}"
+    volumes:
+      - "{{ data_dir }}/node{{ item }}/data:/data/db"
+      - "./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro"
+      - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
+    command: -c config_file=/etc/postgresql/postgresql.conf
+    ports:
+      - "{{ pdpgsql_port }}:5432"
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
