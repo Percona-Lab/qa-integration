@@ -118,7 +118,7 @@
 
 - name: Log Patroni cluster
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
     command: >
       /bin/sh -c '
         patronictl -c /etc/patroni/patroni.yml list
