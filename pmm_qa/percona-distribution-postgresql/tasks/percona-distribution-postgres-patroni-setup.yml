@@ -94,10 +94,10 @@
 #    user: root
     command: >
       /bin/sh -c '
-        mkdir -p /home/postgres/logs
-        touch /home/postgres/logs/etcd.log
-        touch /home/postgres/logs/patroni.log
-        nohup etcd --config-file /etcd.conf.yaml > /home/postgres/logs/etcd.log 2>&1 &
-        nohup patroni /etc/patroni/patroni.yml > /home/postgres/logs/patroni.log 2>&1 &
+        mkdir -p /data/db/logs
+        touch /data/db/logs/etcd.log
+        touch /data/db/logs/patroni.log
+        nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
+        nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
