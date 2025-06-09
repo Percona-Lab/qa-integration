@@ -18,7 +18,7 @@
         mkdir -p /etcd-latest
         tar -xzf etcd-latest.tar.gz -C /etcd-latest &&
         ls &&
-        cd etcd-linux-amd64 &&
+        cd etcd-latest &&
         sudo mv etcd etcdctl /usr/local/bin/ &&
         etcd --version &&
         etcdctl version
