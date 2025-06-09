@@ -15,6 +15,12 @@
     recurse: yes
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Generate pg_hba.conf for replica node
+  template:
+    src: data/postgresqlX.yml.j2
+    dest: "{{ data_dir }}/node{{ item }}/postgresql{{ item }}.yml"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Create Docker network
   community.docker.docker_network:
     name: "{{ network_name }}"
