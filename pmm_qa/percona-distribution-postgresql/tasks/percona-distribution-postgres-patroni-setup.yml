@@ -36,6 +36,12 @@
     dest: "{{ data_dir }}/node{{ item }}/etcd.conf.yaml"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Generate patroni configuration
+  template:
+    src: data/patroni.yml.j2
+    dest: "{{ data_dir }}/node{{ item }}/patroni.yml.j2"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Create Docker network
   community.docker.docker_network:
     name: "{{ network_name }}"
@@ -59,6 +65,7 @@
     volumes:
       - "{{ data_dir }}/node{{ item }}/data:/data/db"
       - "{{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etcd.conf.yaml:ro"
+      - "{{ data_dir }}/node{{ item }}/patroni.yml:/etc/patroni/patroni.yml:ro"
     ports:
       - "{{ pdpgsql_port + item - 1 }}:5432"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"

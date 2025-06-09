@@ -1,0 +1,79 @@
+namespace: percona_lab
+scope: cluster_1
+name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+
+restapi:
+    listen: 0.0.0.0:8008
+    connect_address: "pdpgsql_pmm_{{ pg_version }}_{{ item }}":8008
+
+etcd3:
+    host: "pdpgsql_pmm_{{ pg_version }}_{{ item }}":2379
+
+bootstrap:
+  # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
+  dcs:
+      ttl: 30
+      loop_wait: 10
+      retry_timeout: 10
+      maximum_lag_on_failover: 1048576
+
+      postgresql:
+          use_pg_rewind: true
+          use_slots: true
+          parameters:
+              wal_level: replica
+              hot_standby: "on"
+              wal_keep_segments: 10
+              max_wal_senders: 5
+              max_replication_slots: 10
+              wal_log_hints: "on"
+              logging_collector: 'on'
+              max_wal_size: '10GB'
+              archive_mode: "on"
+              archive_timeout: 600s
+              archive_command: "cp -f %p /home/postgres/archived/%f"
+      pg_hba:
+      - local all all          peer
+      - host replication replicator 127.0.0.1/32 trust
+      - host replication replicator 192.0.0.0/8 scram-sha-256
+      - host all all 0.0.0.0/0 scram-sha-256
+      recovery_conf:
+        restore_command: cp /home/postgres/archived/%f %p
+
+  # some desired options for 'initdb'
+  initdb: # Note: It needs to be a list (some options need values, others are switches)
+      - encoding: UTF8
+      - data-checksums
+
+postgresql:
+    cluster_name: cluster_1
+    listen: 0.0.0.0:5432
+    connect_address: "pdpgsql_pmm_{{ pg_version }}_{{ item }}":5432
+    data_dir: /data/db
+    bin_dir: /usr/pgsql-{{ pg_version }}/bin
+    pgpass: /tmp/pgpass0
+    authentication:
+        replication:
+            username: replicator
+            password: replPasswd
+        superuser:
+            username: postgres
+            password: qaz123
+    parameters:
+        unix_socket_directories: "/var/run/postgresql/"
+    create_replica_methods:
+        - basebackup
+    basebackup:
+        checkpoint: 'fast'
+
+watchdog:
+  mode: required # Allowed values: off, automatic, required
+  device: /dev/watchdog
+  safety_margin: 5
+
+
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false
