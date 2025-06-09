@@ -62,11 +62,12 @@
     user: root
     command: >
       /bin/sh -c '
-        microdnf install -y epel-release
+        microdnf install -y dnf
+        dnf install -y epel-release
         dnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
-        microdnf install -y python3-pip python3-devel binutils
-        microdnf install -y percona-patroni python3-python-etcd percona-pgbackrest
+        dnf install -y python3-pip python3-devel binutils
+        dnf install -y percona-patroni python3-python-etcd percona-pgbackrest
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
