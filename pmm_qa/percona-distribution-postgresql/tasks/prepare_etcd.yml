@@ -6,11 +6,14 @@
     restart_policy: always
     command: sleep infinity
 
+
+
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
     container: "{{ etcd_container_name }}"
     command: >
       /bin/sh -c "
+        curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep "browser_download_url.*tar.gz"
         curl -LO https://github.com/etcd-io/etcd/releases/download/v3.6.1/etcd-v3.6.1-linux-amd64.tar.gz &&
         tar -xzf etcd-linux-amd64.tar.gz &&
         cd etcd-linux-amd64 &&
