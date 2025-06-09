@@ -55,9 +55,7 @@
   community.docker.docker_container:
     name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
     image: "{{ docker_repo }}:{{ pg_version }}"
-    restart_policy: always
     state: started
-    recreate: true
     networks:
       - name: "{{ network_name }}"
     env:
