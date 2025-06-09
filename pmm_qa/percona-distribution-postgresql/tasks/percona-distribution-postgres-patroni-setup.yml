@@ -21,8 +21,7 @@
     container: "{{ patroni_container_name }}"
     command: >
       /bin/sh -c "
-        dnf install -y &&
-        'https://repo.percona.com/yum/percona-release-latest.noarch.rpm' &&
+        dnf install -y 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm' &&
         percona-release setup ppg-17 &&
         dnf install -y python3-etcd percona-haproxy percona-patroni
       "
