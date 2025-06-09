@@ -94,6 +94,8 @@
 #    user: root
     command: >
       /bin/sh -c '
+        touch /home/postgres/logs/etcd.log
+        touch /home/postgres/logs/patroni.log
         nohup etcd --config-file /etcd.conf.yaml > /home/postgres/logs/etcd.log 2>&1 &
         nohup patroni /etc/patroni/patroni.yml > /home/postgres/logs/patroni.log 2>&1 &
       '
