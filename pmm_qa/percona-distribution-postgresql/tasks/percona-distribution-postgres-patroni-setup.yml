@@ -63,7 +63,8 @@
     command: >
       /bin/sh -c '
         percona-release enable ppg-{{ pg_version }}
-        microdnf install -y percona-postgresql{{ pg_version }}-patroni python3-etcd 
+        microdnf install -y python3-pip python3-devel binutils
+        microdnf install -y percona-patroni python3-python-etcd percona-pgbackrest
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
