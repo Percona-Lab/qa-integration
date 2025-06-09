@@ -1,50 +1,24 @@
+- name: Set patroni container name variable
+  set_fact:
+    patroni_container_name: patroni_container
+
 - name: Create Docker network
   community.docker.docker_network:
     name: "{{ network_name }}"
     state: present
   ignore_errors: yes
 
-- name: Run etcd container
+- name: Start Oracle Linux 9 container
   community.docker.docker_container:
-    name: etcd
-    image: bitnami/etcd:latest
+    name: "{{ patroni_container_name }}"
+    image: rockylinux:9
+    state: started
     restart_policy: always
-    ports:
-      - "2379:2379"
-      - "2380:2380"
-    env:
-      ALLOW_NONE_AUTHENTICATION: "yes"
-      ETCD_NAME: "etcd"
-      ETCD_ADVERTISE_CLIENT_URLS: "http://0.0.0.0:2379"
-      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
-      ETCD_INITIAL_ADVERTISE_PEER_URLS: "http://0.0.0.0:2380"
-      ETCD_LISTEN_PEER_URLS: "http://0.0.0.0:2380"
-      ETCD_INITIAL_CLUSTER: "etcd1=http://0.0.0.0:2380"
-      ETCD_INITIAL_CLUSTER_STATE: "new"
 
-- name: Create Patroni data volume
-  community.docker.docker_volume:
-    name: "patroni_pgdata"
-
-- name: Run Patroni container
-  community.docker.docker_container:
-    name: "{{ inventory_hostname }}"
-    image: ghcr.io/zalando/patroni:latest
-    restart_policy: always
-    volumes:
-      - "{{ inventory_hostname }}_pgdata:/home/postgres/pgdata"
-    ports:
-      - "5432:5432"
-    env:
-      PATRONI_NAME: "patroni"
-      PATRONI_SCOPE: patroni_cluster
-      PATRONI_RESTAPI_LISTEN: 0.0.0.0:8008
-      PATRONI_RESTAPI_CONNECT_ADDRESS: "patroni:8008"
-      PATRONI_ETCD_HOSTS: "etcd:2379"
-      PATRONI_POSTGRESQL_DATA_DIR: /home/postgres/pgdata
-      PATRONI_POSTGRESQL_CONNECT_ADDRESS: "patroni:5432"
-      PATRONI_POSTGRESQL_LISTEN: 0.0.0.0:5432
-      PATRONI_SUPERUSER_USERNAME: postgres
-      PATRONI_SUPERUSER_PASSWORD: password
-      PATRONI_REPLICATION_USERNAME: replicator
-      PATRONI_REPLICATION_PASSWORD: rep_pass
+- name: Install required packages in Oracle Linux container
+  community.docker.docker_container_exec:
+    container: "{{ patroni_container_name }}"
+    command: >
+      dnf install -y
+      'https://repo.percona.com/yum/percona-release-latest.noarch.rpm' &&
+      dnf install -y python3-etcd percona-haproxy percona-patroni
