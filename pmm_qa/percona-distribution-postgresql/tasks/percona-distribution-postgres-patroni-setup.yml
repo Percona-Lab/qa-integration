@@ -43,10 +43,9 @@
     name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
     image: oraclelinux:9
     state: started
+    restart_policy: always
     networks:
       - name: "{{ network_name }}"
-    env:
-      POSTGRES_PASSWORD: "{{ root_password }}"
     volumes:
       - "{{ data_dir }}/node{{ item }}/data:/data/db"
       - "{{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etcd.conf.yaml:ro"
