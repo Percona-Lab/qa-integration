@@ -86,7 +86,7 @@
     user: root
     command: >
       /bin/sh -c '
-        systemctl stop { etcd,patroni,postgresql-{{pg_version}} }
-        systemctl disable { etcd,patroni,postgresql-{{pg_version}} }
+        pkill -f patroni
+        pkill -f etcd
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
