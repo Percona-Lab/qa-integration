@@ -77,16 +77,6 @@
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-
-- name: Stop postgres service
-  community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
-    command: >
-      /bin/sh -c '
-        ps aux
-      '
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
 - name: Start etcd service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
