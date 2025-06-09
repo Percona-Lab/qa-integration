@@ -63,8 +63,7 @@
     user: root
     command: >
       /bin/sh -c '
-        microdnf install -y dnf
-        dnf install -y dnf-plugins-core
+        dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
         dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         dnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
