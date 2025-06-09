@@ -40,7 +40,7 @@
 
 - name: Start PostgreSQL containers
   community.docker.docker_container:
-    name: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     image: oraclelinux:9
     state: started
     restart_policy: always
@@ -56,7 +56,7 @@
 
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
@@ -74,7 +74,7 @@
 
 - name: Stop postgres service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     command: >
       /bin/sh -c '
         /usr/pgsql-17/bin/pg_ctl -D /data/db stop -m fast
@@ -88,7 +88,7 @@
 
 - name: Start etcd service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
@@ -104,7 +104,7 @@
 
 - name: Start patroni service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     command: >
       /bin/sh -c '
         nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &
