@@ -49,7 +49,7 @@ postgresql:
     cluster_name: cluster_1
     listen: 0.0.0.0:5432
     connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:5432"
-    data_dir: /data/db
+    data_dir: /var/lib/pgsql/{{ pg_version}}/data
     bin_dir: /usr/pgsql-{{ pg_version }}/bin
     pgpass: /tmp/pgpass0
     authentication:
