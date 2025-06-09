@@ -63,8 +63,9 @@
     command: >
       /bin/sh -c '
         microdnf install -y dnf
-        dnf install -y epel-release
-        dnf config-manager --set-enabled crb  
+        dnf install -y dnf-plugins-core
+        dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        dnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
         dnf install -y python3-pip python3-devel binutils python3-click
         dnf install -y percona-patroni python3-python-etcd percona-pgbackrest
