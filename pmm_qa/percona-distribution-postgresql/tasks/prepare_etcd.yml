@@ -1,12 +1,10 @@
 - name: Start etcd container
   community.docker.docker_container:
     name: "{{ etcd_container_name }}"
-    image: rockylinux:9
+    image: oraclelinux:9
     state: started
     restart_policy: always
     command: sleep infinity
-
-
 
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
@@ -26,4 +24,5 @@
         mv etcd etcdctl /usr/local/bin/ &&
         etcd --version &&
         etcdctl version
+        dnf --help
       '
