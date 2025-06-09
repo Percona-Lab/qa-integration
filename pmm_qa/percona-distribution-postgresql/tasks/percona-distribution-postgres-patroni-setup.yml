@@ -93,6 +93,9 @@
     user: root
     command: >
       /bin/sh -c '
+        pg_ctl -D /data/db stop -m fast
+        rm -f /data/db/postmaster.pid
+        for id in $(ipcs -m | awk '/postgres/ {print $2}'); do ipcrm -m $id; done
         mkdir -p /data/db/logs
         nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
         chown -R postgres:postgres /data/db/logs
