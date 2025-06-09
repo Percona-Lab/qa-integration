@@ -59,9 +59,9 @@
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    user: root
     command: >
       /bin/sh -c '
-        microdnf install -y which epel-release
         microdnf install -y percona-postgresql{{ pg_version }}-patroni python3-etcd 
         patroni --version
       '
