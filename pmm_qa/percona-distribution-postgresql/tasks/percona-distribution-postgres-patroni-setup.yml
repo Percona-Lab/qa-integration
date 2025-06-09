@@ -91,7 +91,7 @@
 - name: Start etcd service
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-    user: root
+#    user: root
     command: >
       /bin/sh -c '
         nohup etcd --config-file /etcd.conf.yaml > /var/log/etcd.log 2>&1 &
