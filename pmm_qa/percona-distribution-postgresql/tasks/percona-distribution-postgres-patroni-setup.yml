@@ -94,6 +94,7 @@
     user: root
     command: >
       /bin/sh -c '
+        rm -rf /var/lib/pgsql/{{ pg_version }}/data/*
         ps aux | grep postgres
         rm -f /data/db/postmaster.pid
         mkdir -p /data/db/logs
