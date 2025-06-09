@@ -7,21 +7,20 @@
 - name: Run etcd container
   community.docker.docker_container:
     name: etcd
-    image: quay.io/coreos/etcd:v3.5
+    image: bitnami/etcd:latest
     restart_policy: always
     ports:
       - "2379:2379"
       - "2380:2380"
-    command: >
-      /usr/local/bin/etcd
-      --name etcd1
-      --data-dir /etcd-data
-      --initial-advertise-peer-urls http://0.0.0.0:2380
-      --listen-peer-urls http://0.0.0.0:2380
-      --listen-client-urls http://0.0.0.0:2379
-      --advertise-client-urls http://0.0.0.0:2379
-      --initial-cluster etcd1=http://0.0.0.0:2380
-      --initial-cluster-state new
+    env:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_NAME: "etcd"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://0.0.0.0:2379"
+      ETCD_LISTEN_CLIENT_URLS: "http://0.0.0.0:2379"
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: "http://0.0.0.0:2380"
+      ETCD_LISTEN_PEER_URLS: "http://0.0.0.0:2380"
+      ETCD_INITIAL_CLUSTER: "etcd1=http://0.0.0.0:2380"
+      ETCD_INITIAL_CLUSTER_STATE: "new"
 
 - name: Create Patroni data volume
   community.docker.docker_volume:
