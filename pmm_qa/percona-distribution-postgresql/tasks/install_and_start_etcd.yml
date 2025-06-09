@@ -1,0 +1,20 @@
+- name: Start etcd container
+  community.docker.docker_container:
+    name: "{{ etcd_container_name }}"
+    image: rockylinux:9
+    state: started
+    restart_policy: always
+    command: sleep infinity
+
+- name: Install required packages in Oracle Linux container
+  community.docker.docker_container_exec:
+    container: "{{ etcd_container_name }}"
+    command: >
+      /bin/sh -c "
+        curl -LO https://github.com/etcd-io/etcd/releases/latest/download/etcd-linux-amd64.tar.gz &&
+        tar -xzf etcd-linux-amd64.tar.gz &&
+        cd etcd-linux-amd64 &&
+        sudo mv etcd etcdctl /usr/local/bin/ &&
+        etcd --version &&
+        etcdctl version
+      "

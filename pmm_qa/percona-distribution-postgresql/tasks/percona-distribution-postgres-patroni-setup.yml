@@ -1,6 +1,6 @@
 - name: Set patroni container name variable
   set_fact:
-    patroni_container_name: patroni_container
+    etcd_container_name: etcd_container
 
 - name: Set correct nodes count for patroni setup
   set_fact:
@@ -36,26 +36,8 @@
     state: present
   ignore_errors: yes
 
-- name: Start Oracle Linux 9 container
-  community.docker.docker_container:
-    name: "{{ patroni_container_name }}"
-    image: rockylinux:9
-    state: started
-    restart_policy: always
-    command: sleep infinity
-
-- name: Install required packages in Oracle Linux container
-  community.docker.docker_container_exec:
-    container: "{{ patroni_container_name }}"
-    command: >
-      /bin/sh -c "
-        dnf install -y epel-release &&
-        dnf config-manager --set-enabled crb &&
-        dnf install -y python3-click &&
-        dnf install -y 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm' &&
-        percona-release setup ppg-17 &&
-        dnf install -y python3-etcd percona-haproxy percona-patroni
-      "
+- name: Prepare ETCD container
+  include_tasks: install_and_start_etcd.yml
 
 - name: Download postgresqlX.yml files from GitHub
   ansible.builtin.get_url:

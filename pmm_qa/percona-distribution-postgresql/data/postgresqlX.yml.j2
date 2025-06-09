@@ -6,3 +6,5 @@ postgresql:
   listen: 0.0.0.0:5432
   connect_address: pdpgsql_pmm_{{ pg_version }}_{{ item }}:5432
   data_dir: /data/db
+etcd3:
+  host: etcd:2379
