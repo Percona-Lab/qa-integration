@@ -86,6 +86,7 @@
     user: root
     command: >
       /bin/sh -c '
+        ps aux
         pkill -f patroni
         pkill -f etcd
       '
