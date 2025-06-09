@@ -63,12 +63,17 @@
     user: root
     command: >
       /bin/sh -c '
+        dnf module disable postgresql
+        dnf config-manager --set-enabled ol9_codeready_builder
+      sudo dnf install perl-IPC-Run -y
         dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
         dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         dnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
+        percona-release setup ppg-{{ pg_version }}
         dnf install -y python3-pip python3-devel binutils python3-click
         dnf install -y percona-postgresql{{ pg_version }}-server percona-patroni etcd python3-python-etcd percona-pgbackrest
+        /usr/pgsql-{{ pg_version }}/bin/postgresql-{{ pg_version }}-setup initdb
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
