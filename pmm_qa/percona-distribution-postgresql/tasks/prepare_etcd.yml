@@ -19,7 +19,7 @@
         tar -xzf etcd-latest.tar.gz -C /etcd-latest &&
         ls &&
         cd etcd-latest &&
-        sudo mv etcd etcdctl /usr/local/bin/ &&
+        mv etcd etcdctl /usr/local/bin/ &&
         etcd --version &&
         etcdctl version
       "
