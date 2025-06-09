@@ -44,6 +44,7 @@
     image: oraclelinux:9
     state: started
     restart_policy: always
+    command: sleep infinity
     networks:
       - name: "{{ network_name }}"
     volumes:
