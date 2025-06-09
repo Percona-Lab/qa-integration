@@ -24,5 +24,4 @@
         mv etcd etcdctl /usr/local/bin/ &&
         etcd --version &&
         etcdctl version
-        dnf --help
       '
