@@ -62,6 +62,8 @@
     user: root
     command: >
       /bin/sh -c '
+        microdnf install -y epel-release
+        microdnf config-manager --set-enabled crb
         percona-release enable ppg-{{ pg_version }}
         microdnf install -y python3-pip python3-devel binutils
         microdnf install -y percona-patroni python3-python-etcd percona-pgbackrest
