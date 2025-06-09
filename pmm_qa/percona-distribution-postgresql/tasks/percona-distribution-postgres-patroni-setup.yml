@@ -97,6 +97,7 @@
         ps aux | grep postgres
         rm -f /data/db/postmaster.pid
         mkdir -p /data/db/logs
+        mkdir -p /dev/watchdog
         nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
         chown -R postgres:postgres /data/db/logs
       '
