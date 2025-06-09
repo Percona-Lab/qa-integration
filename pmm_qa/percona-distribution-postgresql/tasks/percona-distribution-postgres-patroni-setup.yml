@@ -56,9 +56,6 @@
       POSTGRES_PASSWORD: "{{ root_password }}"
     volumes:
       - "{{ data_dir }}/node{{ item }}/data:/data/db"
-      - "./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro"
-      - "{{ data_dir }}/node{{ item }}/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro"
-    command: -c config_file=/etc/postgresql/postgresql.conf
     ports:
-      - "{{ pdpgsql_port }}:5432"
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      - "{{ pdpgsql_port + item - 1 }}:5432"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
