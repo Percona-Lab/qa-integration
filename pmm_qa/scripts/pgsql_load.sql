@@ -44,6 +44,30 @@ INSERT INTO enrollments (student_id, class_id) VALUES
 (3, 3);
 
 -- ========================================
+-- SIMULATE DEAD TUPLES
+-- ========================================
+
+
+INSERT INTO students (first_name, last_name, birth_date)
+SELECT 'John', 'Doe', CURRENT_DATE - (random() * 5000)::int
+FROM generate_series(1, 100000);
+
+-- These updates and deletes will create dead tuples
+
+-- Update records (old versions become dead)
+UPDATE students
+SET last_name = last_name || '_updated'
+WHERE student_id IN (1, 2);
+
+-- Delete records (deleted rows become dead)
+DELETE FROM enrollments
+WHERE enrollment_id IN (SELECT enrollment_id FROM enrollments LIMIT 2);
+
+-- Disable autovacuum temporarily (for demo)
+ALTER TABLE students SET (autovacuum_enabled = false);
+ALTER TABLE enrollments SET (autovacuum_enabled = false);
+
+-- ========================================
 -- SELECT QUERIES
 -- ========================================
 
