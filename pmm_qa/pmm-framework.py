@@ -92,6 +92,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     playbook_path = script_dir + "/" + playbook_filename
     verbosity_level = 1
 
+
+
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
 
@@ -210,8 +212,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'PS_NODES': no_of_nodes,
             'PS_VERSION': ps_version,
             'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + (
-                '_replica' if setup_type_value in ("replication", "replica") else ''),
+            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + ('_replica' if setup_type_value in ("replication", "replica") else ''),
             'PS_PORT': 3318 if setup_type_value in ("replication", "replica") else 3317,
             'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
@@ -225,7 +226,6 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
         # Call the function to run the Ansible playbook
         run_ansible_playbook(playbook_filename, env_vars, args)
-
 
 def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -479,7 +479,7 @@ def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     modb_version = os.getenv('MODB_VERSION') or db_version or \
-                   database_configs[db_type]["versions"][-1]
+                    database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
@@ -622,7 +622,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
-                     database_configs[db_type]["versions"][-1]
+                    database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
     server_hostname = container_name
