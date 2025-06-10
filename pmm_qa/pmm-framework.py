@@ -882,9 +882,7 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
 def setup_bucket(db_type, db_version=None, db_config=None, args=None):
     print("Setting up bucket")
-    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower()
-    print(bucket_names_value)
-    bucket_names_value = bucket_names_value if isinstance(bucket_names_value, list) else [bucket_names_value]
+    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower().split(';')
     print(bucket_names_value)
     env_vars = {
         'BUCKETS': bucket_names_value
