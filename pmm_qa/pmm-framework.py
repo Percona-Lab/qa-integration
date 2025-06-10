@@ -603,6 +603,7 @@ def get_latest_psmdb_version(psmdb_version):
     # Extract the version number using regular expression
     version_number = [v.split('|')[0] for v in re.findall(r'value="([^"]*)"', response.text)]
 
+
     if version_number:
         # Sort the version numbers and extract the latest one
         latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
@@ -692,9 +693,7 @@ def mongo_ssl_setup(script_filename, args):
             subprocess.run(
                 ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(
-                ['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g',
-                 f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])
@@ -873,7 +872,6 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
     elif db_type == 'SSL_MLAUNCH':
         setup_ssl_mlaunch(db_type, db_version, db_config, args)
     elif db_type == 'BUCKET':
-        print(f'Args Are: {args}')
         setup_bucket(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
@@ -912,7 +910,6 @@ if __name__ == "__main__":
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
-    parser.add_argument("--bucket", nargs='+', help='Create MinIO S3 compatible bucket')
     args = parser.parse_args()
 
     if args.verbosity_level is not None and not args.verbosity_level.isnumeric():
