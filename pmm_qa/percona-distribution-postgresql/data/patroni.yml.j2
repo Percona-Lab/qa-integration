@@ -6,9 +6,7 @@ restapi:
     listen: 0.0.0.0:8008
     connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
 etcd3:
-    host: "pdpgsql_pmm_patroni_{{ pg_version }}_1:2379"
-    host: "pdpgsql_pmm_patroni_{{ pg_version }}_2:2379"
-    host: "pdpgsql_pmm_patroni_{{ pg_version }}_3:2379"
+    host: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:2379"
 bootstrap:
   dcs:
     ttl: 30
@@ -24,10 +22,7 @@ initdb:
   - data-checksums
   - waldir: /pg_wal
   - wal-segsize=512
-pg_hba:
-  - host replication replicator 127.0.0.1/32 md5
-  - host replication replicator 172.18.0.0/16 md5
-  - host all all 0.0.0.0/0 md5
+
 users:
   admin:
     password: admin
@@ -50,6 +45,10 @@ postgresql:
   create_replica_methods:
     - pgbackrest
     - basebackup
+  pg_hba:
+    - host replication replicator 127.0.0.1/32 md5
+    - host replication replicator 172.18.0.0/16 md5
+    - host all all 0.0.0.0/0 md5
   pgbackrest:
    command: pgbackrest --stanza=patroni_backup restore --type=none
    keep_data: True
