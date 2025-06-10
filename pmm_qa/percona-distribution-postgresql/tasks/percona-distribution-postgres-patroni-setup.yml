@@ -176,6 +176,12 @@
     command: pmm-admin add postgresql --username=postgres --password=postgres --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Add patroni service to pmm server
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    command: pmm-admin add external --listen-port=8008  --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Log Patroni cluster
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
