@@ -142,7 +142,7 @@
 
 - name: Get already connected services to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
     command: >
       sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
   register: pmm_server_services
@@ -161,7 +161,7 @@
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
     command: pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
