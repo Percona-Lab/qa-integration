@@ -880,7 +880,7 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
 def setup_bucket(args=None):
     print("Setting up bucket")
-    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower()
+    bucket_names_value = get_value('BUCKET_NAMES', '', args, '').lower()
     print(bucket_names_value)
     env_vars = {
         'BUCKETS': args.bucket
