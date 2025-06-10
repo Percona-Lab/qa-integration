@@ -82,6 +82,9 @@ database_configs = {
     "DOCKERCLIENTS": {
         "configurations": {}  # Empty dictionary for consistency
     },
+    "BUCKET": {
+        "configurations": { "BUCKET_NAME": 'bcp' }
+    }
 }
 
 
