@@ -188,7 +188,7 @@
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
   vars:
-    container_name: "pdpgsql_pmm_{{ pg_version }}_1"
+    container_name: "pdpgsql_pmm_{{ pg_version }}"
 
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml

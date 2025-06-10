@@ -1,6 +1,6 @@
 - name: Detect OS inside the container
   community.docker.docker_container_exec:
-    container: "{{ container_name }}"
+    container: "{{ container_name }}_1"
     command: cat /etc/os-release
   register: container_os_info
 
@@ -17,7 +17,7 @@
 
 - name: Install dependencies inside Debian-family container
   community.docker.docker_container_exec:
-    container: "{{ container_name }}"
+    container: "{{ container_name }}_{{ item }}"
     command: >
       sh -c '
       apt-get update &&
@@ -29,7 +29,7 @@
 
 - name: Install dependencies inside RHEL-family container
   community.docker.docker_container_exec:
-    container: "{{ container_name }}"
+    container: "{{ container_name }}_{{ item }}"
     command: >
       sh -c '
         microdnf install percona-pg-stat-monitor{{ pg_version }}
@@ -40,7 +40,7 @@
 
 - name: Create pg_stat_statements extension
   community.docker.docker_container_exec:
-    container: "{{ container_name }}"
+    container: "{{ container_name }}_1"
     user: postgres
     command: >
       psql -U postgres -d 'postgres' -c "
