@@ -229,8 +229,7 @@ services:
     image: minio/minio
     container_name: minio
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9001:9000"
     networks:
       - test-network
     volumes:
@@ -238,7 +237,7 @@ services:
     environment:
       - "MINIO_ACCESS_KEY=minio1234"
       - "MINIO_SECRET_KEY=minio1234"
-    command: server /backups --address 0.0.0.0:9000 --console-address 0.0.0.0:9001
+    command: server /backups
 
   createbucket:
     container_name: createbucket

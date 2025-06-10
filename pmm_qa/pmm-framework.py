@@ -470,7 +470,6 @@ def setup_mlaunch_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
 
-
 def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -600,6 +599,7 @@ def get_latest_psmdb_version(psmdb_version):
     # Extract the version number using regular expression
     version_number = [v.split('|')[0] for v in re.findall(r'value="([^"]*)"', response.text)]
 
+
     if version_number:
         # Sort the version numbers and extract the latest one
         latest_version = sorted(version_number, key=lambda x: tuple(map(int, x.split('-')[-1].split('.'))))[-1]
@@ -622,7 +622,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
-                    database_configs[db_type]["versions"][-1]
+                     database_configs[db_type]["versions"][-1]
 
     # Handle port address for external or internal address
     server_hostname = container_name
@@ -689,9 +689,7 @@ def mongo_ssl_setup(script_filename, args):
             subprocess.run(
                 ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(
-                ['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g',
-                 f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '/container_name/a\    networks:\\\n      \\- pmm-qa', f'{compose_file_path}'])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])
@@ -911,8 +909,6 @@ if __name__ == "__main__":
     if args.verbosity_level is not None and not args.verbosity_level.isnumeric():
         print(f"Option {args.verbosity_level} is invalid verbosity level option, please provide number 1-5")
         exit(1)
-
-    print(args)
 
     # Parse arguments
     try:
