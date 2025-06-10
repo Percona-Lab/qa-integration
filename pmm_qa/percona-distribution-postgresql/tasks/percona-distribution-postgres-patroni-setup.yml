@@ -117,15 +117,15 @@
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start patroni service
-  community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
-    user: postgres
-    command: >
-      /bin/sh -c '
-        /usr/pgsql-{{ pg_version }}/bin/pg_ctl -D /var/lib/pgsql/{{ pg_version }}/data -l /var/lib/pgsql/{{ pg_version }}/data/logfile start
-      '
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#- name: Start patroni service
+#  community.docker.docker_container_exec:
+#    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+#    user: postgres
+#    command: >
+#      /bin/sh -c '
+#        /usr/pgsql-{{ pg_version }}/bin/pg_ctl -D /var/lib/pgsql/{{ pg_version }}/data -l /var/lib/pgsql/{{ pg_version }}/data/logfile start
+#      '
+#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Log Patroni cluster
   community.docker.docker_container_exec:
