@@ -82,6 +82,9 @@ database_configs = {
     "DOCKERCLIENTS": {
         "configurations": {}  # Empty dictionary for consistency
     },
+    "BUCKET": {
+        "configurations": {"BUCKET_NAMES": 'bcp'}
+    }
 }
 
 
@@ -91,8 +94,6 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
     verbosity_level = 1
-
-
 
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
@@ -212,7 +213,8 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'PS_NODES': no_of_nodes,
             'PS_VERSION': ps_version,
             'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + ('_replica' if setup_type_value in ("replication", "replica") else ''),
+            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + (
+                '_replica' if setup_type_value in ("replication", "replica") else ''),
             'PS_PORT': 3318 if setup_type_value in ("replication", "replica") else 3317,
             'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
             'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
@@ -226,6 +228,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
         # Call the function to run the Ansible playbook
         run_ansible_playbook(playbook_filename, env_vars, args)
+
 
 def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
@@ -470,6 +473,7 @@ def setup_mlaunch_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
 
+
 def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
     container_name = get_running_container_name()
@@ -479,7 +483,7 @@ def setup_mlaunch_modb(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     modb_version = os.getenv('MODB_VERSION') or db_version or \
-                    database_configs[db_type]["versions"][-1]
+                   database_configs[db_type]["versions"][-1]
 
     # Define environment variables for playbook
     env_vars = {
@@ -867,10 +871,22 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_mlaunch_modb(db_type, db_version, db_config, args)
     elif db_type == 'SSL_MLAUNCH':
         setup_ssl_mlaunch(db_type, db_version, db_config, args)
-
+    elif db_type == 'BUCKET':
+        setup_bucket(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
+
+
+def setup_bucket(db_type, db_version=None, db_config=None, args=None):
+    print("Setting up bucket")
+    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower().split(';')
+    print(bucket_names_value)
+    env_vars = {
+        'BUCKETS': bucket_names_value
+    }
+
+    run_ansible_playbook('tasks/create_minio_container.yml', env_vars, args)
 
 
 # Main
