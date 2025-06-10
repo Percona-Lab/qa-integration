@@ -1,5 +1,5 @@
 - name: Install and add pmm client
-  include_tasks: ./install_pmm_client_centos.yml
+  include_tasks: install_pmm_client.yml
 
 - name: Set unique service name
   include_tasks: ./set_unique_service_name.yml
