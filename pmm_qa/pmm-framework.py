@@ -885,7 +885,7 @@ def setup_bucket(db_type, db_version=None, db_config=None, args=None):
     bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower()
     print(bucket_names_value)
     env_vars = {
-        'BUCKETS': args.bucket
+        'BUCKETS': bucket_names_value
     }
 
     run_ansible_playbook('tasks/create_minio_container.yml', env_vars, args)
