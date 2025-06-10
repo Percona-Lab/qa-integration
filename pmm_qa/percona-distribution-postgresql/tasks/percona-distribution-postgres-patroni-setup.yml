@@ -124,6 +124,6 @@
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
     command: >
       /bin/sh -c '
-        sleep 10
+        sleep 15
         patronictl -c /etc/patroni/patroni.yml list
       '
