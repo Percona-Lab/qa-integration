@@ -7,7 +7,7 @@ restapi:
   connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
 
 etcd3:
-  host: "pdpgsql_pmm_patroni_{{ pg_version }}_1:2379,pdpgsql_pmm_patroni_{{ pg_version }}_2:2379,pdpgsql_pmm_patroni_{{ pg_version }}_3:2379"
+  host: "pdpgsql_pmm_patroni_{{ pg_version }}_1:2379"
 
 bootstrap:
   dcs:
