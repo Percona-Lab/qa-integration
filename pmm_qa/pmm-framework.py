@@ -870,7 +870,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_mlaunch_modb(db_type, db_version, db_config, args)
     elif db_type == 'SSL_MLAUNCH':
         setup_ssl_mlaunch(db_type, db_version, db_config, args)
-
+    elif db_type == 'BUCKET':
+        setup_bucket(args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)
