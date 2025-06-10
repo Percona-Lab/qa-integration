@@ -1,80 +1,71 @@
-namespace: percona_lab
-scope: cluster_1
-name: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+scope: cluster
+name: postgresql1
 
 restapi:
     listen: 0.0.0.0:8008
     connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
 
-etcd3:
+etcd:
     host: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:2379"
 
+# The bootstrap configuration. Works only when the cluster is not yet initialized.
+# If the cluster is already initialized, all changes in the `bootstrap` section are ignored!
 bootstrap:
-  # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
+  # This section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
+  # and all other cluster members will use it as a `global configuration`.
+  # WARNING! If you want to change any of the parameters that were set up
+  # via `bootstrap.dcs` section, please use `patronictl edit-config`!
   dcs:
-      ttl: 30
-      loop_wait: 10
-      retry_timeout: 10
-      maximum_lag_on_failover: 1048576
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
 
-      postgresql:
-          use_pg_rewind: true
-          use_slots: true
-          parameters:
-              wal_level: replica
-              hot_standby: "on"
-              wal_keep_segments: 10
-              max_wal_senders: 5
-              max_replication_slots: 10
-              wal_log_hints: "on"
-              logging_collector: 'on'
-              max_wal_size: '10GB'
-              archive_mode: "on"
-              archive_timeout: 600s
-              archive_command: "cp -f %p /home/postgres/archived/%f"
+    postgresql:
+      use_pg_rewind: true
       pg_hba:
-      - local all all          peer
-      - host replication replicator 127.0.0.1/32 trust
-      - host replication replicator 192.0.0.0/8 scram-sha-256
-      - host replication replicator 172.18.0.0/16 md5
-      - host all all 0.0.0.0/0 scram-sha-256
-      recovery_conf:
-        restore_command: cp /home/postgres/archived/%f %p
+      - host replication replicator 127.0.0.1/32 md5
+      - host all all 0.0.0.0/0 md5
 
-  # some desired options for 'initdb'
-  initdb: # Note: It needs to be a list (some options need values, others are switches)
-      - encoding: UTF8
-      - data-checksums
+
+      parameters:
+        wal_level: hot_standby
+        hot_standby: "on"
+        max_connections: 100
+        max_worker_processes: 8
+        wal_keep_segments: 8
+        max_wal_senders: 10
+        max_replication_slots: 10
+        max_prepared_transactions: 0
+        max_locks_per_transaction: 64
+        wal_log_hints: "on"
+        track_commit_timestamp: "off"
+
+  initdb:  # Note: It needs to be a list (some options need values, others are switches)
+  - encoding: UTF8
+  - data-checksums
 
 postgresql:
-    cluster_name: cluster_1
-    listen: 0.0.0.0:5432
-    connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:5432"
-    data_dir: /var/lib/pgsql/{{ pg_version}}/data
-    bin_dir: /usr/pgsql-{{ pg_version }}/bin
-    pgpass: /tmp/pgpass0
-    authentication:
-        replication:
-            username: replicator
-            password: replPasswd
-        superuser:
-            username: postgres
-            password: qaz123
-    parameters:
-        unix_socket_directories: "/var/run/postgresql/"
-    create_replica_methods:
-        - basebackup
-    basebackup:
-        checkpoint: 'fast'
-
-watchdog:
-  mode: off # Allowed values: off, automatic, required
-  device: /dev/watchdog
-  safety_margin: 5
-
+  listen: 127.0.0.1:5433
+  connect_address: 127.0.0.1:5433
+  data_dir: data/postgresql1
+  pgpass: /tmp/pgpass1
+  authentication:
+    replication:
+      username: replicator
+      password: rep-pass
+    superuser:
+      username: postgres
+      password: patroni
+    rewind:  # Has no effect on postgres 10 and lower
+      username: rewind_user
+      password: rewind_password
+  parameters:
+    unix_socket_directories: '..'  # parent directory of data_dir
+  basebackup:
+      - verbose
+      - max-rate: 100M
 
 tags:
-    nofailover: false
     noloadbalance: false
     clonefrom: false
-    nosync: false
