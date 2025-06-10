@@ -20,6 +20,7 @@ bootstrap:
       use_pg_rewind: true
       use_slots: true
       parameters:
+        shared_preload_libraries: 'pg_stat_monitor'
         wal_level: replica
         hot_standby: "on"
         wal_keep_size: 128MB
