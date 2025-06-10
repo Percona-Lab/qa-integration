@@ -5,7 +5,7 @@ name: pg_node_{{ item }}
 restapi:
     listen: 0.0.0.0:8008
     connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
-etcd:
+etcd3:
     host: "pdpgsql_pmm_patroni_{{ pg_version }}_1:2379"
     host: "pdpgsql_pmm_patroni_{{ pg_version }}_2:2379"
     host: "pdpgsql_pmm_patroni_{{ pg_version }}_3:2379"
