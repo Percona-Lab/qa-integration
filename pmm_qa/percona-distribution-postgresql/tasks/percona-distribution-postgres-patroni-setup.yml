@@ -134,6 +134,17 @@
   vars:
     container_name: "pdpgsql_pmm_patroni_{{ pg_version }}"
 
+- name: Grant pg_monitor to postgres user
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_{{ pg_version }}_1"
+    user: postgres
+    command: >
+      bash -c '
+        psql -U postgres -d {{ db_name | default("postgres") }} -c "
+          GRANT pg_monitor TO postgres;
+        "
+      '
+
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
