@@ -83,7 +83,7 @@ database_configs = {
         "configurations": {}  # Empty dictionary for consistency
     },
     "BUCKET": {
-        "configurations": { "BUCKET_NAME": 'bcp' }
+        "configurations": { "BUCKET_NAMES": 'bcp' }
     }
 }
 
