@@ -1,0 +1,27 @@
+- name: Start etcd container
+  community.docker.docker_container:
+    name: "{{ etcd_container_name }}"
+    image: oraclelinux:9
+    state: started
+    restart_policy: always
+    command: sleep infinity
+
+- name: Install required packages in Oracle Linux container
+  community.docker.docker_container_exec:
+    container: "{{ etcd_container_name }}"
+    command: >
+      /bin/sh -c '
+        DOWNLOAD_URL=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest | grep "browser_download_url" | grep "linux-amd64.tar.gz" | sed -E "s/.*\"browser_download_url\": *\"(.*)\"/\1/") &&
+        echo "URLS is: $DOWNLOAD_URL" &&
+        FILENAME=$(basename "$DOWNLOAD_URL" .tar.gz) &&
+        echo "Filename is: $FILENAME" &&
+        curl -L -o etcd-latest.tar.gz https://github.com/etcd-io/etcd/releases/download/v3.6.1/etcd-v3.6.1-linux-amd64.tar.gz &&
+        mkdir -p /etcd-latest
+        tar -xzf etcd-latest.tar.gz &&
+        ls &&
+        ls /$FILENAME &&
+        cd $FILENAME &&
+        mv etcd etcdctl /usr/local/bin/ &&
+        etcd --version &&
+        etcdctl version
+      '
