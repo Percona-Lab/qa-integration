@@ -5,7 +5,7 @@
   gather_facts: no
   vars:
     network_name: "pmm-qa"
-    buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) | split(',') }}"
+    buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) }}"
     minio_access_key: minio1234
     minio_secret_key: minio1234
     minio_volume_name: minio_backups
