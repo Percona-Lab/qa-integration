@@ -72,3 +72,7 @@
         state: started
         auto_remove: true
       loop: "{{ buckets }}"
+
+    - name: Create MinIO buckets
+      command: echo {{ item }}
+      loop: "{{ buckets }}"
