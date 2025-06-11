@@ -75,6 +75,7 @@
         container: "minio"
         command: >
           /bin/sh -c "
-            /usr/bin/mc mb myminio/{{ item }}';
-          exit 0;"
+            /usr/bin/mc mb myminio/{{ item }};
+            exit 0;
+          "
       loop: "{{ buckets }}"
