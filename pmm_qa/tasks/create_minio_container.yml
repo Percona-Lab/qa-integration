@@ -30,6 +30,7 @@
         image: minio/minio
         restart_policy: always
         state: absent
+
       ignore_errors: yes
 
     - name: Remove MinIO Docker volume
@@ -51,7 +52,7 @@
         networks:
           - name: "{{ network_name }}"
         volumes:
-          - "{{ minio_volume_name }}:/backups"
+          - "/tmp/minio/backups:/backups"
         env:
           MINIO_ACCESS_KEY: "{{ minio_access_key }}"
           MINIO_SECRET_KEY: "{{ minio_secret_key }}"
