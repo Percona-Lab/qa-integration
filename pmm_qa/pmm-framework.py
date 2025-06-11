@@ -792,7 +792,7 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
 
 def setup_bucket(db_type, db_version=None, db_config=None, args=None):
     print("Setting up bucket")
-    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower().split(';')
+    bucket_names_value = get_value('BUCKET_NAMES', db_type, args, db_config).lower().replace('"', '').split(';')
     print(bucket_names_value)
     env_vars = {
         'BUCKETS': bucket_names_value
