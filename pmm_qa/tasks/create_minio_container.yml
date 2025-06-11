@@ -24,7 +24,7 @@
       community.docker.docker_container:
         name: minio
         state: absent
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Remove MinIO Docker volume
       community.docker.docker_volume:
@@ -61,8 +61,7 @@
     - name: Run temporary mc container to create buckets
       vars:
         mc_cmd: >
-          mc alias set myminio http://minio:9000 {{ minio_access_key }} {{ minio_secret_key }} &&
-          {% for bucket in buckets %} mc mb myminio/{{ bucket }}; {% endfor %}
+          mc alias set myminio http://minio:9000 {{ minio_access_key }} {{ minio_secret_key }} && mc mb myminio/{{ item }};
       community.docker.docker_container:
         name: "mc-setup"
         image: minio/mc
@@ -72,3 +71,4 @@
         command: -c "{{ mc_cmd }}"
         state: started
         auto_remove: true
+      loop: "{{ buckets }}"
