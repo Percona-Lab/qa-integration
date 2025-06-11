@@ -2,22 +2,18 @@
 - name: Deploy MinIO bucket.
   hosts: localhost
   connection: local
-  gather_facts: yes
+  gather_facts: no
   vars:
     network_name: "pmm-qa"
-    buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) }}"
+    buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) | split(',') }}"
     minio_access_key: minio1234
     minio_secret_key: minio1234
     minio_volume_name: minio_backups
     minio_ports:
-      - "9010:9000"
+      - "9000:9000"
       - "9001:9001"
 
   tasks:
-    - name: Run docker ps with port info
-      shell: docker ps -a
-      register: docker_ps_output
-
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
@@ -27,10 +23,7 @@
     - name: Remove old MinIO docker container
       community.docker.docker_container:
         name: minio
-        image: minio/minio
-        restart_policy: always
         state: absent
-
       ignore_errors: yes
 
     - name: Remove MinIO Docker volume
@@ -56,27 +49,26 @@
         env:
           MINIO_ACCESS_KEY: "{{ minio_access_key }}"
           MINIO_SECRET_KEY: "{{ minio_secret_key }}"
-        command: server /backups --address 0.0.0.0:9000 --console-address 0.0.0.0:9001
+        command: server /backups --address :9000 --console-address :9001
 
-    - name: Show the list of buckets
-      debug:
-        var: buckets
+    - name: Wait for MinIO to start
+      wait_for:
+        port: 9000
+        host: "localhost"
+        delay: 5
+        timeout: 30
 
-    - name: Set MinIO alias inside the container
-      community.docker.docker_container_exec:
-        container: "minio"
-        command: >
-          /bin/sh -c "
-          sleep 5;
-          /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234;
-          exit 0;"
-
-    - name: Create MinIO buckets
-      community.docker.docker_container_exec:
-        container: "minio"
-        command: >
-          /bin/sh -c "
-            /usr/bin/mc mb myminio/{{ item }};
-            exit 0;
-          "
-      loop: "{{ buckets }}"
+    - name: Run temporary mc container to create buckets
+      vars:
+        mc_cmd: >
+          mc alias set myminio http://minio:9000 {{ minio_access_key }} {{ minio_secret_key }} &&
+          {% for bucket in buckets %} mc mb myminio/{{ bucket }}; {% endfor %}
+      community.docker.docker_container:
+        name: "mc-setup"
+        image: minio/mc
+        networks:
+          - name: "{{ network_name }}"
+        entrypoint: /bin/sh
+        command: -c "{{ mc_cmd }}"
+        state: started
+        auto_remove: true
