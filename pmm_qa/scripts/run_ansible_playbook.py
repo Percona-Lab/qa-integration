@@ -1,6 +1,7 @@
 import os
 import ansible_runner
 import sys
+import subprocess
 
 def run_ansible_playbook(playbook_filename, env_vars, args):
     # Get Script Dir
@@ -8,7 +9,8 @@ def run_ansible_playbook(playbook_filename, env_vars, args):
     script_dir = os.path.dirname(script_path)
     playbook_path = script_dir + "/" + playbook_filename
     verbosity_level = 1
-
+    # Install community docker plugin for ansible
+    subprocess.run(["ansible-galaxy", "collection", "install", "community.docker"], capture_output=True, text=True)
     if args.verbosity_level is not None:
         verbosity_level = int(args.verbosity_level)
 
