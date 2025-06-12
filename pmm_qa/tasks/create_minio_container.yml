@@ -2,7 +2,7 @@
 - name: Deploy MinIO bucket.
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: yes
   vars:
     network_name: "pmm-qa"
     buckets: "{{ lookup('env', 'BUCKETS') | default('bcp', true) }}"
@@ -27,9 +27,9 @@
     - name: Remove old MinIO docker container
       community.docker.docker_container:
         name: minio
-        state: absent
         image: minio/minio
         restart_policy: always
+        state: absent
       ignore_errors: yes
 
     - name: Remove MinIO Docker volume
@@ -62,6 +62,15 @@
         var: buckets
 
     - name: Set MinIO alias inside the container
+      community.docker.docker_container_exec:
+        container: "minio"
+        command: >
+          /bin/sh -c "
+          sleep 5;
+          /usr/bin/mc alias set myminio http://127.0.0.1:9000 minio1234 minio1234;
+          exit 0;"
+
+    - name: Create MinIO buckets
       community.docker.docker_container_exec:
         container: "minio"
         command: >
