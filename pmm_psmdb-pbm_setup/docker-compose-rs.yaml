@@ -200,7 +200,6 @@ services:
     environment:
       - "MINIO_ACCESS_KEY=minio1234"
       - "MINIO_SECRET_KEY=minio1234"
-      - "MINIO_AUDIT_WEBHOOK_ENABLE_logger1:on"
     command: server /backups
 
   createbucket:

@@ -10,10 +10,14 @@
     minio_secret_key: minio1234
     minio_volume_name: minio_backups
     minio_ports:
-      - "9000:9000"
+      - "9010:9000"
       - "9001:9001"
 
   tasks:
+    - name: Run docker ps with port info
+      shell: docker ps -a
+      register: docker_ps_output
+
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ network_name }}"
@@ -24,7 +28,9 @@
       community.docker.docker_container:
         name: minio
         state: absent
-      ignore_errors: true
+        image: minio/minio
+        restart_policy: always
+      ignore_errors: yes
 
     - name: Remove MinIO Docker volume
       community.docker.docker_volume:
@@ -45,34 +51,21 @@
         networks:
           - name: "{{ network_name }}"
         volumes:
-          - "/tmp/minio/backups:/backups"
+          - "{{ minio_volume_name }}:/backups"
         env:
           MINIO_ACCESS_KEY: "{{ minio_access_key }}"
           MINIO_SECRET_KEY: "{{ minio_secret_key }}"
-        command: server /backups --address :9000 --console-address :9001
+        command: server /backups --address 0.0.0.0:9000 --console-address 0.0.0.0:9001
 
-    - name: Wait for MinIO to start
-      wait_for:
-        port: 9000
-        host: "localhost"
-        delay: 5
-        timeout: 30
+    - name: Show the list of buckets
+      debug:
+        var: buckets
 
-    - name: Run temporary mc container to create buckets
-      vars:
-        mc_cmd: >
-          mc alias set myminio http://minio:9000 {{ minio_access_key }} {{ minio_secret_key }} && mc mb myminio/{{ item }};
-      community.docker.docker_container:
-        name: "mc-setup"
-        image: minio/mc
-        networks:
-          - name: "{{ network_name }}"
-        entrypoint: /bin/sh
-        command: -c "{{ mc_cmd }}"
-        state: started
-        auto_remove: true
-      loop: "{{ buckets }}"
-
-    - name: Create MinIO buckets
-      command: echo {{ item }}
+    - name: Set MinIO alias inside the container
+      community.docker.docker_container_exec:
+        container: "minio"
+        command: >
+          /bin/sh -c "
+          /usr/bin/mc mb myminio/{{ item }} || echo 'Bucket {{ item }} already exists';
+          exit 0;"
       loop: "{{ buckets }}"
