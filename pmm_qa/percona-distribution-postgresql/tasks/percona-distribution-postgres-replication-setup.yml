@@ -229,11 +229,17 @@
     pgbench_time: 120
     pgbench_scale: 1000
 
+- name: Copy sample load into container
+  community.docker.docker_container_copy_into:
+    container: "{{ container_name }}"
+    path: ../data/load_pgsql.sql
+    container_path: /load_pgsql.sql
+
 - name: Run sample load
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_1"
     user: postgres
-    command: psql -U postgres -d postgres -f ../data/load_pgsql.sql
+    command: psql -U postgres -d postgres -f /load_pgsql.sql
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
