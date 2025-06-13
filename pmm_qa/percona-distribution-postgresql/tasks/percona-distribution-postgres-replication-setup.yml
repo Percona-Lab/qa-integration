@@ -233,7 +233,7 @@
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_1"
     user: postgres
-    command: psql -U postgres -d postgres -f ../../data/load_pgsql.sql
+    command: psql -U postgres -d postgres -f ../data/load_pgsql.sql
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
