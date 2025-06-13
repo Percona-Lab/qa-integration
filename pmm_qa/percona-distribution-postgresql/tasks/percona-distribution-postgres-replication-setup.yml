@@ -231,7 +231,7 @@
 
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
-    container: "{{ container_name }}"
+    container: "pdpgsql_pmm_{{ pg_version }}_1"
     path: ../data/load_pgsql.sql
     container_path: /load_pgsql.sql
 
