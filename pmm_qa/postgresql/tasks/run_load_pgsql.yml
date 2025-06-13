@@ -56,8 +56,4 @@
   debug:
     var: pgbench_result.stdout_lines
 
-- name: Run sample load
-  community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_1"
-    user: postgres
-    command: psql -U postgres -d postgres -f load.sql
+
