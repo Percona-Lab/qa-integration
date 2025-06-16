@@ -239,7 +239,7 @@
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_1"
     command: >
-      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /load_pgsql.sql; done' > /tmp/sql_loop.log 2>&1 &"
+      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /load_pgsql.sql; sleep 5; done' > /tmp/sql_loop.log 2>&1 &"
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
