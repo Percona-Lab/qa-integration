@@ -22,4 +22,5 @@ END $$;
 
 -- Step 4: Show final buffers_alloc value
 SELECT 'Final buffers_alloc' AS info, buffers_alloc FROM pg_stat_bgwriter;
-VACUUM FULL;
+VACUUM;
+SELECT pg_switch_wal();
