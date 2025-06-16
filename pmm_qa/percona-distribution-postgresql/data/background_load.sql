@@ -1,32 +1,19 @@
 -- Step 1: Create a test table
-CREATE TABLE test_users (
-    id INT PRIMARY KEY,
-    name VARCHAR(50),
-    email VARCHAR(100)
+CREATE TABLE IF NOT EXISTS test_users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(150),
+    created_at TIMESTAMP DEFAULT NOW(),
+    bio TEXT
 );
 
--- Step 2: Insert test data
-INSERT INTO test_users (id, name, email) VALUES
-(1, 'Alice', 'alice@example.com'),
-(2, 'Bob', 'bob@example.com'),
-(3, 'Charlie', 'charlie@example.com'),
-(4, 'David', 'david@example.com'),
-(5, 'Eva', 'eva@example.com'),
-(6, 'Frank', 'frank@example.com'),
-(7, 'Grace', 'grace@example.com'),
-(8, 'Hannah', 'hannah@example.com'),
-(9, 'Ian', 'ian@example.com'),
-(10, 'Julia', 'julia@example.com'),
-(11, 'Kevin', 'kevin@example.com'),
-(12, 'Laura', 'laura@example.com'),
-(13, 'Mike', 'mike@example.com'),
-(14, 'Nina', 'nina@example.com'),
-(15, 'Oscar', 'oscar@example.com'),
-(16, 'Paula', 'paula@example.com'),
-(17, 'Quentin', 'quentin@example.com'),
-(18, 'Rachel', 'rachel@example.com'),
-(19, 'Steve', 'steve@example.com'),
-(20, 'Tina', 'tina@example.com');
+-- Step 2: Insert 10,000 rows
+INSERT INTO test_users (name, email, bio)
+SELECT
+    'User_' || gs::TEXT AS name,
+    'user_' || gs::TEXT || '@example.com' AS email,
+    'This is a generated bio for user #' || gs::TEXT
+FROM generate_series(1, 10000) AS gs;
 
 -- Step 3: Query the data
 SELECT * FROM test_users;
