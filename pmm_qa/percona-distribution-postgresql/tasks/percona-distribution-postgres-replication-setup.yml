@@ -235,23 +235,23 @@
     path: ../data/load_pgsql.sql
     container_path: /load_pgsql.sql
 
-- name: Copy permanent load into container
-  community.docker.docker_container_copy_into:
-    container: "pdpgsql_pmm_{{ pg_version }}_1"
-    path: ./data/background_load.sql
-    container_path: /background_load.sql
-
-- name: Run sample load
-  community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_{{ pg_version }}_1"
-    user: postgres
-    command: psql -U postgres -d postgres -f /load_pgsql.sql
+#- name: Copy permanent load into container
+#  community.docker.docker_container_copy_into:
+#    container: "pdpgsql_pmm_{{ pg_version }}_1"
+#    path: ./data/background_load.sql
+#    container_path: /background_load.sql
+#
+#- name: Run sample load
+#  community.docker.docker_container_exec:
+#    container: "pdpgsql_pmm_{{ pg_version }}_1"
+#    user: postgres
+#    command: psql -U postgres -d postgres -f /load_pgsql.sql
 
 - name: Start permanent SQL load in background
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_1"
     command: >
-      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /background_load.sql; done' > /tmp/sql_loop.log 2>&1 &"
+      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /load_pgsql.sql; done' > /tmp/sql_loop.log 2>&1 &"
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
