@@ -218,7 +218,7 @@
 - name: Add service to pmm server
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_{{ pg_version }}_{{ item }}"
-    command: pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsq_replication_cluster--query-source=pgstatmonitor pdpgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    command: pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 #- name: Run load on primary node.
@@ -234,18 +234,6 @@
     container: "pdpgsql_pmm_{{ pg_version }}_1"
     path: ../data/load_pgsql.sql
     container_path: /load_pgsql.sql
-
-#- name: Copy permanent load into container
-#  community.docker.docker_container_copy_into:
-#    container: "pdpgsql_pmm_{{ pg_version }}_1"
-#    path: ./data/background_load.sql
-#    container_path: /background_load.sql
-#
-#- name: Run sample load
-#  community.docker.docker_container_exec:
-#    container: "pdpgsql_pmm_{{ pg_version }}_1"
-#    user: postgres
-#    command: psql -U postgres -d postgres -f /load_pgsql.sql
 
 - name: Start permanent SQL load in background
   community.docker.docker_container_exec:
