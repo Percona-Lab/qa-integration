@@ -24,3 +24,9 @@ END $$;
 SELECT 'Final buffers_alloc' AS info, buffers_alloc FROM pg_stat_bgwriter;
 VACUUM;
 SELECT pg_switch_wal();
+
+-- Step 5: Query the data
+SELECT * FROM buffer_test;
+
+-- Step 6: Delete the data
+DELETE FROM buffer_test;
