@@ -221,13 +221,31 @@
     command: pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-#- name: Run load on primary node.
-#  include_tasks: ../postgresql/tasks/run_load_pgsql.yml
-#  vars:
-#    node_name: "pdpgsql_pmm_replication_{{ pg_version }}_1"
-#    pgbench_clients: 10
-#    pgbench_time: 120
-#    pgbench_scale: 1000
+- name: Create pg_custom_publication view using psql
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    user: postgres
+- name: Create pg_custom_publication view using psql
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    user: postgres
+    command: >
+        psql -U postgres -d postgres -c "
+        CREATE OR REPLACE VIEW pg_custom_publication AS
+        SELECT
+            p.pubname AS publication,
+            pt.schemaname || '.' || pt.tablename AS fully_qualified_table,
+            p.puballtables,
+            p.pubinsert,
+            p.pubupdate,
+            p.pubdelete,
+            p.pubtruncate
+        FROM
+            pg_publication p
+        JOIN
+            pg_publication_tables pt ON p.pubname = pt.pubname;
+        "
+
 
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
