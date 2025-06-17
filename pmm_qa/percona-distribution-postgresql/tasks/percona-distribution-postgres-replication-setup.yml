@@ -36,7 +36,7 @@
 
 - name: Remove old PostgreSQL primary container
   community.docker.docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    name: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     image: "{{ docker_repo }}:{{ pg_version }}"
     restart_policy: always
     state: absent
@@ -44,7 +44,7 @@
 
 - name: Start PostgreSQL primary container
   community.docker.docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    name: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     image: "{{ docker_repo }}:{{ pg_version }}"
     restart_policy: always
     state: started
@@ -70,7 +70,7 @@
 
 - name: Create replication user
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     user: postgres
     command: >
       psql -c "
@@ -79,14 +79,14 @@
 
 - name: Stop and remove replica if exists
   community.docker.docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     state: absent
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
   ignore_errors: yes
 
 - name: Start Percona Distribution PostgreSQL replica container
   community.docker.docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     image: "{{ docker_repo }}:{{ pg_version }}"
     restart_policy: "no"
     state: started
@@ -104,14 +104,14 @@
 
 - name: Wipe replica data directory before basebackup
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     user: root
     command: rm -rf /data/db/*
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Create PostgreSQL user 'pmm' with password
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     user: postgres
     command: >
       bash -c '
@@ -123,7 +123,7 @@
 
 #- name: Create custom database for pgbench
 #  community.docker.docker_container_exec:
-#    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+#    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
 #    user: postgres
 #    command: >
 #      bash -c "
@@ -140,20 +140,20 @@
 
 - name: Run pg_basebackup from primary to replica
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     user: root
     command: >
       bash -c "
         export PGPASSWORD='{{ replication_password }}' && \
         timeout 120s \
         pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
-        --host=pdpgsql_pmm_replication_{{ pg_version }}_1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
+        --host=pdpgsql_pmm_replication_primary_{{ pg_version }} --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
       "
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Remove temporary backup container
   docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     state: absent
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
@@ -168,7 +168,7 @@
 
 - name: Restart Percona Distribution PostgreSQL container with custom command
   community.docker.docker_container:
-    name: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
     image: "{{ docker_repo }}:{{ pg_version }}"
     restart: true
     state: started
@@ -193,12 +193,12 @@
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
-    container_name: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
+    container_name: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Get already connected services to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     command: >
       sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is ansible.utils.ipv4 else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
   register: pmm_server_services
@@ -217,38 +217,38 @@
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}"
-    command: pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    container: "pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}"
+    command: pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_replica_{{ item }}_{{ pg_version }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 #- name: Run load on primary node.
 #  include_tasks: ../postgresql/tasks/run_load_pgsql.yml
 #  vars:
-#    node_name: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+#    node_name: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
 #    pgbench_clients: 10
 #    pgbench_time: 120
 #    pgbench_scale: 1000
 
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     path: ../data/load_pgsql.sql
     container_path: /load_pgsql.sql
 
 - name: Start permanent SQL load in background
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     command: >
       sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /load_pgsql.sql; sleep 30; done' > /tmp/sql_loop.log 2>&1 &"
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     user: postgres
     command: psql -U postgres -d postgres -c "SELECT * FROM pg_create_logical_replication_slot('test_slot', 'test_decoding');"
 
 - name: Check replication status on primary
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_replication_primary_{{ pg_version }}"
     user: postgres
     command: psql -c "SELECT * FROM pg_stat_replication;"
