@@ -226,17 +226,17 @@
     container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
     user: postgres
     command: >
-        psql -U postgres -d postgres -c "
-        CREATE OR REPLACE VIEW pg_custom_publication AS
-        SELECT
-            pubname,
-            puballtables,
-            pubinsert,
-            pubupdate,
-            pubdelete
-        FROM
-            pg_publication;
-      "
+      bash -c 'psql -U postgres -d postgres <<SQL
+      CREATE OR REPLACE VIEW pg_custom_publication AS
+      SELECT
+        pubname,
+        puballtables,
+        pubinsert,
+        pubupdate,
+        pubdelete
+      FROM
+        pg_publication;
+      SQL'
 
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
