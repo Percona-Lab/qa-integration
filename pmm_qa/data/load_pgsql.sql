@@ -11,17 +11,17 @@ SELECT
 
 ANALYZE buffer_test;
 
--- Step 3: Perform repeated full-table scans to stress buffer allocation
-DO $$
-BEGIN
-  FOR i IN 1..10 LOOP
-    RAISE NOTICE 'Running scan iteration %', i;
-    PERFORM COUNT(*) FROM buffer_test;
-  END LOOP;
-END $$;
-
--- Step 4: Show final buffers_alloc value
-SELECT 'Final buffers_alloc' AS info, buffers_alloc FROM pg_stat_bgwriter;
+---- Step 3: Perform repeated full-table scans to stress buffer allocation
+--DO $$
+--BEGIN
+--  FOR i IN 1..10 LOOP
+--    RAISE NOTICE 'Running scan iteration %', i;
+--    PERFORM COUNT(*) FROM buffer_test;
+--  END LOOP;
+--END $$;
+--
+---- Step 4: Show final buffers_alloc value
+--SELECT 'Final buffers_alloc' AS info, buffers_alloc FROM pg_stat_bgwriter;
 VACUUM;
 SELECT pg_switch_wal();
 
