@@ -229,19 +229,14 @@
         psql -U postgres -d postgres -c "
         CREATE OR REPLACE VIEW pg_custom_publication AS
         SELECT
-            p.pubname AS publication,
-            pt.schemaname || '.' || pt.tablename AS fully_qualified_table,
-            p.puballtables,
-            p.pubinsert,
-            p.pubupdate,
-            p.pubdelete,
-            p.pubtruncate
+            pubname,
+            puballtables,
+            pubinsert,
+            pubupdate,
+            pubdelete
         FROM
-            pg_publication p
-        JOIN
-            pg_publication_tables pt ON p.pubname = pt.pubname;
-        "
-
+            pg_publication;
+      "
 
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
