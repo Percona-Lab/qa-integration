@@ -225,10 +225,6 @@
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
     user: postgres
-- name: Create pg_custom_publication view using psql
-  community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
-    user: postgres
     command: >
         psql -U postgres -d postgres -c "
         CREATE OR REPLACE VIEW pg_custom_publication AS
