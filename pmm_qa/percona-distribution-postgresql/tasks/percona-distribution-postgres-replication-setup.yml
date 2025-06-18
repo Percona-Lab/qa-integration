@@ -121,22 +121,22 @@
         "
       '
 
-#- name: Create custom database for pgbench
-#  community.docker.docker_container_exec:
-#    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
-#    user: postgres
-#    command: >
-#      bash -c "
-#        echo \"
-#        CREATE DATABASE pgbench;
-#        \\c pgbench
-#        GRANT CONNECT ON DATABASE pgbench TO pmm;
-#        GRANT USAGE ON SCHEMA public TO pmm;
-#        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
-#        ALTER DEFAULT PRIVILEGES IN SCHEMA public
-#          GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
-#        \" | psql -U postgres -v ON_ERROR_STOP=1
-#      "
+- name: Create custom database
+  community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
+    user: postgres
+    command: >
+      bash -c "
+        echo \"
+        CREATE DATABASE test_database;
+        \\c test_database
+        GRANT CONNECT ON DATABASE test_database TO pmm;
+        GRANT USAGE ON SCHEMA public TO pmm;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+          GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+        \" | psql -U postgres -v ON_ERROR_STOP=1
+      "
 
 - name: Run pg_basebackup from primary to replica
   community.docker.docker_container_exec:
@@ -248,7 +248,7 @@
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
     command: >
-      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d postgres -f /load_pgsql.sql; sleep 30; done' > /tmp/sql_loop.log 2>&1 &"
+      sh -c "nohup bash -c 'while true; do echo Starting insert at $(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d test_database -f /load_pgsql.sql; sleep 30; done' > /tmp/sql_loop.log 2>&1 &"
 
 - name: Create logical replication slots
   community.docker.docker_container_exec:
