@@ -238,6 +238,16 @@
         pg_publication;
       SQL'
 
+- name: Create pg_stat_statements extension
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}_1"
+    user: postgres
+    command: >
+      psql -U postgres -d test_database -c "
+        CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
+        SELECT pg_stat_monitor_version();
+      "
+
 - name: Copy sample load into container
   community.docker.docker_container_copy_into:
     container: "pdpgsql_pmm_replication_{{ pg_version }}_1"
