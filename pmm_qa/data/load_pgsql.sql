@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS buffer_test;
 
 CREATE TABLE buffer_test AS
 SELECT
-    generate_series(1, 500_000) AS id,
+    generate_series(1, 1_000_000) AS id,
     md5(random()::text) AS filler;
 
 ANALYZE buffer_test;
