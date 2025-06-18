@@ -19,7 +19,7 @@ fi
 # If branch/tag is not provided then it will default to main branch
 if [ -z "$pgstat_monitor_branch" ]
 then
-      export pgstat_monitor_branch="2.1.0"
+      export pgstat_monitor_branch="2.1.1"
 fi
 
 # If repo is not provided then it will default to percona PGSM repository
