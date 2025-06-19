@@ -179,7 +179,7 @@
 - name: Add patroni service to pmm server
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
-    command: pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
+    command: pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster_test --environment=pdpgsql_patroni_service_environment_test --service-name=patroni_service_1{{ random_service_name_value }}
 
 - name: Add patroni service to pmm server
   community.docker.docker_container_exec:
