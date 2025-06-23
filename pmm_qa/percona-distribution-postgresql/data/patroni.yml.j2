@@ -30,9 +30,6 @@ bootstrap:
         archive_mode: "on"
         archive_timeout: 600s
         archive_command: "cp -f %p /home/postgres/archived/%f"
-        logging_collector: on
-        log_directory: 'log'
-        log_filename: 'postgresql.log'
       pg_hba:
         - host replication replicator 127.0.0.1/32 md5
         - host replication replicator 172.18.0.0/16 md5
