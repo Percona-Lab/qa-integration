@@ -613,7 +613,8 @@ def mongo_ssl_setup(script_filename, args):
             if 'services' in data and 'pmm-server' in data['services']:
                 del data['services']['pmm-server']
 
-            content = data.replace('pmm-agent setup 2', 'pmm-agent setup --server-insecure-tls 2')
+            if 'pmm-agent setup 2' in data:
+                data = data.replace('pmm-agent setup 2', 'pmm-agent setup --server-insecure-tls 2')
 
             for service in data.get('services', {}).values():
                 networks = service.get('networks', [])
