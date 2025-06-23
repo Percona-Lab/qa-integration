@@ -649,18 +649,16 @@ def mongo_ssl_setup(script_filename, args):
                     psmdb_service['environment'] = env
 
                 depends_on = psmdb_service.get('depends_on')
+                print(depends_on)
                 if depends_on == {'pmm-server': {'condition': 'service_healthy'}}:
                     del psmdb_service['depends_on']
-
-            print("This is the parsed data: ")
-            print(data)
 
             # Save it back
             with open(compose_file_path, 'w') as f:
                 yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-            subprocess.run(['sed', '-i',
-                            '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
-                            f'{compose_file_path}'])
+            # subprocess.run(['sed', '-i',
+            #                 '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
+            #                 f'{compose_file_path}'])
             # subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
             #
             # Search replace content in-line in shell file
