@@ -62,6 +62,8 @@ services:
     depends_on:
       pmm-server:
        condition: service_healthy
+      kerberos:
+       condition: service_healthy
 
   pmm-server:
     container_name: pmm-server
