@@ -56,7 +56,7 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 set +e
 i=1
 while [ $i -le 3 ]; do
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
+    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=admin --server-insecure-tls)
     exit_code=$?
     echo "Output is: $output"
 
