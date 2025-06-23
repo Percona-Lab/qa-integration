@@ -657,10 +657,8 @@ def mongo_ssl_setup(script_filename, args):
 
                 depends_on = psmdb_service.get('depends_on')
                 print(f'Service depends on: {depends_on}')
-                if depends_on == {'pmm-server': {'condition': 'service_healthy'}}:
-                    del psmdb_service['depends_on']['pmm-server']
-                if depends_on == {'kerberos': {'condition': 'service_healthy'}}:
-                    del psmdb_service['depends_on']['kerberos']
+                if depends_on == {'pmm-server': {'condition': 'service_healthy'}} or depends_on == {'kerberos': {'condition': 'service_healthy'}}:
+                    del psmdb_service['depends_on']
 
             # Save it back
             with open(compose_file_path, 'w') as f:
