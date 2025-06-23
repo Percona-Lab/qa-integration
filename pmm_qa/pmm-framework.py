@@ -653,7 +653,7 @@ def mongo_ssl_setup(script_filename, args):
 
             # Save it back
             with open(compose_file_path, 'w') as f:
-                print(yaml.dump(data, f, sort_keys=False))
+                print(yaml.dump(data, f, sort_keys=False, default_flow_style=False))
             # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
             # subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
             # subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
