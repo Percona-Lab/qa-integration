@@ -648,20 +648,19 @@ def mongo_ssl_setup(script_filename, args):
                     env['PMM_AGENT_SERVER_PASSWORD'] = admin_password
                     psmdb_service['environment'] = env
 
+                depends_on = psmdb_service.get('depends_on')
+                if depends_on == {'pmm-server': {'condition': 'service_healthy'}}:
+                    del psmdb_service['depends_on']
+
             print("This is the parsed data: ")
-            # print(data)
+            print(data)
 
             # Save it back
             with open(compose_file_path, 'w') as f:
-                print(yaml.dump(data, f, sort_keys=False, default_flow_style=False))
-            # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            # subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
-            # subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
-            # subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
-            #                 f'{compose_file_path}'])
-            # subprocess.run(['sed', '-i',
-            #                 '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
-            #                 f'{compose_file_path}'])
+                yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+            subprocess.run(['sed', '-i',
+                            '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
+                            f'{compose_file_path}'])
             # subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
             #
             # Search replace content in-line in shell file
