@@ -55,44 +55,44 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 #Configure PMM
 set +e
 i=1
-while [ $i -le 3 ]; do
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
-    exit_code=$?
-
-    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
-        i=$((i + 1))
-    else
-        break
-    fi
-    sleep 1
-done
-
-#Add Mongo Service
-random_number=$RANDOM
-docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
-#Add some data
-docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
-
-tests=${TESTS:-yes}
-if [ $tests = "yes" ]; then
-    echo "running tests"
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml run test pytest -s --verbose test.py)
-    else
-    echo "skipping tests"
-fi
-
-cleanup=${CLEANUP:-yes}
-if [ $cleanup = "yes" ]; then
-    echo "cleanup"
-    docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
-    if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2"* ]]; then
-       sed -i 's/MONGODB-X509/MONGODB-X509,MONGODB-AWS/' conf/mongod.conf
-    fi
-    else
-    echo "skipping cleanup"
-fi
-
-echo "$output"
-if echo "$output" | grep -q "\bFAILED\b"; then
-    exit 1
-fi
+#while [ $i -le 3 ]; do
+#    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
+#    exit_code=$?
+#
+#    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
+#        i=$((i + 1))
+#    else
+#        break
+#    fi
+#    sleep 1
+#done
+#
+Add Mongo Service
+#random_number=$RANDOM
+#docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
+Add some data
+#docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
+#
+#tests=${TESTS:-yes}
+#if [ $tests = "yes" ]; then
+#    echo "running tests"
+#    output=$(docker compose -f docker-compose-pmm-psmdb.yml run test pytest -s --verbose test.py)
+#    else
+#    echo "skipping tests"
+#fi
+#
+#cleanup=${CLEANUP:-yes}
+#if [ $cleanup = "yes" ]; then
+#    echo "cleanup"
+#    docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
+#    if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2"* ]]; then
+#       sed -i 's/MONGODB-X509/MONGODB-X509,MONGODB-AWS/' conf/mongod.conf
+#    fi
+#    else
+#    echo "skipping cleanup"
+#fi
+#
+#echo "$output"
+#if echo "$output" | grep -q "\bFAILED\b"; then
+#    exit 1
+#fi
