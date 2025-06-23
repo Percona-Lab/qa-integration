@@ -32,6 +32,7 @@ openssl dhparam -out certs/dhparam.pem 2048
 cp pki/ca.crt certs/ca-certs.pem
 cp pki/private/pmm-server.key certs/certificate.key
 cp pki/issued/pmm-server.crt certs/certificate.crt
+cat pki/private/psmdb-server.key pki/issued/pmm-server.crt > certs/pmm-server.pem
 cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-server.pem
 cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
