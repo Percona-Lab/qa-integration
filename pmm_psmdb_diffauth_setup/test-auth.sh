@@ -55,18 +55,18 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 #Configure PMM
 set +e
 i=1
-#while [ $i -le 3 ]; do
-#    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
-#    exit_code=$?
-#
-#    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
-#        i=$((i + 1))
-#    else
-#        break
-#    fi
-#    sleep 1
-#done
-#
+while [ $i -le 3 ]; do
+    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
+    exit_code=$?
+
+    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
+        i=$((i + 1))
+    else
+        break
+    fi
+    sleep 1
+done
+
 Add Mongo Service
 #random_number=$RANDOM
 #docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
