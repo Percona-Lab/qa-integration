@@ -38,8 +38,8 @@ find certs -type f -exec chmod 644 {} \;
 
 #Start setup
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
-docker compose -f docker-compose-pmm-psmdb.yml build
-docker compose -f docker-compose-pmm-psmdb.yml up -d
+#docker compose -f docker-compose-pmm-psmdb.yml build
+#docker compose -f docker-compose-pmm-psmdb.yml up -d
 
 ##Add users
 #docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
