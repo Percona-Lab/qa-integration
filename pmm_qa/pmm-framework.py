@@ -606,10 +606,11 @@ def mongo_ssl_setup(script_filename, args):
         if no_server:
             shutil.copy(compose_file_folder + 'docker-compose-pmm-psmdb.yml', compose_file_folder + compose_filename)
             print(f'File location is: {compose_file_folder + compose_filename}')
+            # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+            admin_password = 'Test2'
+            print(f'Admin password is: {admin_password}')
             with open(compose_file_folder + compose_filename, 'r') as f:
                 data = yaml.safe_load(f)
-            print("This is the parsed data: ")
-            print(data)
 
             for service in data.get('services', {}).values():
                 networks = service.get('networks', [])
@@ -628,12 +629,31 @@ def mongo_ssl_setup(script_filename, args):
 
             data['networks']['pmm-qa'] = {'external': True, 'name': 'pmm-qa'}
 
+            psmdb_service = data.get('services', {}).get('psmdb-server')
+            if psmdb_service:
+                env = psmdb_service.get('environment', [])
+
+                # If environment is a list (common in Docker Compose)
+                if isinstance(env, list):
+                    for i, entry in enumerate(env):
+                        if entry.startswith('PMM_AGENT_SERVER_PASSWORD='):
+                            env[i] = f'PMM_AGENT_SERVER_PASSWORD={admin_password}'
+                            break
+                    else:
+                        env.append(f'PMM_AGENT_SERVER_PASSWORD={admin_password}')
+                    psmdb_service['environment'] = env
+
+                # If environment is a dict (less common but valid)
+                elif isinstance(env, dict):
+                    env['PMM_AGENT_SERVER_PASSWORD'] = admin_password
+                    psmdb_service['environment'] = env
+
+            print("This is the parsed data: ")
+            # print(data)
+
             # Save it back
             with open(compose_file_path, 'w') as f:
-                yaml.dump(data, f, sort_keys=False)
-            # Search & Replace content in the temporary compose files
-            # subprocess.run(
-            #     ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
+                print(yaml.dump(data, f, sort_keys=False))
             # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
             # subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
             # subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
