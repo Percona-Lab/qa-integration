@@ -58,6 +58,7 @@ i=1
 while [ $i -le 3 ]; do
     output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup 2>&1)
     exit_code=$?
+    echo "Output is: $output"
 
     if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
         i=$((i + 1))
@@ -66,8 +67,6 @@ while [ $i -le 3 ]; do
     fi
     sleep 1
 done
-
-docker compose -f docker-compose-pmm-psmdb.yml exec -T  psmdb-server bash -c "pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml"
 
 #Add Mongo Service
 random_number=$RANDOM
