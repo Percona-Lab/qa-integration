@@ -96,6 +96,23 @@ services:
     volumes:
       - 'openldap-data:/bitnami/openldap'
 
+  kerberos:
+    image: kerberos/local
+    build:
+      dockerfile: ./Dockerfile-kerberos
+      context: .
+    container_name: kerberos
+    hostname: kerberos
+    environment:
+      - "KRB5_TRACE=/dev/stderr"
+    volumes:
+      - keytabs:/keytabs
+    healthcheck:
+      test: ["CMD", "kadmin.local", "-q", "listprincs"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+
   minio:
     image: minio/minio
     container_name: minio
