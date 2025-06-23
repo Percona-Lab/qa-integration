@@ -606,7 +606,7 @@ def mongo_ssl_setup(script_filename, args):
                 ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
             admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
             subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', '/container_name/a\\    networks:\\\\n      \\\\- pmm-qa', f'{compose_file_path}'])
+            subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
             subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
                             f'{compose_file_path}'])
             subprocess.run(['sed', '-i',
