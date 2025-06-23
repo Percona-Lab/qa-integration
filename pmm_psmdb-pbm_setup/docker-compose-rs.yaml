@@ -198,8 +198,8 @@ services:
     volumes:
       - /tmp/minio/backups:/backups
     environment:
-      - "MINIO_ROOT_USER=minio1234"
-      - "MINIO_ROOT_PASSWORD=minio1234"
+      - "MINIO_ACCESS_KEY=minio1234"
+      - "MINIO_SECRET_KEY=minio1234"
     command: server /backups
 
   createbucket:
@@ -215,7 +215,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c " sleep 60; /usr/bin/mc config host add myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
+      /bin/sh -c " sleep 5; /usr/bin/mc alias set myminio http://minio:9000 minio1234 minio1234; /usr/bin/mc mb myminio/bcp; exit 0; "
 
 networks:
   qa-integration:
