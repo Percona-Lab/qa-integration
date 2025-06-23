@@ -613,6 +613,8 @@ def mongo_ssl_setup(script_filename, args):
             if 'services' in data and 'pmm-server' in data['services']:
                 del data['services']['pmm-server']
 
+            content = data.replace('pmm-agent setup 2', 'pmm-agent setup --server-insecure-tls 2')
+
             for service in data.get('services', {}).values():
                 networks = service.get('networks', [])
                 if isinstance(networks, list):
@@ -657,14 +659,7 @@ def mongo_ssl_setup(script_filename, args):
             # Save it back
             with open(compose_file_path, 'w') as f:
                 yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-            # subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
-            #
-            # Search replace content in-line in shell file
-            # subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
-            #                 f'{shellscript_file_path}'])
-            # subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
-            #                 f'{shellscript_file_path}'])
-    except subprocess.CalledProcessError as e:
+    except yaml.YAMLError as e:
         print(f"Error occurred: {e}")
 
 
