@@ -606,11 +606,12 @@ def mongo_ssl_setup(script_filename, args):
         if no_server:
             shutil.copy(compose_file_folder + 'docker-compose-pmm-psmdb.yml', compose_file_folder + compose_filename)
             print(f'File location is: {compose_file_folder + compose_filename}')
-            # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            admin_password = 'Test2'
-            print(f'Admin password is: {admin_password}')
+            admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
             with open(compose_file_folder + compose_filename, 'r') as f:
                 data = yaml.safe_load(f)
+
+            if 'services' in data and 'pmm-server' in data['services']:
+                del data['services']['pmm-server']
 
             for service in data.get('services', {}).values():
                 networks = service.get('networks', [])
@@ -656,9 +657,6 @@ def mongo_ssl_setup(script_filename, args):
             # Save it back
             with open(compose_file_path, 'w') as f:
                 yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-            # subprocess.run(['sed', '-i',
-            #                 '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
-            #                 f'{compose_file_path}'])
             # subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
             #
             # Search replace content in-line in shell file
