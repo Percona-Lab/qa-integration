@@ -604,8 +604,8 @@ def mongo_ssl_setup(script_filename, args):
     try:
         if no_server:
             shutil.copy(compose_file_folder + 'docker-compose-pmm-psmdb.yml', compose_file_folder + compose_filename)
-            print(f'File location is: {compose_file_path + compose_filename}')
-            with open(compose_file_path + compose_filename, 'r') as f:
+            print(f'File location is: {compose_file_folder + compose_filename}')
+            with open(compose_file_folder + compose_filename, 'r') as f:
                 data = yaml.safe_load(f)
             print("This is the parsed data: ")
             print(data)
