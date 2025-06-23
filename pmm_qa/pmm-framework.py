@@ -663,6 +663,10 @@ def mongo_ssl_setup(script_filename, args):
     except yaml.YAMLError as e:
         print(f"Error occurred: {e}")
 
+    try:
+        subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g', f'{shellscript_file_path}'])
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
 
 def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
