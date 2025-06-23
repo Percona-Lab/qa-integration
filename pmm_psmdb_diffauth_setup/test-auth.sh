@@ -67,7 +67,7 @@ while [ $i -le 3 ]; do
     sleep 1
 done
 
-docker compose -f docker-compose-pmm-psmdb.yml exec -T pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml
+docker compose -f docker-compose-pmm-psmdb.yml exec -T  psmdb-server bash -c "pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml"
 
 #Add Mongo Service
 random_number=$RANDOM
