@@ -591,6 +591,7 @@ def mongo_ssl_setup(script_filename, args):
     # Temporary docker compose filename
     compose_filename = f'docker-compose-psmdb.yml'
     compose_file_path = scripts_path + compose_filename
+    file_path = os.path.dirname(current_dir)
 
     # Create pmm-qa n/w used in workaround
     result = subprocess.run(['docker', 'network', 'inspect', 'pmm-qa'], capture_output=True)
@@ -601,6 +602,7 @@ def mongo_ssl_setup(script_filename, args):
     # Add workaround (copy files) till sharding only support is ready.
     try:
         if no_server:
+            print(f'File location is: {file_path}')
             with open(compose_file_path, 'r') as f:
                 data = yaml.safe_load(f)
             print("This is the parsed data: ")
