@@ -19,7 +19,7 @@ fi
 # If branch/tag is not provided then it will default to main branch
 if [ -z "$pgstat_monitor_branch" ]
 then
-      export pgstat_monitor_branch="main"
+      export pgstat_monitor_branch="2.1.0"
 fi
 
 # If repo is not provided then it will default to percona PGSM repository
@@ -54,13 +54,13 @@ then
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
       sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
       apt update
-      apt -y install postgresql-${pgsql_version} postgresql-server-dev-${pgsql_version} percona-pg-stat-monitor${pgsql_version}
+      apt -y install postgresql-${pgsql_version} postgresql-server-dev-${pgsql_version}
 else
       wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
       dpkg -i percona-release_latest.generic_all.deb
       percona-release setup ppg-${pgsql_version}
       apt-get -y update
-      apt-get -y install percona-postgresql-${pgsql_version} percona-postgresql-contrib percona-postgresql-server-dev-all percona-pg-stat-monitor${pgsql_version}
+      apt-get -y install percona-postgresql-${pgsql_version} percona-postgresql-contrib percona-postgresql-server-dev-all
 fi
 
 sleep 10
@@ -84,16 +84,16 @@ echo $PATH
 cp /usr/lib/postgresql/${pgsql_version}/bin/pg_config /usr/bin
 
 # Clone PGSM repo and move to /home/postgres/pg_stat_monitor dir
-#cd /home/postgres
-#git clone --depth 1 --branch ${pgstat_monitor_branch} https://github.com/${pgstat_monitor_repo}
-#chown -R postgres:postgres pg_stat_monitor
-#cd pg_stat_monitor
+cd /home/postgres
+git clone --depth 1 --branch ${pgstat_monitor_branch} https://github.com/${pgstat_monitor_repo}
+chown -R postgres:postgres pg_stat_monitor
+cd pg_stat_monitor
 
 # Build PGSM
-#make USE_PGXS=1
+make USE_PGXS=1
 
 # Install built PGSM library into server
-#make USE_PGXS=1 install
+make USE_PGXS=1 install
 
 # Stop server and edit postgresql.conf to load PGSM library with required configurations
 service postgresql stop
