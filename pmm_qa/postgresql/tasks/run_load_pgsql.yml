@@ -55,5 +55,3 @@
 - name: Print pgbench results
   debug:
     var: pgbench_result.stdout_lines
-
-

@@ -32,7 +32,6 @@ openssl dhparam -out certs/dhparam.pem 2048
 cp pki/ca.crt certs/ca-certs.pem
 cp pki/private/pmm-server.key certs/certificate.key
 cp pki/issued/pmm-server.crt certs/certificate.crt
-cat pki/private/psmdb-server.key pki/issued/pmm-server.crt > certs/pmm-server.pem
 cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-server.pem
 cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
@@ -58,7 +57,6 @@ i=1
 while [ $i -le 3 ]; do
     output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=admin --server-insecure-tls)
     exit_code=$?
-    echo "Output is: $output"
 
     if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
         i=$((i + 1))
