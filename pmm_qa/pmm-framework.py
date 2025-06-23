@@ -610,24 +610,45 @@ def mongo_ssl_setup(script_filename, args):
                 data = yaml.safe_load(f)
             print("This is the parsed data: ")
             print(data)
-            # Search & Replace content in the temporary compose files
-            subprocess.run(
-                ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
-            admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
-            subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
-            subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
-                            f'{compose_file_path}'])
-            subprocess.run(['sed', '-i',
-                            '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
-                            f'{compose_file_path}'])
-            subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
 
+            for service in data.get('services', {}).values():
+                networks = service.get('networks', [])
+                if isinstance(networks, list):
+                    if 'pmm-qa' not in networks:
+                        networks.append('pmm-qa')
+                    service['networks'] = networks
+                elif isinstance(networks, dict):
+                    networks['pmm-qa'] = {}
+                else:
+                    service['networks'] = ['pmm-qa']
+
+            # Ensure the network is declared globally
+            if 'networks' not in data:
+                data['networks'] = {}
+
+            data['networks']['pmm-qa'] = {'external': True, 'name': 'pmm-qa'}
+
+            # Save it back
+            with open(compose_file_path, 'w') as f:
+                yaml.dump(data, f, sort_keys=False)
+            # Search & Replace content in the temporary compose files
+            # subprocess.run(
+            #     ['cp', f'{scripts_path}docker-compose-pmm-psmdb.yml', f'{compose_file_path}'])
+            # admin_password = os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin'
+            # subprocess.run(['sed', '-i', f's/PMM_AGENT_SERVER_PASSWORD=admin/PMM_AGENT_SERVER_PASSWORD={admin_password}/g', f'{compose_file_path}'])
+            # subprocess.run(['sed', '-i', r"/container_name/a\    networks:\n      - pmm-qa", compose_file_path])
+            # subprocess.run(['sed', '-i', '$a\\\nnetworks:\\\n  pmm-qa:\\\n    name: pmm-qa\\\n    external: true',
+            #                 f'{compose_file_path}'])
+            # subprocess.run(['sed', '-i',
+            #                 '/    depends_on:/{N;N;N;/    depends_on:\\\n      pmm-server:\\\n       condition: service_healthy/d;}',
+            #                 f'{compose_file_path}'])
+            # subprocess.run(['sed', '-i', '/^  pmm-server:/,/^$/{/^  ldap-server:/!d}', f'{compose_file_path}'])
+            #
             # Search replace content in-line in shell file
-            subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
-                            f'{shellscript_file_path}'])
-            subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
-                            f'{shellscript_file_path}'])
+            # subprocess.run(['sed', '-i', f's/pmm-agent setup 2/pmm-agent setup --server-insecure-tls 2/g',
+            #                 f'{shellscript_file_path}'])
+            # subprocess.run(['sed', '-i', f's/docker-compose-pmm-psmdb.yml/{compose_filename}/g',
+            #                 f'{shellscript_file_path}'])
     except subprocess.CalledProcessError as e:
         print(f"Error occurred: {e}")
 
