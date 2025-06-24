@@ -2,6 +2,9 @@
   set_fact:
     nodes_count: 3
   when: nodes_count | int < 3
+- name: Set external facing port in patroni setup
+  set_fact:
+    pdpgsql_port: 6432
 
 - name: Remove old data folders
   shell: 'rm -fr {{ data_dir }}'
@@ -173,14 +176,19 @@
 - name: Add service to pmm server
   community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
-    command: pmm-admin add postgresql --username=postgres --password=postgres --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    command: pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Add patroni service to pmm server
   community.docker.docker_container_exec:
+    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
+    command: pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
+
+- name: Add patroni service to pmm server
+  community.docker.docker_container_exec:
     container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
-    command: pmm-admin add external --listen-port=8008  --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+    command: pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Log Patroni cluster
   community.docker.docker_container_exec:
