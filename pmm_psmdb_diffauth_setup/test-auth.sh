@@ -19,6 +19,10 @@ if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2."* ]]; then
     export SKIP_AWS_TESTS="true"
 fi
 
+if [ -z "$ADMIN_PASSWORD" ]; then
+    export ADMIN_PASSWORD=admin
+fi
+
 #Generate certificates for tests
 rm -rf easy-rsa pki certs && mkdir certs
 git clone https://github.com/OpenVPN/easy-rsa.git
@@ -55,7 +59,7 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 set +e
 i=1
 while [ $i -le 3 ]; do
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=admin --server-insecure-tls)
+    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${ADMIN_PASSWORD} --server-insecure-tls)
     exit_code=$?
 
     if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
