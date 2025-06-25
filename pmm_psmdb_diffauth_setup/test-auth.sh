@@ -59,8 +59,8 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 set +e
 i=1
 while [ $i -le 3 ]; do
-    echo "Admin password is: ${admin_password}"
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${admin_password} --server-insecure-tls)
+    output="Admin password is: ${admin_password}"
+    docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${admin_password} --server-insecure-tls
     exit_code=$?
 
     if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
