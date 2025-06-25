@@ -59,7 +59,7 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 set +e
 i=1
 while [ $i -le 3 ]; do
-    output="Admin password is: ${admin_password}"
+    output="Admin password is: ${ADMIN_PASSWORD}"
     docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${admin_password} --server-insecure-tls
     exit_code=$?
 
