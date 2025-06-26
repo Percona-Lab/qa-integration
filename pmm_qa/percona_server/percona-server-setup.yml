@@ -66,6 +66,18 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Check ports to find a free one
+      shell: "ss -tuln | grep -q ':{{ item }} '"
+      register: port_check
+      loop: "{{ range(mysql_port, 3316 + 1) | list }}"
+      ignore_errors: true
+      changed_when: false
+
+    - name: Set first available port
+      set_fact:
+        mysql_port: "{{ port_check.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list | first }}"
+
+
+    - name: Check ports to find a free one
       wait_for:
         port: "{{ item }}"
         host: "0.0.0.0"
