@@ -42,7 +42,7 @@
 
 - name: Reset configuration for all nodes
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
+    container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
     command: >
       mysql -uroot -p{{ root_password }} -e "
       RESET BINARY LOGS AND GTIDS;
@@ -53,7 +53,7 @@
 
 - name: Get primary ps_pmm_{{ ps_version }}_1 binary log status
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_1"
+    container: "ps_pmm_{{ query_source }}_{{ ps_version }}_1"
     command: >
       mysql -uroot -p{{ root_password }} -e "
       SHOW BINARY LOG STATUS\G
@@ -68,7 +68,7 @@
 
 - name: Configure replica servers (container2-containerN)
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
+    container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
     command: >
       mysql -uroot -p{{ root_password }} -e "
       CHANGE REPLICATION SOURCE TO 
@@ -85,7 +85,7 @@
 
 - name: Create and seed a test database on primary
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_1"
+    container: "ps_pmm_{{ query_source }}_{{ ps_version }}_1"
     command: >
       mysql -uroot -p{{ root_password}} -e "
       CREATE DATABASE testdb;
@@ -95,7 +95,7 @@
 
 - name: Check replication status on replica nodes
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
+    container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
     command: mysql -uroot -p{{ root_password }} -e "SHOW REPLICA STATUS\G"
   register: replication_status
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
