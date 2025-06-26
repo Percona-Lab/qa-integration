@@ -123,7 +123,13 @@
     - name: Restart Docker container
       community.docker.docker_container:
         name: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
-        state: restarted
+        state: stopped
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Restart Docker container
+      community.docker.docker_container:
+        name: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
+        state: started
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Install and add pmm client.
