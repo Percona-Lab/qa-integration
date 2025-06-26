@@ -233,7 +233,7 @@
             --mysql-password=password 
             --mysql-db=sbtest 
             --tables=10 
-            --table-size=100000 
+            --table-size=1000
             prepare
       when: setup_type == "gr" or setup_type == "replication"
 
@@ -248,8 +248,8 @@
             --mysql-password=password 
             --mysql-db=sbtest 
             --tables=10 
-            --table-size=100000 
-            --threads=16 
+            --table-size=1000
+            --threads=2
             --time=60
             run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
