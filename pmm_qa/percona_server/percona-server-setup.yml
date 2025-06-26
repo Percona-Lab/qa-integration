@@ -68,7 +68,6 @@
     - name: Check ports to find a free one
       wait_for:
         port: "{{ item }}"
-        host: "127.0.0.1"
         state: drained
         timeout: 1
       register: port_check_results
@@ -78,7 +77,6 @@
     - name: Set the first available port
       set_fact:
         mysql_port: "{{ port_check_results.results | selectattr('failed', 'eq', false) | map(attribute='item') | list | first }}"
-
 
     - name: Setup Percona Server group replication
       include_tasks: ./tasks/percona-server-group-replication-setup.yml
