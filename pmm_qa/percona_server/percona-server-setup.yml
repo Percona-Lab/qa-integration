@@ -65,15 +65,16 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Check ports to find a free one
+    - name: Find first free port
       wait_for:
         port: "{{ item }}"
         host: "127.0.0.1"
-        state: drained  # means: wait until the port is free
+        state: drained
         timeout: 1
-      register: port_check_results
+      register: port_result
       with_sequence: start={{ mysql_port }} end=3399
-      ignore_errors: true
+      loop_control:
+        break_when: port_result.failed == false
 
     - name: Setup Percona Server group replication
       include_tasks: ./tasks/percona-server-group-replication-setup.yml
