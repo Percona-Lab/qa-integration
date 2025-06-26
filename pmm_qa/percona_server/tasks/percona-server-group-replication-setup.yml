@@ -12,7 +12,7 @@
 
 - name: Start Percona Server containers with group replication
   community.docker.docker_container:
-    name: "ps_pmm_{{ ps_version }}_{{ item }}"
+    name: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
     image: "percona/percona-server:{{ ps_version }}"
     restart_policy: always
     state: started
