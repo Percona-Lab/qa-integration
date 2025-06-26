@@ -77,6 +77,10 @@
       include_tasks: tasks/percona-server-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
+    - name: Wait 5 seconds for bootstrap to complete
+      pause:
+        seconds: 5
+
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -235,6 +239,3 @@
             run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Wait 5 seconds for bootstrap to complete
-      pause:
-        seconds: 5
