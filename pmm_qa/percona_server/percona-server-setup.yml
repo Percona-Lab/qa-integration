@@ -114,7 +114,7 @@
         container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
-          performance_schema_max_sql_text_length = 65536
+          SET GLOBAL performance_schema_max_sql_text_length = 65536;
           "
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
