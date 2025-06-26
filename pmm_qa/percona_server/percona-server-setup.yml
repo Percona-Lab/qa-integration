@@ -83,7 +83,7 @@
 
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
-        container: "ps_pmm_{{ query_source }}{{ ps_version }}_{{ item }}"
+        container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
         command: >
           mysql -uroot -p{{ root_password }} -e "
           SET GLOBAL slow_query_log='ON';
