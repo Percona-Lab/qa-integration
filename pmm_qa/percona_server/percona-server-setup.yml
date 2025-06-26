@@ -122,7 +122,7 @@
 
     - name: Restart Docker container
       community.docker.docker_container:
-        container: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
+        name: "ps_pmm_{{ query_source }}_{{ ps_version }}_{{ item }}"
         state: restarted
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
