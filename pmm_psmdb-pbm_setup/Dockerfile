@@ -21,7 +21,7 @@ CMD ["/usr/sbin/init"]
 RUN set -ex; \
     export GNUPGHOME="$(mktemp -d)"; \
     export PERCONA_TELEMETRY_URL="https://check-dev.percona.com/v1/telemetry/GenericReport"; \
-    yum install -y gnupg2; \
+    dnf install -y gnupg2; \
     if [ $PSMDB_VERSION != "latest" ]; then export PSMDB_REPO="$(echo "${PSMDB_VERSION}" | awk -F '.' '{print "psmdb-"$1$2}')" ; else export PSMDB_REPO=psmdb-80 ; fi ; \
     gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 4D1BB29D63D98E422B2113B19334A25F8507EFA5 99DB70FAE1D7CE227FB6488205B555B38483C65D 94E279EB8D8F25B21810ADF121EA45AB2F86D6A1; \
     gpg --batch --export --armor 4D1BB29D63D98E422B2113B19334A25F8507EFA5 > ${GNUPGHOME}/PERCONA-PACKAGING-KEY; \
@@ -36,41 +36,41 @@ RUN set -ex; \
     percona-release enable pbm ${REPO} && \
     percona-release enable ${PSMDB_REPO} ${REPO} && \
     percona-release enable pmm3-client ${PMM_REPO} && \
-    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    yum update --refresh -y && \
+    dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    dnf update --refresh -y && \
     if [[ $PSMDB_VERSION == "latest" || "$PSMDB_VERSION" =~ ^[0-9]\.[0-9]$ ]] ; then \
-        yum -y install percona-server-mongodb \
+        dnf -y install percona-server-mongodb \
                        percona-server-mongodb-tools \
                        percona-server-mongodb-server \
                        percona-server-mongodb-mongos ; \
     else \
-        yum -y install percona-server-mongodb-${PSMDB_VERSION}.el9 \
+        dnf -y install percona-server-mongodb-${PSMDB_VERSION}.el9 \
                           percona-server-mongodb-tools-${PSMDB_VERSION}.el9 \
                           percona-server-mongodb-server-${PSMDB_VERSION}.el9 \
                           percona-server-mongodb-mongos-${PSMDB_VERSION}.el9 ; \
     fi && \
     if [ "$PBM_VERSION" == "latest" ]; then \
-        yum -y install percona-backup-mongodb ; \
+        dnf -y install percona-backup-mongodb ; \
     else \
-        yum -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
+        dnf -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
     fi 
 
 RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
-        yum -y install pmm-client && \
+        dnf -y install pmm-client && \
         curl -Lf -o /tmp/pmm-client.tar.gz $PMM_CLIENT_VERSION && \
         cd /tmp && tar -xvf pmm-client.tar.gz --transform 's,^/*[^/]*,/pmm-client,S' && \
         cd /tmp/pmm-client && ./install_tarball && cd ../ && rm -rf pmm* ;\
     elif [[ "$PMM_CLIENT_VERSION" =~ 3-dev-latest|latest ]]; then \
-        yum -y install pmm-client ; \
+        dnf -y install pmm-client ; \
     elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
         percona-release enable pmm3-client testing  && \
-        yum update --refresh -y && \
-        yum -y install pmm-client ; \
+        dnf update --refresh -y && \
+        dnf -y install pmm-client ; \
     else \
         if [[ "$PMM_CLIENT_VERSION" =~ ^([3-9])\.([1-9][0-9]*)\.([0-9]+)$ ]]; then \
-            yum -y install pmm-client-${PMM_CLIENT_VERSION}-7.el9 ; \
+            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-7.el9 ; \
         else \
-            yum -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
+            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
         fi \
     fi && \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
@@ -80,7 +80,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     systemctl enable pmm-agent && \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
-    yum clean all; \
+    dnf clean all; \
     rm -rf /var/cache/dnf /var/cache/yum /data/db && mkdir -p /data/db;
 
 COPY conf/sysconfig/mongod /etc/sysconfig/
