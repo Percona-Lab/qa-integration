@@ -3,6 +3,7 @@ set -e
 
 profile=${COMPOSE_PROFILES:-classic}
 mongo_setup_type=${MONGO_SETUP_TYPE:-pss}
+ol_version=${OL_VERSION:-9}
 
 docker network create qa-integration || true
 docker network create pmm-qa || true
@@ -12,6 +13,9 @@ docker network create pmm2-ui-tests_pmm-network || true
 
 export COMPOSE_PROFILES=${profile}
 export MONGO_SETUP_TYPE=${mongo_setup_type}
+export OL_VERSION=${ol_version}
+
+# bash -e ../pmm_psmdb_diffauth_setup/generate-certs.sh
 
 docker compose -f docker-compose-rs.yaml down -v --remove-orphans
 docker compose -f docker-compose-rs.yaml build --no-cache

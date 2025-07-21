@@ -2,7 +2,7 @@ database_options = {
     "PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "8.0", "latest"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "pss", "COMPOSE_PROFILES": "classic",
-                           "TARBALL": ""}
+                           "TARBALL": "", "OL_VERSION": "9"}
     },
     "MLAUNCH_PSMDB": {
         "versions": ["4.4", "5.0", "6.0", "7.0", "8.0"],

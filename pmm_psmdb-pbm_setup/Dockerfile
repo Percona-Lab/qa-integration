@@ -1,4 +1,5 @@
-FROM oraclelinux:9
+ARG OL_VERSION=9
+FROM oraclelinux:${OL_VERSION}
 ARG REPO=testing
 ARG PMM_REPO=experimental
 ARG PBM_VERSION=latest
@@ -44,16 +45,16 @@ RUN set -ex; \
                        percona-server-mongodb-server \
                        percona-server-mongodb-mongos ; \
     else \
-        dnf -y install percona-server-mongodb-${PSMDB_VERSION}.el9 \
-                          percona-server-mongodb-tools-${PSMDB_VERSION}.el9 \
-                          percona-server-mongodb-server-${PSMDB_VERSION}.el9 \
-                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el9 ; \
+        dnf -y install percona-server-mongodb-${PSMDB_VERSION}.el${OL_VERSION} \
+                          percona-server-mongodb-tools-${PSMDB_VERSION}.el${OL_VERSION} \
+                          percona-server-mongodb-server-${PSMDB_VERSION}.el${OL_VERSION} \
+                          percona-server-mongodb-mongos-${PSMDB_VERSION}.el${OL_VERSION} ; \
     fi && \
     if [ "$PBM_VERSION" == "latest" ]; then \
         dnf -y install percona-backup-mongodb ; \
     else \
-        dnf -y install percona-backup-mongodb-${PBM_VERSION}.el9 ; \
-    fi 
+        dnf -y install percona-backup-mongodb-${PBM_VERSION}.el${OL_VERSION} ; \
+    fi
 
 RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         dnf -y install pmm-client && \
@@ -68,9 +69,9 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         dnf -y install pmm-client ; \
     else \
         if [[ "$PMM_CLIENT_VERSION" =~ ^([3-9])\.([1-9][0-9]*)\.([0-9]+)$ ]]; then \
-            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-7.el9 ; \
+            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-7.el${OL_VERSION} ; \
         else \
-            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-6.el9 ; \
+            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-6.el${OL_VERSION} ; \
         fi \
     fi && \
     sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
@@ -81,7 +82,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
     dnf clean all; \
-    rm -rf /var/cache/dnf /var/cache/yum /data/db && mkdir -p /data/db;
+    rm -rf /var/cache/dnf /var/cache/dnf /data/db && mkdir -p /data/db;
 
 COPY conf/sysconfig/mongod /etc/sysconfig/
 COPY keyfile /etc/keyfile

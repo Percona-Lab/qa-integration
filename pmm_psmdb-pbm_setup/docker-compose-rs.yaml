@@ -12,6 +12,7 @@ services:
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-3-dev-latest}
+        - OL_VERSION=${OL_VERSION:-9}
     command: /bin/bash
 
   rs101:
@@ -33,6 +34,15 @@ services:
       - ./conf/datagen:/etc/datagen:ro
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - /tmp/backup_data:/tmp/backup_data:rw
+      - keytabs:/keytabs
+      - ./certs:/mongodb_certs
+    entrypoint:
+      - bash
+      - -c
+      - |
+         cp /mongodb_certs/ca-certs.pem /etc/pki/tls/certs/
+         chown -R mongod:mongod /keytabs
+         exec /usr/sbin/init
     privileged: true
     cgroup: host
     environment:
@@ -202,6 +212,29 @@ services:
       - "MINIO_SECRET_KEY=minio1234"
     command: server /backups
 
+  kerberos:
+    image: kerberos/local
+    build:
+      dockerfile: ./Dockerfile-kerberos
+      context: ../pmm_psmdb_diffauth_setup/
+    container_name: kerberos
+    hostname: kerberos
+    environment:
+      - "KRB5_TRACE=/dev/stderr"
+    volumes:
+      - keytabs:/keytabs
+    healthcheck:
+      test: ["CMD", "kadmin.local", "-q", "listprincs"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+    networks:
+      - pmm-qa
+      - pmm-ui-tests1
+      - qa-integration
+      - pmm-ui-tests2
+      - pmm-ui-tests3
+
   createbucket:
     container_name: createbucket
     image: minio/mc
@@ -232,3 +265,7 @@ networks:
   pmm-qa:
     name: pmm-qa
     external: true
+
+volumes:
+  keytabs:
+    driver: local
