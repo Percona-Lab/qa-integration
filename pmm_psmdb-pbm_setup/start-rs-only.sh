@@ -15,8 +15,6 @@ export COMPOSE_PROFILES=${profile}
 export MONGO_SETUP_TYPE=${mongo_setup_type}
 export OL_VERSION=${ol_version}
 
-# bash -e ../pmm_psmdb_diffauth_setup/generate-certs.sh
-
 docker compose -f docker-compose-rs.yaml down -v --remove-orphans
 docker compose -f docker-compose-rs.yaml build --no-cache
 docker compose -f docker-compose-rs.yaml up -d
