@@ -46,7 +46,7 @@
   - name: Run Redis Container in Host
     shell: "{{ item }}"
     with_items:
-      - docker run --name redis_container -d -p 6379:6379 redis '--requirepass oFukiBRg7GujAJXq3tmd'
+      - docker run --name redis_container -d -p 6379:6379 docker.io/library/redis '--requirepass oFukiBRg7GujAJXq3tmd'
       - docker network connect pmm-qa redis_container
 
   - name: Setup External Exporters for monitoring
