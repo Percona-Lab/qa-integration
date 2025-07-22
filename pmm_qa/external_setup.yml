@@ -29,7 +29,7 @@
   - name: Prepare Container for External Exporters
     shell: >
       sudo docker run -d -p 43100:43100 --name={{ external_container }}
-      phusion/baseimage:jammy-1.0.1
+      docker.io/phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker external_container
     shell: "{{ item }}"
