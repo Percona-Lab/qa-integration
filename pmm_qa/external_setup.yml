@@ -28,7 +28,7 @@
 
   - name: Prepare Container for External Exporters
     shell: >
-      docker run -d -p 43100:43100 --name={{ external_container }} docker.io/phusion/baseimage:jammy-1.0.1
+      docker run -d -p 43100:43100 --network=bridge --name={{ external_container }} docker.io/phusion/baseimage:jammy-1.0.1
 
   - name: Prepare Container for External Exporters
     shell: |
@@ -46,7 +46,7 @@
   - name: Run Redis Container in Host
     shell: "{{ item }}"
     with_items:
-      - docker run --name redis_container -d -p 6379:6379 docker.io/library/redis '--requirepass oFukiBRg7GujAJXq3tmd'
+      - docker run --name redis_container --network=bridge -d -p 6379:6379 docker.io/library/redis '--requirepass oFukiBRg7GujAJXq3tmd'
       - docker network connect pmm-qa redis_container
 
   - name: Setup External Exporters for monitoring
