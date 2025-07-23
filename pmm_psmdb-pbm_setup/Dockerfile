@@ -19,6 +19,7 @@ VOLUME [ "/sys/fs/cgroup" ]
 
 CMD ["/usr/sbin/init"]
 
+ARG OL_VERSION
 RUN set -ex; \
     export GNUPGHOME="$(mktemp -d)"; \
     export PERCONA_TELEMETRY_URL="https://check-dev.percona.com/v1/telemetry/GenericReport"; \
@@ -56,6 +57,7 @@ RUN set -ex; \
         dnf -y install percona-backup-mongodb-${PBM_VERSION}.el${OL_VERSION} ; \
     fi
 
+ARG OL_VERSION
 RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         dnf -y install pmm-client && \
         curl -Lf -o /tmp/pmm-client.tar.gz $PMM_CLIENT_VERSION && \
