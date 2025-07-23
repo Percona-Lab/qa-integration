@@ -12,6 +12,7 @@ services:
         - PBM_VERSION=${PBM_VERSION:-latest}
         - PSMDB_VERSION=${PSMDB_VERSION:-latest}
         - PMM_CLIENT_VERSION=${PMM_CLIENT_VERSION:-3-dev-latest}
+        - OL_VERSION=${OL_VERSION:-9}
     command: /bin/bash
 
   rs101:

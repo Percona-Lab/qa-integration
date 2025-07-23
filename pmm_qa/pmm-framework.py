@@ -561,6 +561,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
         'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
+        'OL_VERSION': get_value('OL_VERSION', db_type, args, db_config),
         'TESTS': 'no',
         'CLEANUP': 'no'
     }
