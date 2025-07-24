@@ -71,6 +71,12 @@
     with_items:
       - docker exec {{ ms_container }} bash -xe ./client_container_ms_setup.sh --ms_version {{ ms_version }} --ms_tarball {{ ms_tarball }} --number_of_nodes {{ number_of_nodes }} --query_source {{ query_source }} --group_replication {{ group_replication }} > setup_ms_{{ ms_version }}.log
 
+  - name: Copy a load file into the container
+    community.docker.docker_container_copy_into:
+      container: "{{ ms_container}}"
+      path: ../scripts/mysql_load.sql
+      container_path: /mysql_load.sql
+
   - name: Wait 10 seconds for node to be connected
     pause:
       seconds: 10
@@ -80,6 +86,6 @@
       container: "{{ ms_container}}"
       command: >
         /bin/sh -c '
-          mysql -uroot -pmsandbox -e "CREATE DATABASE school;"
-          mysql -uroot -pmsandbox school < /mysql_load.sql
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "CREATE DATABASE school;"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port school < /mysql_load.sql
         '
