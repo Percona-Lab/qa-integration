@@ -46,6 +46,32 @@ INSERT INTO enrollments (student_id, class_id) VALUES
 (3, 3);
 
 -- ========================================
+-- SELECT: View all data after insert
+-- ========================================
+
+-- View all students
+SELECT * FROM students;
+
+-- View all classes
+SELECT * FROM classes;
+
+-- View all enrollments
+SELECT * FROM enrollments;
+
+-- View students enrolled in Mathematics
+SELECT s.first_name, s.last_name
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN classes c ON e.class_id = c.class_id
+WHERE c.name = 'Mathematics';
+
+-- Count students per class
+SELECT c.name AS class_name, COUNT(e.student_id) AS student_count
+FROM classes c
+LEFT JOIN enrollments e ON c.class_id = e.class_id
+GROUP BY c.name;
+
+-- ========================================
 -- UPDATE DATA
 -- ========================================
 
