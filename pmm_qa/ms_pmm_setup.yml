@@ -106,5 +106,5 @@
       command: >
         /bin/sh -c '
            mysql -h 127.0.0.1 -u msandbox -pmsandbox --port {{ mysql_internal_port }} -e "CREATE DATABASE school;"
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port {{ mysql_internal_port }} < /mysql_load.sql
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port {{ mysql_internal_port }} school < /mysql_load.sql
         '
