@@ -62,8 +62,7 @@ WHERE name = 'History';
 -- ========================================
 
 DELETE FROM enrollments
-WHERE student_id = (SELECT student_id FROM students WHERE first_name = 'Charlie')
-  AND class_id = (SELECT class_id FROM classes WHERE name = 'Science');
+WHERE student_id = (SELECT student_id FROM students WHERE first_name = 'Alice' AND last_name = 'Smith');
 
 DELETE FROM students
 WHERE first_name = 'Alice' AND last_name = 'Smith';
