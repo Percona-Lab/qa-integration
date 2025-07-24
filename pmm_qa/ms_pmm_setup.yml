@@ -88,7 +88,13 @@
 
   - name: Extract internal port
     set_fact:
-      mysql_internal_port: "{{ mysql_info.containers[0].Config.ExposedPorts.keys() | map('regex_replace', '/tcp', '') | list | first }}"
+      mysql_internal_port: >-
+        {{
+          mysql_info.container.Config.ExposedPorts.keys()
+          | map('regex_replace', '/tcp', '')
+          | list
+          | first
+        }}
 
   - name: Show extracted port
     debug:
