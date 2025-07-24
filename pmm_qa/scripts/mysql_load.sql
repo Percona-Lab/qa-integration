@@ -19,7 +19,7 @@ CREATE TABLE enrollments (
     enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     class_id INT,
-    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
 );
