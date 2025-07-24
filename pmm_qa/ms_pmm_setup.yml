@@ -71,3 +71,15 @@
     with_items:
       - docker exec {{ ms_container }} bash -xe ./client_container_ms_setup.sh --ms_version {{ ms_version }} --ms_tarball {{ ms_tarball }} --number_of_nodes {{ number_of_nodes }} --query_source {{ query_source }} --group_replication {{ group_replication }} > setup_ms_{{ ms_version }}.log
 
+  - name: Wait 10 seconds for node to be connected
+    pause:
+      seconds: 10
+
+  - name: Run load inside of first percona server node
+    community.docker.docker_container_exec:
+      container: {{ ms_container }}
+      command: >
+        /bin/sh -c '
+          mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
+          mysql -uroot -p{{ root_password }} school < /mysql_load.sql
+        '
