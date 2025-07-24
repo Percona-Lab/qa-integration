@@ -74,7 +74,7 @@
   - name: Copy a load file into the container
     community.docker.docker_container_copy_into:
       container: "{{ ms_container}}"
-      path: ../scripts/mysql_load.sql
+      path: ./scripts/mysql_load.sql
       container_path: /mysql_load.sql
 
   - name: Wait 10 seconds for node to be connected
