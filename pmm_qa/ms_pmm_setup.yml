@@ -77,7 +77,7 @@
 
   - name: Run load inside of first percona server node
     community.docker.docker_container_exec:
-      container: ms_container
+      container: "{{ ms_container}}"
       command: >
         /bin/sh -c '
           mysql -uroot -pmsandbox -e "CREATE DATABASE school;"
