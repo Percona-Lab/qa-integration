@@ -81,11 +81,24 @@
     pause:
       seconds: 10
 
+  - name: Get container info
+    community.docker.docker_container_info:
+      name: mysql_pmm_8.4
+    register: mysql_info
+
+  - name: Extract internal port
+    set_fact:
+      mysql_internal_port: "{{ mysql_info.containers[0].Config.ExposedPorts.keys() | map('regex_replace', '/tcp', '') | list | first }}"
+
+  - name: Show extracted port
+    debug:
+      var: mysql_internal_port
+
   - name: Run load inside of first percona server node
     community.docker.docker_container_exec:
       container: "{{ ms_container}}"
       command: >
         /bin/sh -c '
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port -e "CREATE DATABASE school;"
-           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port $node_port school < /mysql_load.sql
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port {{ mysql_internal_port }} -e "CREATE DATABASE school;"
+           mysql -h 127.0.0.1 -u msandbox -pmsandbox --port {{ mysql_internal_port }} < /mysql_load.sql
         '
