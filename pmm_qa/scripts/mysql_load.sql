@@ -25,7 +25,7 @@ CREATE TABLE enrollments (
 );
 
 -- ========================================
--- INSERT MOCK DATA
+-- INSERT INITIAL DATA
 -- ========================================
 
 INSERT INTO students (first_name, last_name, birth_date) VALUES
@@ -46,47 +46,7 @@ INSERT INTO enrollments (student_id, class_id) VALUES
 (3, 3);
 
 -- ========================================
--- SIMULATE DEAD TUPLES
--- ========================================
-
--- Create a helper table with numbers 1 to 100000
-WITH RECURSIVE numbers AS (
-    SELECT 1 AS n
-    UNION ALL
-    SELECT n + 1 FROM numbers WHERE n < 100000
-)
-INSERT INTO students (first_name, last_name, birth_date)
-SELECT 'John', 'Doe',
-       DATE_ADD('2000-01-01',
-                INTERVAL FLOOR(RAND() * (DATEDIFF('2005-12-31', '2000-01-01') + 1)) DAY)
-FROM numbers;
-
-UPDATE students
-SET last_name = CONCAT(last_name, '_updated')
-WHERE student_id IN (1, 2);
-
-DELETE FROM enrollments
-WHERE enrollment_id IN (SELECT enrollment_id FROM (SELECT enrollment_id FROM enrollments LIMIT 2) AS temp);
-
--- ========================================
--- SELECT QUERIES
--- ========================================
-
-SELECT * FROM students;
-
-SELECT s.first_name, s.last_name
-FROM students s
-JOIN enrollments e ON s.student_id = e.student_id
-JOIN classes c ON e.class_id = c.class_id
-WHERE c.name = 'Mathematics';
-
-SELECT c.name, COUNT(e.student_id) AS student_count
-FROM classes c
-LEFT JOIN enrollments e ON c.class_id = e.class_id
-GROUP BY c.name;
-
--- ========================================
--- UPDATE QUERIES
+-- UPDATE DATA
 -- ========================================
 
 UPDATE students
@@ -98,7 +58,7 @@ SET teacher = 'Ms. Carter'
 WHERE name = 'History';
 
 -- ========================================
--- DELETE QUERIES
+-- DELETE DATA
 -- ========================================
 
 DELETE FROM enrollments
