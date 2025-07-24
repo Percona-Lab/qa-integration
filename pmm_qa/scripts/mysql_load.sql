@@ -56,7 +56,9 @@ WITH RECURSIVE numbers AS (
     SELECT n + 1 FROM numbers WHERE n < 100000
 )
 INSERT INTO students (first_name, last_name, birth_date)
-SELECT 'John', 'Doe', CURDATE() - INTERVAL FLOOR(RAND() * 5000) DAY
+SELECT 'John', 'Doe',
+       DATE_ADD('2000-01-01',
+                INTERVAL FLOOR(RAND() * (DATEDIFF('2005-12-31', '2000-01-01') + 1)) DAY)
 FROM numbers;
 
 UPDATE students
