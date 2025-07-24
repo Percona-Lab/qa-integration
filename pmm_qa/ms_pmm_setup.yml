@@ -80,6 +80,6 @@
       container: ms_container
       command: >
         /bin/sh -c '
-          mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
-          mysql -uroot -p{{ root_password }} school < /mysql_load.sql
+          mysql -uroot -pmsandbox -e "CREATE DATABASE school;"
+          mysql -uroot -pmsandbox school < /mysql_load.sql
         '
