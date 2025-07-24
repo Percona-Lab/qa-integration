@@ -81,7 +81,7 @@
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
-          mysql -uroot -p{{ root_password }} -e "
+          mysql -uroot -p{{ root_password }} -h 127.0.0.1 -e"
           SET GLOBAL slow_query_log='ON';
           SET GLOBAL long_query_time=0;
           SET GLOBAL log_slow_admin_statements=ON;
