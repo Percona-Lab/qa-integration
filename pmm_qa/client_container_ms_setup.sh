@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PMM_AGENT_PERFSCHEMA_REFRESH_RATE=1
+
 while [ $# -gt 0 ]; do
 
    if [[ $1 == *"--"* ]]; then
