@@ -102,10 +102,11 @@ if [[ "$client_version" == http* ]]; then
     popd
     pmm-admin --version
 fi    
-
+echo "Upgrade config is: --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --server-username=admin --server-password=${admin_password}"
 ## Check if we are upgrading or attempting fresh install.
 if [[ -z "$upgrade" ]]; then
     if [[ "$use_metrics_mode" == "yes" ]]; then
+
         echo "setup pmm-agent"
         pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --metrics-mode=${metrics_mode} --server-username=admin --server-password=${admin_password}
     else 
