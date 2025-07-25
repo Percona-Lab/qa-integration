@@ -39,7 +39,7 @@ touch sysbench_run.txt
 curl -L -s https://bit.ly/dbdeployer | bash || true
 
 ### Get the tarball
-wget ${ms_tarball}
+wget -q ${ms_tarball}
 mkdir ~/ms${ms_version} || true
 mkdir /tmp || true
 chmod 1777 /tmp || true
