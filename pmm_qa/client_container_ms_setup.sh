@@ -36,7 +36,7 @@ touch sysbench_prepare.txt
 touch sysbench_run.txt
 
 ## Setup DB deployer
-curl -L -s https://bit.ly/dbdeployer | bash || true
+curl -L -s https://bit.ly/dbdeployer | bash
 
 ### Get the tarball
 wget ${ms_tarball}
