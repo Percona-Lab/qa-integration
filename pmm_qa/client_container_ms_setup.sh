@@ -123,8 +123,3 @@ else
         sleep 20
     done
 fi
-
-## Start Running Load
-~/sandboxes/${db_sandbox}/sysbench_ready prepare > sysbench_prepare.txt 2>&1 &
-sleep 120
-~/sandboxes/${db_sandbox}/sysbench_ready run > sysbench_run.txt 2>&1 &
