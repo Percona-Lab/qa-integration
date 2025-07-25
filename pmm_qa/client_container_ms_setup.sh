@@ -56,7 +56,7 @@ my_cnf_options=""
 
 # Check if ps_version is 8.4 or greater to enable the plugin to change the password
 if [[ "$ms_version" =~ ^8\.[4-9]([0-9])? || "$ms_version" =~ ^[9-9][0-9]\. ]]; then
-  my_cnf_options="mysql-native-password=ON"
+  my_cnf_options="mysql-native-password=ON performance_schema_max_sql_text_length=65536"
 fi
 
 if [[ "$number_of_nodes" == 1 ]];then
