@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export PMM_AGENT_PERFSCHEMA_REFRESH_RATE=1
-
 while [ $# -gt 0 ]; do
 
    if [[ $1 == *"--"* ]]; then
@@ -36,7 +34,7 @@ touch sysbench_prepare.txt
 touch sysbench_run.txt
 
 ## Setup DB deployer
-curl -L -s https://bit.ly/dbdeployer | bash
+curl -L -s https://bit.ly/dbdeployer | bash || true
 
 ### Get the tarball
 wget ${ms_tarball}
@@ -52,11 +50,11 @@ export db_version_sandbox=$(ls ~/ms${ms_version})
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 
 # Initialize my_cnf_options
-my_cnf_options="performance_schema_max_sql_text_length=65536"
+my_cnf_options=""
 
 # Check if ps_version is 8.4 or greater to enable the plugin to change the password
 if [[ "$ms_version" =~ ^8\.[4-9]([0-9])? || "$ms_version" =~ ^[9-9][0-9]\. ]]; then
-  my_cnf_options="mysql-native-password=ON performance_schema_max_sql_text_length=65536"
+  my_cnf_options="mysql-native-password=ON"
 fi
 
 if [[ "$number_of_nodes" == 1 ]];then
