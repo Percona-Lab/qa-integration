@@ -3,7 +3,7 @@
 server_id={{ server_id_start + item - 1 }}
 bind-address=0.0.0.0
 port={{ mysql_listen_port }}
-userstat=1
+super_read_only=0
 
 # General replication settings
 gtid_mode=ON
