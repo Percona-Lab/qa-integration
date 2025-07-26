@@ -1,12 +1,12 @@
-#- name: Generate my.cnf for each node
-#  template:
-#    src: my.cnf.j2
-#    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+- name: Generate my.cnf for each node
+  template:
+    src: ./data/my-gr.cnf.j2
+    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create initialization script for each node
   template:
-    src: ./data/init.sql.j2
+    src: ./data/init-gr.sql.j2
     dest: "{{ data_dir }}/node{{ item }}/init.sql"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
