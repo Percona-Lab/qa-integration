@@ -70,7 +70,7 @@
       when: setup_type == "gr"
 
     - name: Setup Percona Server with async replication
-      include_tasks: ./tasks/percona-server-async-replication-setup.yml
+      include_tasks: ./tasks/mysql-async-replication-setup.yml
       when: setup_type == "replication"
 
     - name: Setup Percona Server
