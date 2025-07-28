@@ -54,6 +54,10 @@
     with_items:
       - docker exec {{ external_container }} bash -x ./external_setup.sh > setup_external.log
 
+  - name: Display admin password
+    debug:
+      msg: "{{ admin_password }}"
+
   - name: Install pmm2-client on the external_container
     shell: "{{ item }}"
     with_items:
