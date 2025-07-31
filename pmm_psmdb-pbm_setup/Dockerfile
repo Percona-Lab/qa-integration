@@ -84,7 +84,8 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     curl -Lf -o /tmp/mgodatagen.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.11.2/mgodatagen_0.11.2_Linux_x86_64.tar.gz && \
     tar -xf /tmp/mgodatagen.tar.gz -C /usr/bin && \
     dnf clean all; \
-    rm -rf /var/cache/dnf /var/cache/dnf /data/db && mkdir -p /data/db;
+    rm -rf /var/cache/dnf /var/cache/dnf /data/db && mkdir -p /data/db; \
+    dnf -y install krb5-workstation
 
 COPY conf/sysconfig/mongod /etc/sysconfig/
 COPY keyfile /etc/keyfile
