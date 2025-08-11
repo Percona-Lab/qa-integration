@@ -6,6 +6,9 @@ pmm_mongo_user_pass=${PMM_MONGO_USER_PASS:-pmmpass}
 pbm_user=${PBM_USER:-pbm}
 pbm_pass=${PBM_PASS:-pbmpass}
 mongo_setup_type=${MONGO_SETUP_TYPE:-pss}
+gssapi_enabled=${GSSAPI:-false}
+gssapi_username=${GSSAPI_USERNAME:-pmm@PERCONATEST.COM}
+gssapi_password=${GSSAPI_PASSWORD:-password1}
 
 echo
 echo "configuring pbm agents"
@@ -34,5 +37,9 @@ do
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 ${node}_${random_number} 127.0.0.1:27017
     else
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 --username=${pmm_mongo_user} --password=${pmm_mongo_user_pass} ${node}_${random_number} 127.0.0.1:27017
+
+      if [[ $gssapi_enabled == "true" ]]; then
+        docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs --username=${gssapi_username} --password=${gssapi_password} --authentication-mechanism=GSSAPI --authentication-database="$external" --host=${$node} --port=27017 ${node}_gssapi_${random_number}
+      fi
     fi
 done
