@@ -101,3 +101,20 @@ db.getSiblingDB("admin").createUser({
     ]
 });
 EOF
+
+echo "creating pmm kerberos user"
+docker compose -f docker-compose-rs.yaml exec -T rs201 mongo "mongodb://root:root@localhost/?replicaSet=rs" --quiet << EOF
+db.getSiblingDB("\$external").createUser({
+    user: "${pmm_mongo_user}@PERCONATEST.COM",
+    roles: [
+        { role: "explainRole", db: "admin" },
+        { role: "clusterMonitor", db: "admin" },
+        { role: "read", db: "local" },
+        { "db" : "admin", "role" : "readWrite", "collection": "" },
+        { "db" : "admin", "role" : "backup" },
+        { "db" : "admin", "role" : "clusterMonitor" },
+        { "db" : "admin", "role" : "restore" },
+        { "db" : "admin", "role" : "pbmAnyAction" }
+    ]
+});
+EOF
