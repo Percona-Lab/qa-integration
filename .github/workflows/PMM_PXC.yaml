@@ -4,10 +4,10 @@ on:
     inputs:
       pxc_version:
         description: "pxc version, example: 8.0.33-25 Fetched from https://github.com/Percona-QA/package-testing/blob/master/VERSIONS by default"
-        required: false
+        required: true
       pxc_glibc:
         description: "pxc glibc version, example: 2.35"
-        required: true
+        required: false
       pmm_image:
         description: "pmm_image, example: perconalab/pmm-server:dev-latest"
         required: false
@@ -26,6 +26,7 @@ jobs:
     env:
       PXC_GLIBC: ${{ github.event.inputs.pxc_glibc || '2.35' }}
       PMM_IMAGE: ${{ github.event.inputs.pmm_image || 'perconalab/pmm-server:dev-latest' }}
+      PXC_VERSION: ${{ github.event.inputs.pxc_version || '8.0.33' }}
     steps:
     - uses: actions/checkout@v2
 
@@ -84,7 +85,13 @@ jobs:
       run:  sudo pmm-admin config --server-insecure-tls --server-url=https://admin:admin@localhost:443
 
     - name: Run for PXC tests
-      run: ./pmm-framework.sh --pxc-version ${{ env.PXC_VERSION }} --addclient=pxc,1 --pmm2 --pxc-tarball ${{ env.PXC_TARBALL_PATH }}
+      run: |
+        if [[ "${{ github.event.inputs.pxc_version }}" != http* ]]; then
+          ./pmm-framework.sh --pxc-version ${{ env.PXC_VERSION }} --addclient=pxc,1 --pmm2
+
+        else
+          ./pmm-framework.sh --pxc-version ${{ env.PXC_VERSION }} --addclient=pxc,1 --pmm2 --pxc-tarball ${{ env.PXC_TARBALL_PATH }}
+        fi
       working-directory: pmm-qa/pmm-tests
         
     - name: Checkout the repo and install node packages
