@@ -14,16 +14,16 @@ gssapi_service_name_part=""
 
 if [[ $gssapi_enabled == "true" ]]; then
   client_credentials_flags=(
-    --username="$gssapi_username"
-    --password="$gssapi_password"
-    --authentication-mechanism=GSSAPI
-    --authentication-database='$external'
+    --username "$gssapi_username"
+    --password "$gssapi_password"
+    --authentication-mechanism GSSAPI
+    --authentication-database '$external'
   )
   gssapi_service_name_part="_gssapi"
 fi
 
 echo
-echo "gssapi enabled: $gssapi_enabled. Using credentials: $client_credentials_flags"
+echo "gssapi enabled: $gssapi_enabled. Using credentials: ${client_credentials_flags[*]}"
 
 echo
 echo "configuring pbm agents"
@@ -51,6 +51,6 @@ do
     if [[ $mongo_setup_type == "psa" && $node == "rs203"  ]]; then
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     else
-      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset ${client_credentials_flags} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
+      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset ${client_credentials_flags[*]} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     fi
 done
