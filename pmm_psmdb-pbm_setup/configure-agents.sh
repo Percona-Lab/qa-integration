@@ -13,17 +13,12 @@ client_credentials_flags="--username=${pmm_mongo_user} --password=${pmm_mongo_us
 gssapi_service_name_part=""
 
 if [[ $gssapi_enabled == "true" ]]; then
-  client_credentials_flags=(
-    --username="$gssapi_username"
-    --password="$gssapi_password"
-    --authentication-mechanism=GSSAPI
-    --authentication-database='"$external"'
-  )
+  client_credentials_flags="--username="$gssapi_username" --password="$gssapi_password" --authentication-mechanism=GSSAPI --authentication-database='\$external'"
   gssapi_service_name_part="_gssapi"
 fi
 
 echo
-echo "gssapi enabled: $gssapi_enabled. Using credentials: ${client_credentials_flags[*]}"
+echo "gssapi enabled: $gssapi_enabled. Using credentials: ${client_credentials_flags}"
 
 echo
 echo "configuring pbm agents"
@@ -48,14 +43,14 @@ random_number=$RANDOM
 nodes="rs101 rs102 rs103"
 for node in $nodes
 do
-    echo "congiguring pmm agent on $node"
+    echo "configuring pmm agent on $node"
     docker compose -f docker-compose-rs.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}._${random_number} $node pmm-agent setup
     if [[ $mongo_setup_type == "psa" && $node == "rs103" ]]; then
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     else
       echo
-      echo "docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs ${client_credentials_flags[*]} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}"
-      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs "${client_credentials_flags[*]}" --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
+      echo "docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs ${client_credentials_flags} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}"
+      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs "${client_credentials_flags}" --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     fi
 done
 echo
