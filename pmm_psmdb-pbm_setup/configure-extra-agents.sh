@@ -13,8 +13,13 @@ client_credentials_flags="--username=${pmm_mongo_user} --password=${pmm_mongo_us
 gssapi_service_name_part=""
 
 if [[ $gssapi_enabled == "true" ]]; then
-        client_credentials_flags="--username=${gssapi_username} --password=${gssapi_password} --authentication-mechanism=GSSAPI --authentication-database=\"\$external\""
-        gssapi_service_name_part="_gssapi"
+  client_credentials_flags=(
+    --username="$gssapi_username"
+    --password="$gssapi_password"
+    --authentication-mechanism=GSSAPI
+    --authentication-database='$external'
+  )
+  gssapi_service_name_part="_gssapi"
 fi
 
 echo
