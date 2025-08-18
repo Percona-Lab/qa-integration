@@ -14,10 +14,10 @@ gssapi_service_name_part=""
 
 if [[ $gssapi_enabled == "true" ]]; then
   client_credentials_flags=(
-    --username "$gssapi_username"
-    --password "$gssapi_password"
-    --authentication-mechanism GSSAPI
-    --authentication-database "$external"
+    --username="$gssapi_username"
+    --password="$gssapi_password"
+    --authentication-mechanism=GSSAPI
+    --authentication-database='$external'
   )
   gssapi_service_name_part="_gssapi"
 fi
