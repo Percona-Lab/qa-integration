@@ -17,7 +17,7 @@ if [[ $gssapi_enabled == "true" ]]; then
     --username "$gssapi_username"
     --password "$gssapi_password"
     --authentication-mechanism GSSAPI
-    --authentication-database '$external'
+    --authentication-database "$external"
   )
   gssapi_service_name_part="_gssapi"
 fi
