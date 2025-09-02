@@ -187,8 +187,8 @@
       set_fact:
         pmm_client_containers: >-
           {{ ['valkey-primary']
-            + (lookup('ansible.builtin.sequence', 'start=1 end=' + (valkey_replica_count | string), format='valkey-replica-%d') | list)
-            + (lookup('ansible.builtin.sequence', 'start=1 end=' + (sentinel_count | string), format='sentinel-%d') | list)
+            + (range(1, valkey_replica_count + 1) | map('string') | map('regex_replace', '^(.*)$', 'valkey-replica-\\1') | list)
+            + (range(1, sentinel_count + 1) | map('string') | map('regex_replace', '^(.*)$', 'sentinel-\\1') | list)
           }}
 
     - name: Install PMM Client in each container
