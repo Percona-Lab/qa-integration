@@ -6,7 +6,7 @@
     valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('7-alpine', true) }}"
     valkey_image: "valkey/valkey:{{ valkey_version }}"
     valkey_network_name: "pmm-qa"
-    valkey_password: ""
+    valkey_password: "VKvl41568AsE"
     valkey_data_dir: "{{ lookup('env', 'HOME') }}/valkey/data"
     valkey_config_dir: "{{ lookup('env', 'HOME') }}/valkey/config"
     valkey_primary_port: 6379
@@ -63,15 +63,6 @@
         dest: "{{ valkey_config_dir }}/sentinel-{{ item }}/sentinel.conf"
         mode: '0664'
       loop: "{{ range(1, sentinel_count + 1) | list }}"
-
-    - name: Generate a password if not provided
-      when: valkey_password == ""
-      set_fact:
-        valkey_password: "{{ lookup('community.general.random_string', length=20, min_special=5, min_upper=2, override_special='!?()[]{}:;/|@#$%&^*<>=_+-') }}"
-
-    - name: Display generated Valkey password
-      debug:
-        msg: "Generated Valkey password: {{ valkey_password }}"
 
     - name: Create Docker volume for primary data
       community.docker.docker_volume:
@@ -188,22 +179,33 @@
       debug:
         msg: "{{ sentinel_status.stdout_lines }}"
 
+    - name: Install PMM Client in each container
+      ansible.builtin.include_tasks: ../tasks/install_pmm_client.yml
+      loop: >-
+        {{ ['valkey-primary'] +
+          range(1, valkey_replica_count | int + 1) | map('format', 'valkey-replica-%d') | list +
+          range(1, sentinel_count | int + 1) | map('format', 'sentinel-%d') | list }}
+      loop_control:
+        loop_var: current_container_name
+      vars:
+        container_name: "{{ current_container_name }}"
+
     - name: Add the primary to monitoring
       community.docker.docker_container_exec:
-        container: "{{ pmm_server_name }}"
+        container: "valkey-primary"
         command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-primary-svc --host=valkey-primary --port=6379 --custom-labels='role=primary'
       ignore_errors: yes
 
     - name: Add the replicas to monitoring
       community.docker.docker_container_exec:
-        container: "{{ pmm_server_name }}"
+        container: "valkey-replica-{{ item }}"
         command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-replica{{ item }}-svc --host=valkey-replica-{{ item }} --port=6379 --custom-labels='role=replica'
       loop: "{{ range(1, valkey_replica_count + 1) | list }}"
       ignore_errors: yes
 
     - name: Add Sentinels to monitoring
       community.docker.docker_container_exec:
-        container: "{{ pmm_server_name }}"
+        container: "sentinel-{{ item }}"
         command: pmm-admin add valkey --cluster=valkey-cluster --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=sentinel{{ item }}-svc --host=sentinel-{{ item }} --port={{ sentinel_start_port }} --custom-labels='role=sentinel'
       loop: "{{ range(1, sentinel_count + 1) | list }}"
       ignore_errors: yes
