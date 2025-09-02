@@ -183,8 +183,8 @@
       ansible.builtin.include_tasks: ../tasks/install_pmm_client.yml
       loop: >-
         {{ ['valkey-primary'] +
-          range(1, valkey_replica_count | int + 1) | map('format', 'valkey-replica-%d') | list +
-          range(1, sentinel_count | int + 1) | map('format', 'sentinel-%d') | list }}
+          range(1, valkey_replica_count | int + 1) | map('format', 'valkey-replica-{}') | list +
+          range(1, sentinel_count | int + 1) | map('format', 'sentinel-{}') | list }}
       loop_control:
         loop_var: current_container_name
       vars:
@@ -209,4 +209,3 @@
         command: pmm-admin add valkey --cluster=valkey-cluster --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=sentinel{{ item }}-svc --host=sentinel-{{ item }} --port={{ sentinel_start_port }} --custom-labels='role=sentinel'
       loop: "{{ range(1, sentinel_count + 1) | list }}"
       ignore_errors: yes
-      
