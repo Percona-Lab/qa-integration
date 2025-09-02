@@ -183,13 +183,17 @@
       debug:
         msg: "{{ sentinel_status.stdout_lines }}"
 
+    - name: Set container list for PMM client install
+      set_fact:
+        pmm_client_containers: >-
+          {{ ['valkey-primary']
+            + (lookup('ansible.builtin.sequence', 'count=' + (valkey_replica_count | string), format='valkey-replica-%d') | list)
+            + (lookup('ansible.builtin.sequence', 'count=' + (sentinel_count | string), format='sentinel-%d') | list)
+          }}
+
     - name: Install PMM Client in each container
       ansible.builtin.include_tasks: ../tasks/install_pmm_client.yml
-      loop: >-
-        {{ ['valkey-primary']
-          + (lookup('ansible.builtin.sequence', 'count=' + (valkey_replica_count | string), format='valkey-replica-%d') | list)
-          + (lookup('ansible.builtin.sequence', 'count=' + (sentinel_count | string), format='sentinel-%d') | list)
-        }}      
+      loop: "{{ pmm_client_containers }}"
       loop_control:
         loop_var: current_container_name
       vars:
