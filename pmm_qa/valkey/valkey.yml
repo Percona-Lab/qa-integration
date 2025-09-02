@@ -3,6 +3,9 @@
   hosts: localhost
   gather_facts: false
   vars:
+    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
+    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('7-alpine', true) }}"
     valkey_image: "valkey/valkey:{{ valkey_version }}"
     valkey_network_name: "pmm-qa"
