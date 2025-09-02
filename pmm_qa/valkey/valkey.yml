@@ -182,9 +182,10 @@
     - name: Install PMM Client in each container
       ansible.builtin.include_tasks: ../tasks/install_pmm_client.yml
       loop: >-
-        {{ ['valkey-primary'] +
-          range(1, valkey_replica_count | int + 1) | map('format', 'valkey-replica-{}') | list +
-          range(1, sentinel_count | int + 1) | map('format', 'sentinel-{}') | list }}
+        {{ ['valkey-primary']
+          + (lookup('ansible.builtin.sequence', 'count=' + (valkey_replica_count | string), format='valkey-replica-%d') | list)
+          + (lookup('ansible.builtin.sequence', 'count=' + (sentinel_count | string), format='sentinel-%d') | list)
+        }}      
       loop_control:
         loop_var: current_container_name
       vars:
