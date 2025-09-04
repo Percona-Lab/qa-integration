@@ -234,3 +234,35 @@
             --time=60
             run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Copy a load file into the container
+      community.docker.docker_container_copy_into:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        path: ./data/ps_load.sql
+        container_path: /ps_load.sql
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+    - name: Wait 10 seconds for node to be connected
+      pause:
+        seconds: 10
+
+    - name: Run load inside of first percona server node
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_1"
+        command: >
+          /bin/sh -c '
+            mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
+            mysql -uroot -p{{ root_password }} school < /ps_load.sql
+          '
+      when: setup_type == "gr" or setup_type == "replication"
+
+    - name: Run load inside of all percona server nodes
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          /bin/sh -c '
+            mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
+            mysql -uroot -p{{ root_password }} school < /ps_load.sql
+          '
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type != "gr" and setup_type != "replication"
