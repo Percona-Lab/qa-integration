@@ -66,15 +66,18 @@ jobs:
         psmdb: ["6.0", "7.0", "8.0"]
     env:
       PMM_CLIENT_VERSION: ${{ inputs.pmm_version || '3-dev-latest' }}
-      PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server-fb:PR-4031-b9c86c5' }}
+      PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server:3-dev-latest' }}
     steps:
     - uses: actions/checkout@v3
     - name: Test auth with PSMDB ${{ matrix.psmdb }}
       run: |
         PSMDB_VERSION=${{ matrix.psmdb }} ./test-auth.sh
       working-directory: ./pmm_psmdb_diffauth_setup
-    - name: Test auth with PSMDB ${{ matrix.psmdb }}
+    - name: PMM Server container logs
       if: failure()
       run: |
         docker logs pmm-server || true
-      working-directory: ./pmm_psmdb_diffauth_setup
+    - name: PSMDB Server container logs
+      if: failure()
+      run: |
+        docker logs psmdb-server || true
