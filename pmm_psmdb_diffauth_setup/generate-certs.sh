@@ -14,4 +14,3 @@ cp pki/issued/pmm-server.crt certs/certificate.crt
 cat pki/private/psmdb-server.key pki/issued/psmdb-server.crt > certs/psmdb-server.pem
 cat pki/private/pmm-test.key pki/issued/pmm-test.crt > certs/client.pem
 find certs -type f -exec chmod 644 {} \;
-find certs -type f -exec chown 1000 {} \;
