@@ -25,12 +25,12 @@
 - name: Set correct pmm server port
   set_fact:
     pmm_server_port: 443
-  when: pmm_server_ip is ansible.utils.ipv4
+  when: pmm_server_ip | default('') | regex_search('\.')
 
 - name: Set correct pmm server port
   set_fact:
     pmm_server_port: 8443
-  when: pmm_server_ip is not ansible.utils.ipv4
+  when: not (pmm_server_ip | default('') | regex_search('\.'))
 
 - name: Detect OS inside the container
   community.docker.docker_container_exec:
