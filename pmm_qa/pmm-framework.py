@@ -789,6 +789,31 @@ def setup_dockerclients(db_type, db_version=None, db_config=None, args=None):
     # Call the function to run the setup_docker_client_images script
     execute_shell_scripts(shell_scripts, shell_scripts_path, env_vars, args)
 
+def setup_valkey(db_type, db_version=None, db_config=None, args=None):
+
+    # Check if PMM server is running
+    container_name = get_running_container_name()
+    if container_name is None and args.pmm_server_ip is None:
+        print(f"Check if PMM Server is Up and Running..Exiting")
+        exit()
+
+    # Gather Version details
+    valkey_version = os.getenv('VALKEY_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+
+    # Define environment variables for playbook
+    env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'VALKEY_VERSION': valkey_version,
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+    }
+
+    # Ansible playbook filename
+    playbook_filename = 'valkey/valkey.yml'
+
+    # Call the function to run the Ansible playbook
+    run_ansible_playbook(playbook_filename, env_vars, args)
 
 # Set up databases based on arguments received
 def setup_database(db_type, db_version=None, db_config=None, args=None):
@@ -835,6 +860,8 @@ def setup_database(db_type, db_version=None, db_config=None, args=None):
         setup_ssl_mlaunch(db_type, db_version, db_config, args)
     elif db_type == 'BUCKET':
         setup_bucket(db_type, db_version, db_config, args)
+    elif db_type == 'VALKEY':
+        setup_valkey(db_type, db_version, db_config, args)
     else:
         print(f"Database type {db_type} is not recognised, Exiting...")
         exit(1)

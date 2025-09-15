@@ -76,5 +76,9 @@ database_options = {
     },
     "BUCKET": {
         "configurations": {"BUCKET_NAMES": 'bcp'}
+    },
+    "VALKEY": {
+        "versions": ["7", "8"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "", "TARBALL": ""}
     }
 }
