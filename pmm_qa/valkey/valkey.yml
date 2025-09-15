@@ -7,11 +7,7 @@
     metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
-    valkey_version_input: "{{ lookup('env', 'VALKEY_VERSION') | default('7', true) }}"
-    valkey_version_map:
-      '7': '7-alpine'
-      '8': '8-bookworm'
-    valkey_version: "{{ valkey_version_map[valkey_version_input] }}"
+    valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('7', true) }}"
     valkey_image: "valkey/valkey:{{ valkey_version }}"
     valkey_network_name: "pmm-qa"
     valkey_password: "VKvl41568AsE"
@@ -23,11 +19,14 @@
     sentinel_count: 3
     sentinel_start_port: 26379
     sentinel_quorum: 2
-    random_number: "{{ lookup('pipe', 'shuf -i 1-99999 -n 1') }}"
 
     pmm_server_name: "pmm-server"
 
   tasks:
+    - name: Set Random Number Fact
+      set_fact:
+        random_number: "{{ (10000 | random) | int }}"
+
     - name: Create Docker network
       community.docker.docker_network:
         name: "{{ valkey_network_name }}"
