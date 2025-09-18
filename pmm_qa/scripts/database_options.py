@@ -28,7 +28,7 @@ database_options = {
                            "TARBALL": ""}
     },
     "PS": {
-        "versions": ["5.7", "8.4", "8.0"],
+        "versions": ["8.4", "8.0", "5.7"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": "", "NODES_COUNT": 1}
     },
