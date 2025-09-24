@@ -76,7 +76,7 @@ services:
   ldap-server:
     container_name: ldap-server
     hostname: ldap-server
-    image: bitnami/openldap
+    image: bitnamilegacy/openldap
     environment:
       - LDAP_ADMIN_USERNAME=admin
       - LDAP_ADMIN_PASSWORD=adminpassword
