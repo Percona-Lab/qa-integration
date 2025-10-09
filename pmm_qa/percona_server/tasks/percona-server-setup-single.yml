@@ -1,21 +1,8 @@
-- name: Generate my.cnf
+- name: Generate my.cnf for each node
   template:
     src: ./data/my.cnf.j2
     dest: "{{ data_dir }}/node{{ item }}/my.cnf"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-#- name: Append MyRocks settings to my.cnf
-#  blockinfile:
-#    path: "{{ data_dir }}/node{{ item }}/my.cnf"
-#    block: |
-#      loose-default-storage-engine=rocksdb
-#      loose-plugins=rocksdb=FORCE
-#      loose-rocksdb_block_cache_size=4G
-#      loose-rocksdb_default_cf_options="write_buffer_size=256m;max_write_buffer_number=4"
-#      loose-rocksdb_max_open_files=-1
-#    insertafter: EOF
-#    marker: "# {mark} ANSIBLE MANAGED BLOCK: MyRocks"
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start Percona Server containers
   community.docker.docker_container:
