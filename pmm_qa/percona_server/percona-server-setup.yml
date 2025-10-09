@@ -257,7 +257,13 @@
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
         command: >
           /bin/sh -c '
-            ls /etc/mysql/
+            sudo tee -a /etc/my.cnf > /dev/null <<EOF
+            loose-default-storage-engine=rocksdb
+            loose-plugins=rocksdb=FORCE
+            loose-rocksdb_block_cache_size=4G
+            loose-rocksdb_default_cf_options="write_buffer_size=256m;max_write_buffer_number=4"
+            loose-rocksdb_max_open_files=-1
+            EOF
             cat /etc/mysql/my.cnf
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
