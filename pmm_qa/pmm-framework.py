@@ -76,6 +76,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'PS_VERSION': ps_version,
             'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
             'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+            'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
         }
 
         run_ansible_playbook('percona_server/percona-server-setup.yml', env_vars, args)

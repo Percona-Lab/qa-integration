@@ -24,6 +24,8 @@
     metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
+    my_rocks: "{{ lookup('env', 'MY_ROCKS') | default(false, true) }}"
+
 
   tasks:
     - name: Mofidy the node count for group replication
@@ -251,3 +253,13 @@
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
+
+    - name: Enable MySQL MyRocks
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          /bin/sh -c '
+            ps-admin --enable-rocksdb -u root -p{{ root_password }}
+          '
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: my_rocks | bool
