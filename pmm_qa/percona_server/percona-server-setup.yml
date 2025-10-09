@@ -79,6 +79,10 @@
       include_tasks: tasks/percona-server-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
+    - name: Wait 10 seconds for setup to finish
+      pause:
+        seconds: 10
+
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
