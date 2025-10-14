@@ -12,12 +12,6 @@
   debug:
     var: pmm_server_ip
 
-- name: Copy a file into the container
-  community.docker.docker_container_copy_into:
-    container: "{{ container_name }}"
-    path: ../pmm3-client-setup-centos.sh
-    container_path: /pmm3-client-setup.sh
-
 - name: "PMM Server IP is"
   debug:
     msg: "{{ pmm_server_ip }} is pmm server IP"
