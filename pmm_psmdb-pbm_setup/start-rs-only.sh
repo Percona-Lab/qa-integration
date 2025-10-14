@@ -34,11 +34,11 @@ EOF
 
 echo "Generated $PLAYBOOK_FILE. You can now run:"
 echo "ansible-playbook $PLAYBOOK_FILE"
-echo "PMM Server ip is: $PMM_SERVER_IP"
+echo "PMM Client version is: $PMM_CLIENT_VERSION"
 
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
     echo "Container: $c"
-    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP" 2>&1)
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION" 2>&1)
     if [ $? -ne 0 ]; then
         echo "Ansible failed for $c:"
         echo "$ansible_out"
