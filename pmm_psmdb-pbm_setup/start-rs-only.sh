@@ -34,6 +34,7 @@ EOF
 
 echo "Generated $PLAYBOOK_FILE. You can now run:"
 echo "ansible-playbook $PLAYBOOK_FILE"
+echo "PMM Server ip is: $PMM_SERVER_IP"
 
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
     echo "Container: $c"
