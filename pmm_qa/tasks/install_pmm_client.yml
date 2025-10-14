@@ -162,6 +162,29 @@
       '
   when: distro_family == "rhel" and client_version == "pmm3-rc"
 
+- name: Install pmm client testing on Debian-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      sh -c '
+        percona-release enable-only pmm3-client release &&
+        apt-get update &&
+        apt-get -y install pmm-client
+      '
+  when: distro_family == "debian" and client_version == "release"
+
+- name: Install pmm client testing on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
+    user: "root"
+    command: >
+      sh -c '
+        percona-release enable-only pmm3-client release &&
+        microdnf install -y pmm-client
+      '
+  when: distro_family == "rhel" and client_version == "release"
+
 - name: Install pmm client release on Debian-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
