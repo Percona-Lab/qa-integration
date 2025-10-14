@@ -57,6 +57,14 @@
 - name: Install dependencies on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
+    command: dnf install -y microdnf
+    user: "root"
+  when: distro_family == "rhel"
+  ignore_errors: true
+
+- name: Install dependencies on RHEL-family containers
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}"
     command: microdnf install -y wget gnupg2 jq
     user: "root"
   when: distro_family == "rhel"
