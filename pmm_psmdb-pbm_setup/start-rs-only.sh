@@ -46,8 +46,6 @@ for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
   docker exec "$c" pmm-admin list
 done
 
-exit 1
-
 if [ $mongo_setup_type == "pss" ]; then
   bash -e ./configure-replset.sh
 else
