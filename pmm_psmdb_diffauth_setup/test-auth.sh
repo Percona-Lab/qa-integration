@@ -40,6 +40,17 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quie
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "echo \"PBM_MONGODB_URI=mongodb://pbm:pbmpass@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
+# Install PMM Client
+for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
+    echo "Container: $c"
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for $c:"
+        echo "$ansible_out"
+      fi
+  docker exec "$c" pmm-admin list
+done
+
 #Configure PMM
 set +e
 i=1
@@ -54,6 +65,8 @@ while [ $i -le 3 ]; do
     fi
     sleep 1
 done
+
+
 
 #Add Mongo Service
 random_number=$RANDOM
