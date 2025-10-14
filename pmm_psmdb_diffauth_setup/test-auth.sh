@@ -25,22 +25,22 @@ fi
 
 bash -e ./generate-certs.sh
 
-#Start setup
+echo "Start setup"
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
 docker compose -f docker-compose-pmm-psmdb.yml up -d
 
-#Add users
+echo "Add users"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet "mongodb://root:root@localhost/?replicaSet=rs0" < init/setup_psmdb.js
 
-#Configure PBM
+echo "Configure PBM"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "echo \"PBM_MONGODB_URI=mongodb://pbm:pbmpass@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
-# Install PMM Client
+echo "Install PMM Client"
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
     echo "Container: $c"
     ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
