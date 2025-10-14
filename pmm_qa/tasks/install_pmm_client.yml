@@ -65,7 +65,7 @@
 - name: Install dependencies on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
-    command: microdnf install -y wget gnupg2 jq
+    command: microdnf install -y wget gnupg2 jq perl
     user: "root"
   when: distro_family == "rhel"
 
