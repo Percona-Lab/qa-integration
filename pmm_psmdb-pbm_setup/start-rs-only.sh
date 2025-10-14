@@ -27,12 +27,11 @@ docker ps --format "{{.Names}}" | grep '^rs'
 
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
   echo "Container: $c"
+  ansible-playbook ../pmm_qa/tasks/install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c"
+  docker exec "$c" pmm-admin list
 done
 
 exit 1
-
-echo install PMM Client
-ansible-playbook ../pmm_qa/tasks/install_pmm_client.yml -i localhost, --connection=local
 
 if [ $mongo_setup_type == "pss" ]; then
   bash -e ./configure-replset.sh
