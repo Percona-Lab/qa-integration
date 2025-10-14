@@ -26,8 +26,12 @@ echo
 docker ps --format "{{.Names}}" | grep '^rs'
 
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
-  echo "Container: $c"
-  ansible-playbook ../pmm_qa/tasks/install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c"
+    echo "Container: $c"
+    ansible_out=$(ansible-playbook ../pmm_qa/tasks/install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for $c:"
+        echo "$ansible_out"
+      fi
   docker exec "$c" pmm-admin list
 done
 
