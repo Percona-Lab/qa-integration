@@ -48,6 +48,10 @@ random_number=$RANDOM
 nodes="rs101 rs102 rs103"
 for node in $nodes
 do
+    docker exec $node wget https://github.com/feliixx/mgodatagen/releases/latest/download/mgodatagen_linux_amd64.tar.gz
+    tar -xzf mgodatagen_linux_amd64.tar.gz
+    mv mgodatagen /usr/local/bin/
+    chmod +x /usr/local/bin/mgodatagen
     echo "configuring pmm agent on $node"
     if [[ $mongo_setup_type == "psa" && $node == "rs103" ]]; then
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --environment=psmdb-dev --cluster=replicaset --replication-set=rs --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
