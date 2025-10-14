@@ -89,7 +89,7 @@
   set_fact:
     lsb_release: "{{ lsb_release.stdout }}"
 
-- name: Print expected client version
+- name: Set metrics mode to auto when metrics mode is not defined.
   set_fact:
     metrics_mode: "auto"
   when: metrics_mode is not defined
