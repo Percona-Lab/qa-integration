@@ -90,8 +90,9 @@
     lsb_release: "{{ lsb_release.stdout }}"
 
 - name: Print expected client version
-  debug:
-    msg: "{{ metrics_mode }}"
+  set_fact:
+    metrics_mode: "auto"
+  when: metrics_mode is not defined
 
 - name: Install percona release on Debian-family containers
   community.docker.docker_container_exec:
