@@ -20,8 +20,7 @@ VOLUME [ "/sys/fs/cgroup" ]
 CMD ["/usr/sbin/init"]
 
 ARG OL_VERSION
-RUN set -ex; \
-    export GNUPGHOME="$(mktemp -d)"; \
+RUN export GNUPGHOME="$(mktemp -d)"; \
     export PERCONA_TELEMETRY_URL="https://check-dev.percona.com/v1/telemetry/GenericReport"; \
     dnf install -y gnupg2; \
     if [ $PSMDB_VERSION != "latest" ]; then export PSMDB_REPO="$(echo "${PSMDB_VERSION}" | awk -F '.' '{print "psmdb-"$1$2}')" ; else export PSMDB_REPO=psmdb-80 ; fi ; \
