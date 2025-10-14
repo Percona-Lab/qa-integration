@@ -11,7 +11,7 @@
 # TESTS - whether to run tests, by default - yes
 # CLEANUP - whether to remove setup, by default - yes
 
-set -e
+#set -e
 
 # PSMDB 4.2 doesn't support AWS auth
 if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2."* ]]; then
@@ -50,6 +50,8 @@ for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
       fi
   docker exec "$c" pmm-admin list
 done
+
+exit 1
 
 #Configure PMM
 set +e
