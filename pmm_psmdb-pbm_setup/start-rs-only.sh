@@ -22,6 +22,13 @@ echo
 echo "waiting 60 seconds for replica set members to start"
 sleep 60
 echo
+
+docker ps -a
+exit 1
+
+echo install PMM Client
+ansible-playbook ../pmm_qa/tasks/install_pmm_client.yml -i localhost, --connection=local
+
 if [ $mongo_setup_type == "pss" ]; then
   bash -e ./configure-replset.sh
 else

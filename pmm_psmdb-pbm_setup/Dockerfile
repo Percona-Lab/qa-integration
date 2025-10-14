@@ -59,14 +59,6 @@ RUN set -ex; \
 
 ARG OL_VERSION
 
-RUN yum -y install oracle-epel-release-el${OL_VERSION} && \
-    yum -y install python3 ansible && \
-    yum clean all \
-
-COPY ../pmm_qa/tasks/install_pmm_client.yml /install_pmm_client.yml
-
-RUN ansible-playbook /install_pmm_client.yml -i localhost, --connection=local
-
 RUN sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
