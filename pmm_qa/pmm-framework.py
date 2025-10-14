@@ -698,6 +698,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Define environment variables for playbook
     env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PSMDB_VERSION': psmdb_version,
         'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
