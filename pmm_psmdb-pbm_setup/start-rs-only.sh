@@ -24,6 +24,11 @@ sleep 60
 echo
 
 docker ps --format "{{.Names}}" | grep '^rs'
+
+for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
+  echo "Container: $c"
+done
+
 exit 1
 
 echo install PMM Client
