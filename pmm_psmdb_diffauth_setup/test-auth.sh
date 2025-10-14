@@ -41,7 +41,15 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "ech
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
 echo "Install PMM Client"
-docker ps -a
+
+PLAYBOOK_FILE="install_pmm_client.yml"
+cat > "$PLAYBOOK_FILE" <<EOF
+- hosts: localhost
+  connection: local
+  tasks:
+    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
+EOF
+
 ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
 docker exec psmdb-server pmm-admin list
 
