@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+#set -e
 
 profile=${COMPOSE_PROFILES:-classic}
 mongo_setup_type=${MONGO_SETUP_TYPE:-pss}
