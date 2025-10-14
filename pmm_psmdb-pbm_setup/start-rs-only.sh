@@ -23,7 +23,7 @@ echo "waiting 60 seconds for replica set members to start"
 sleep 60
 echo
 
-docker ps -a
+docker ps --format "{{.Names}}" | grep '^rs'
 exit 1
 
 echo install PMM Client
