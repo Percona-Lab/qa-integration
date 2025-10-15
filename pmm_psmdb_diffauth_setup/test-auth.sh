@@ -60,7 +60,7 @@ docker exec psmdb-server wget https://github.com/feliixx/mgodatagen/releases/lat
 docker exec psmdb-server tar -xzf mgodatagen_linux_amd64.tar.gz
 docker exec psmdb-server mv mgodatagen /usr/local/bin/
 docker exec psmdb-server chmod +x /usr/local/bin/mgodatagen
-docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
+docker exec psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
 
 tests=${TESTS:-yes}
 if [ $tests = "yes" ]; then
