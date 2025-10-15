@@ -3,6 +3,10 @@
     pmm_server_ip: "pmm-server"
   when: pmm_server_ip | default('') == ''
 
+- name: "Log PMM Server IP"
+  debug:
+    msg: "{{ pmm_server_ip }} is pmm server IP"
+
 - name: Get PMM server address
   shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
   register: pmm_server_ip_output
