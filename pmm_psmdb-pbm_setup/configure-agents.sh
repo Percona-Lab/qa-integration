@@ -48,7 +48,7 @@ random_number=$RANDOM
 nodes="rs101 rs102 rs103"
 for node in $nodes
 do
-    docker exec $node wget https://github.com/feliixx/mgodatagen/releases/latest/download/mgodatagen_linux_amd64.tar.gz
+    docker exec $node wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
     docker exec $node tar -xzf mgodatagen_linux_amd64.tar.gz
     docker exec $node mv mgodatagen /usr/local/bin/
     docker exec $node chmod +x /usr/local/bin/mgodatagen
