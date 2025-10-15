@@ -422,7 +422,6 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
     # Get script directory
     current_directory = os.getcwd()
     shell_scripts_path = os.path.abspath(os.path.join(current_directory, os.pardir, project_relative_scripts_dir))
-    print(f'File path is: {shell_scripts_path}')
     # Get the original working directory
     original_dir = os.getcwd()
 
@@ -442,11 +441,9 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
             print(f'changed directory {os.getcwd()}')
-            result = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
+            result = subprocess.run(['bash', script], capture_output=True, text=True, check=True)
             print("Output:")
-            for line in result.stdout:
-                print(line, end='')
-            result.wait()
+            print(result.stdout)
             print(f"Shell script '{script}' executed successfully.")
         except subprocess.CalledProcessError as e:
             print(
@@ -580,7 +577,6 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     elif setup_type in ("shards", "sharding"):
         shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
-        print('Preparation is ready for sharding!')
 
     # Execute shell scripts
     if not shell_scripts == []:
