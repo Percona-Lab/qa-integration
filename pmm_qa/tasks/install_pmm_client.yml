@@ -1,3 +1,8 @@
+- name: Set PMM Server address if undefined
+  set_fact:
+    pmm_server_ip: "pmm-server"
+  when: pmm_server_ip is not defined
+
 - name: Get PMM server address
   shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
   register: pmm_server_ip_output
