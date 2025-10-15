@@ -52,26 +52,14 @@ EOF
 
 ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
 
-echo "Configure PMM"
-i=1
-while [ $i -le 3 ]; do
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${ADMIN_PASSWORD} --server-insecure-tls)
-    exit_code=$?
-
-    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
-        i=$((i + 1))
-    else
-        break
-    fi
-    sleep 1
-done
-
-
-
-#Add Mongo Service
+echo "Add Mongo Service"
 random_number=$RANDOM
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
 #Add some data
+docker exec psmdb-server wget https://github.com/feliixx/mgodatagen/releases/latest/download/mgodatagen_linux_amd64.tar.gz
+docker exec psmdb-server tar -xzf mgodatagen_linux_amd64.tar.gz
+docker exec psmdb-server mv mgodatagen /usr/local/bin/
+docker exec psmdb-server chmod +x /usr/local/bin/mgodatagen
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
 
 tests=${TESTS:-yes}
