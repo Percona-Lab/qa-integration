@@ -578,6 +578,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     elif setup_type in ("shards", "sharding"):
         shell_scripts = ['start-sharded-no-server.sh']
         mongo_sharding_setup(shell_scripts[0], args)
+        print('Preparation is ready for sharding!')
 
     # Execute shell scripts
     if not shell_scripts == []:
