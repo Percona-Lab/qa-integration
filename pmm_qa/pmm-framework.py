@@ -422,7 +422,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
     # Get script directory
     current_directory = os.getcwd()
     shell_scripts_path = os.path.abspath(os.path.join(current_directory, os.pardir, project_relative_scripts_dir))
-
+    print(f'File path is: {shell_scripts_path}')
     # Get the original working directory
     original_dir = os.getcwd()
 
