@@ -57,7 +57,7 @@ random_number=$RANDOM
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
 
 echo "Add some data"
-docker exec psmdb-server wget https://github.com/feliixx/mgodatagen/releases/latest/download/mgodatagen_linux_amd64.tar.gz
+docker exec psmdb-server wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
 docker exec psmdb-server tar -xzf mgodatagen_linux_amd64.tar.gz
 docker exec psmdb-server mv mgodatagen /usr/local/bin/
 docker exec psmdb-server chmod +x /usr/local/bin/mgodatagen
