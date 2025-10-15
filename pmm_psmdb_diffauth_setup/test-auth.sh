@@ -42,6 +42,8 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 
 echo "Install PMM Client"
 
+docker ps -a
+
 PLAYBOOK_FILE="install_pmm_client.yml"
 cat > "$PLAYBOOK_FILE" <<EOF
 - hosts: localhost
