@@ -55,7 +55,14 @@ EOF
 for node in $nodes
 do
     echo "Configuring PMM Client on $node"
-    ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$node pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$node pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for: $node"
+        echo "$ansible_out"
+        exit 1
+    fi
+
     if [[ $mongo_setup_type == "psa" && $node == "rs203"  ]]; then
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     else

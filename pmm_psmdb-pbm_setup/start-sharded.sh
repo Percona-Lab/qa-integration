@@ -245,7 +245,14 @@ nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
 for node in $nodes
 do
     echo "Configuring PMM Client on $node"
-    ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$node pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$node pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for: $node"
+        echo "$ansible_out"
+        exit 1
+    fi
+
     docker exec $node pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} ${node}_${random_number} 127.0.0.1:27017
 done
 echo "configuring pmm-agent on primary rscfg01 for mongos instance"
