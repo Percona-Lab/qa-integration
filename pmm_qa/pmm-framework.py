@@ -442,7 +442,7 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
             # Change directory to where the script is located
             os.chdir(shell_scripts_path)
             print(f'changed directory {os.getcwd()}')
-            result = subprocess.Popen(['bash', script], capture_output=True, text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
+            result = subprocess.Popen(['bash', script], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
             print("Output:")
             for line in result.stdout:
                 print(line, end='')
