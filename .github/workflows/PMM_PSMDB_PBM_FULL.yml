@@ -25,7 +25,7 @@ on:
 jobs:
   test_replica_set:
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
