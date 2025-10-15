@@ -1,5 +1,4 @@
 #!/bin/bash
-set -ex
 pmm_user=${PMM_USER:-pmm}
 pmm_pass=${PMM_PASS:-pmmpass}
 pbm_user=${PBM_USER:-pbm}
