@@ -24,7 +24,7 @@ if [ -z "$ADMIN_PASSWORD" ]; then
 fi
 
 bash -e ./generate-certs.sh
-exit 1
+
 echo "Start setup"
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
