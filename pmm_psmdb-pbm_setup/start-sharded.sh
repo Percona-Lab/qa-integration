@@ -17,6 +17,8 @@ docker compose -f docker-compose-sharded.yaml restart pmm-server
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
 
+exit 1
+
 nodes="rs101 rs201"
 for node in $nodes
 do
