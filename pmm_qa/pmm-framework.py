@@ -577,7 +577,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         shell_scripts = ['start-rs-only.sh']
     elif setup_type in ("shards", "sharding"):
         shell_scripts = ['start-sharded-no-server.sh']
-        # mongo_sharding_setup(shell_scripts[0], args)
+        mongo_sharding_setup(shell_scripts[0], args)
 
     # Execute shell scripts
     if not shell_scripts == []:
