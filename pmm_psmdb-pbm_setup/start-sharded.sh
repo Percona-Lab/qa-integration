@@ -17,8 +17,6 @@ docker compose -f docker-compose-sharded.yaml restart pmm-server
 echo "waiting 30 seconds for pmm-server to start"
 sleep 30
 
-exit 1
-
 nodes="rs101 rs201"
 for node in $nodes
 do
@@ -47,6 +45,8 @@ do
           };
           rs.initiate(config);
 EOF
+
+
     sleep 60
     echo
     echo "configuring root user on primary $node replicaset $rs"
@@ -117,6 +117,8 @@ EOF
     });
 EOF
 done
+
+exit 1
 
 echo "configuring configserver replicaset with members priorities"
 docker compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo --quiet << EOF
