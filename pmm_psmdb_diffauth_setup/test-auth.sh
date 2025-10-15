@@ -52,10 +52,14 @@ cat > "$PLAYBOOK_FILE" <<EOF
     - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
 EOF
 
+if [ -z "${MYVAR+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
 echo "PMM Server IP is: $PMM_SERVER_IP"
 echo "PMM Client version is: $PMM_CLIENT_VERSION"
 echo "Admin Password is: $ADMIN_PASSWORD"
-ansible_out=$(ansible-playbook install_pmm_client.yml --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+ansible_out=$(ansible-playbook install_pmm_client.yml -vvv --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
 
 if [ $? -ne 0 ]; then
     echo "Ansible failed for: psmdb-server"
