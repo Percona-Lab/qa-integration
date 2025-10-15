@@ -52,7 +52,7 @@ cat > "$PLAYBOOK_FILE" <<EOF
     - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
 EOF
 
-if [ -z "${MYVAR+x}" ]; then
+if [ -z "${PMM_SERVER_IP+x}" ]; then
     PMM_SERVER_IP="pmm-server"
 fi
 

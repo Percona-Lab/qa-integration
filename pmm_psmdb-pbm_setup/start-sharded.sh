@@ -240,6 +240,10 @@ cat > "$PLAYBOOK_FILE" <<EOF
     - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
 EOF
 
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
 random_number=$RANDOM
 nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
 for node in $nodes
