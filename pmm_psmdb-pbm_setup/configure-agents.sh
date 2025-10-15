@@ -56,6 +56,10 @@ if [ -z "${PMM_SERVER_IP+x}" ]; then
     PMM_SERVER_IP="pmm-server"
 fi
 
+if [ -z "${ADMIN_PASSWORD+x}" ]; then
+    ADMIN_PASSWORD="admin"
+fi
+
 echo "PMM Server IP is: $PMM_SERVER_IP"
 echo "PMM Client version is: $PMM_CLIENT_VERSION"
 echo "Admin Password is: $ADMIN_PASSWORD"
