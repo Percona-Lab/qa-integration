@@ -34,7 +34,11 @@ EOF
 
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
     echo "Container: $c"
-    ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for $c:"
+        echo "$ansible_out"
+      fi
 done
 
 if [ $mongo_setup_type == "pss" ]; then
