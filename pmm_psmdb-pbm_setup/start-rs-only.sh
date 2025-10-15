@@ -32,18 +32,9 @@ cat > "$PLAYBOOK_FILE" <<EOF
     - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
 EOF
 
-echo "Generated $PLAYBOOK_FILE. You can now run:"
-echo "ansible-playbook $PLAYBOOK_FILE"
-echo "PMM Client version is: $PMM_CLIENT_VERSION"
-
 for c in $(docker ps --format "{{.Names}}" | grep '^rs'); do
     echo "Container: $c"
-    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
-    if [ $? -ne 0 ]; then
-        echo "Ansible failed for $c:"
-        echo "$ansible_out"
-      fi
-  docker exec "$c" pmm-admin list
+    ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$c pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
 done
 
 if [ $mongo_setup_type == "pss" ]; then
