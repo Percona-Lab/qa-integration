@@ -1,7 +1,7 @@
 - name: Set PMM Server address if undefined
   set_fact:
     pmm_server_ip: "pmm-server"
-  when: pmm_server_ip is not defined or pmm_server_ip == ""
+  when: pmm_server_ip | default('') == ''
 
 - name: Get PMM server address
   shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
@@ -13,11 +13,7 @@
     pmm_server_ip: "{{ pmm_server_ip_output.stdout }}"
   when: pmm_server_ip == "127.0.0.1"
 
-- name: Print pmm server address
-  debug:
-    var: pmm_server_ip
-
-- name: "PMM Server IP is"
+- name: "Log PMM Server IP"
   debug:
     msg: "{{ pmm_server_ip }} is pmm server IP"
 
