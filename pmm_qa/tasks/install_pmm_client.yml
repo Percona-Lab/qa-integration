@@ -64,7 +64,7 @@
   when: distro_family == "rhel"
 
 - name: Install curl on RHEL-family containers
-  shell: docker exec -u root {{ container_name }} microdnf install -y curl-minimal
+  shell: docker exec -u root {{ container_name }} microdnf install -y curl-minimal wget
   when: distro_family == "rhel"
   ignore_errors: true
 
