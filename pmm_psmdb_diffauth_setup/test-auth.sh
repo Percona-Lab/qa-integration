@@ -51,12 +51,8 @@ cat > "$PLAYBOOK_FILE" <<EOF
 EOF
 
 ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
-docker exec psmdb-server pmm-admin list
 
-exit 1
-
-#Configure PMM
-set +e
+echo "Configure PMM"
 i=1
 while [ $i -le 3 ]; do
     output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${ADMIN_PASSWORD} --server-insecure-tls)
