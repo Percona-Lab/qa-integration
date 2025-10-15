@@ -230,13 +230,21 @@ do
 done
 echo
 echo "configuring pmm agents"
+PLAYBOOK_FILE="install_pmm_client.yml"
+cat > "$PLAYBOOK_FILE" <<EOF
+- hosts: localhost
+  connection: local
+  tasks:
+    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
+EOF
+
 random_number=$RANDOM
 nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
 for node in $nodes
 do
     echo "congiguring pmm agent on $node"
     rs=$(echo $node | awk -F "0" '{print $1}')
-    docker compose -f docker-compose-sharded.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}_${random_number} $node pmm-agent setup
+    ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD"
     docker compose -f docker-compose-sharded.yaml exec -T $node pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} ${node}_${random_number} 127.0.0.1:27017
 done
 echo "configuring pmm-agent on primary rscfg01 for mongos instance"
