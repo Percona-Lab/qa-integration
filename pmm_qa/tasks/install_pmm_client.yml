@@ -106,7 +106,7 @@
   when:
     - distro_family == 'debian'
 
-- name: Install specific PMM client version on RHEL-family containers
+- name: Install percona release on RHEL-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
     user: "root"
@@ -210,6 +210,9 @@
         microdnf install -y pmm-client
       '
   when: distro_family == "rhel" and client_version == "pmm3-latest"
+- name:
+  debug:
+    var: client_version
 
 - name: Install specific PMM client version on Debian-family containers
   community.docker.docker_container_exec:
