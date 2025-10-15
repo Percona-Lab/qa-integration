@@ -42,7 +42,13 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl re
 
 echo "Install PMM Client"
 #ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
-../pmm_qa/scripts/install_pmm_client.sh --server-ip=$PMM_SERVER_IP
+script_setup=$(../pmm_qa/scripts/install_pmm_client.sh --server-ip="$PMM_SERVER_IP")
+
+if [ $? -ne 0 ]; then
+    echo "PMM Client setup failed on"
+    echo "$script_setup"
+    exit 1
+fi
 
 exit 1
 
