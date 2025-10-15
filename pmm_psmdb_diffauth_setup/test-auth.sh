@@ -41,22 +41,10 @@ docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "ech
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
 echo "Install PMM Client"
+#ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+../pmm_qa/scripts/install_pmm_client.sh --server-ip=$PMM_SERVER_IP
 
-PLAYBOOK_FILE="install_pmm_client.yml"
-cat > "$PLAYBOOK_FILE" <<EOF
-- hosts: localhost
-  connection: local
-  tasks:
-    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
-EOF
-
-ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
-
-if [ $? -ne 0 ]; then
-    echo "Ansible failed for: psmdb-server"
-    echo "$ansible_out"
-    exit 1
-fi
+exit 1
 
 echo "Add Mongo Service"
 random_number=$RANDOM
