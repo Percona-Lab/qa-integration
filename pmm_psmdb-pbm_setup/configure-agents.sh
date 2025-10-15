@@ -56,7 +56,7 @@ if [ -z "${PMM_SERVER_IP+x}" ]; then
 fi
 
 if [ -z "${ADMIN_PASSWORD+x}" ]; then
-    ADMIN_PASSWORD="admin"
+    ADMIN_PASSWORD=$pmm_server_admin_pass
 fi
 
 
