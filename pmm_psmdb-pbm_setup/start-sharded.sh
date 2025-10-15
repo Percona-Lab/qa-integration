@@ -246,6 +246,15 @@ fi
 
 random_number=$RANDOM
 nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
+
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
+if [ -z "${ADMIN_PASSWORD+x}" ]; then
+        ADMIN_PASSWORD="admin"
+fi
+
 for node in $nodes
 do
     echo "Configuring PMM Client on $node"
