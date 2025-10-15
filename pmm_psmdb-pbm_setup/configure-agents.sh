@@ -44,14 +44,27 @@ if [[ $mongo_setup_type == "psa" ]]; then
 fi
 echo
 echo "configuring pmm agents"
+PLAYBOOK_FILE="install_pmm_client.yml"
+cat > "$PLAYBOOK_FILE" <<EOF
+- hosts: localhost
+  connection: local
+  tasks:
+    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
+EOF
+
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
+echo "PMM Server IP is: $PMM_SERVER_IP"
+echo "PMM Client version is: $PMM_CLIENT_VERSION"
+echo "Admin Password is: $ADMIN_PASSWORD"
+ansible_out=$(ansible-playbook install_pmm_client.yml -vvv --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+
 random_number=$RANDOM
 nodes="rs101 rs102 rs103"
 for node in $nodes
 do
-    docker exec $node wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
-    docker exec $node tar -xzf mgodatagen_linux_amd64.tar.gz
-    docker exec $node mv mgodatagen /usr/local/bin/
-    docker exec $node chmod +x /usr/local/bin/mgodatagen
     echo "configuring pmm agent on $node"
     if [[ $mongo_setup_type == "psa" && $node == "rs103" ]]; then
       docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --environment=psmdb-dev --cluster=replicaset --replication-set=rs --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
@@ -62,6 +75,10 @@ do
 done
 echo
 echo "adding some data"
+docker exec rs101 wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
+docker exec rs101 tar -xzf mgodatagen_linux_amd64.tar.gz
+docker exec rs101 mv mgodatagen /usr/local/bin/
+docker exec rs101 chmod +x /usr/local/bin/mgodatagen
 docker compose -f docker-compose-rs.yaml exec -T rs101 mgodatagen -f /etc/datagen/replicaset.json --uri=mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@127.0.0.1:27017/?replicaSet=rs
 docker compose -f docker-compose-rs.yaml exec -T rs101 mongo "mongodb://${pmm_mongo_user}:${pmm_mongo_user_pass}@localhost/?replicaSet=rs" --quiet << EOF
 use students;
