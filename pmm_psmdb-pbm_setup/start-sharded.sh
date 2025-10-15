@@ -118,8 +118,6 @@ EOF
 EOF
 done
 
-exit 1
-
 echo "configuring configserver replicaset with members priorities"
 docker compose -f docker-compose-sharded.yaml exec -T rscfg01 mongo --quiet << EOF
     config = {
