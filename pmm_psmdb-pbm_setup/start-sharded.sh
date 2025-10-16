@@ -272,6 +272,7 @@ echo "configuring pmm-agent on primary rscfg01 for mongos instance"
 docker compose -f docker-compose-sharded.yaml exec -T rscfg01 pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} mongos_${random_number} mongos:27017
 
 echo "adding some data"
+docker exec mongos yum install -y wget
 docker exec mongos wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
 docker exec mongos tar -xzf mgodatagen_linux_amd64.tar.gz
 docker exec mongos mv mgodatagen /usr/local/bin/
