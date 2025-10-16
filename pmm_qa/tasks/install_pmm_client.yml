@@ -213,6 +213,7 @@
   when: random_node_name_suffix is not defined
 
 - name: Connect pmm client to pmm server using metrics mode
+  shell: >
     docker exec -u root {{ container_name }} env PMM_AGENT_SETUP_NODE_NAME="{{ container_name }}_{{ random_node_name_suffix }}" pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }} {{ container_name }}_{{ random_node_name_suffix }}
   when: metrics_mode | length > 0
 
