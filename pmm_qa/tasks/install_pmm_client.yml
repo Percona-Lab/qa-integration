@@ -207,14 +207,18 @@
   when:
     - client_version | regex_search('^https?://.*\.tar\.gz$') is not none
 
+- name: Generate random node name suffix
+  set_fact:
+    random_node_name_suffix: "_{{ 99999 | random + 1 }}"
+
 - name: Connect pmm client to pmm server using metrics mode
   shell: >
-    docker exec -u root {{ container_name }} pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }} {{ container_name }}
+    docker exec -u root {{ container_name }} pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }} {{ container_name }}_{{ random_node_name_suffix }}
   when: metrics_mode | length > 0
 
 - name: Connect pmm client to pmm server without metrics mode
   shell: >
-    docker exec -u root {{ container_name }} pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }} {{ container_name }}
+    docker exec -u root {{ container_name }} pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }} {{ container_name }}_{{ random_node_name_suffix }}
   when: metrics_mode | length == 0
 
 - name: Wait 5 seconds for connection to complete
