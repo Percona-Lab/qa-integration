@@ -210,6 +210,7 @@
 - name: Generate random node name suffix
   set_fact:
     random_node_name_suffix: "_{{ 99999 | random + 1 }}"
+  when: random_node_name_suffix is not defined
 
 - name: Connect pmm client to pmm server using metrics mode
   shell: >
