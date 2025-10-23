@@ -202,19 +202,19 @@
     - name: Add the primary to monitoring
       community.docker.docker_container_exec:
         container: "valkey-primary"
-        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-primary-svc-{{ random_number }} --host=valkey-primary --port=6379 --custom-labels='role=master' valkey-node
+        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-primary-svc-{{ random_number }} --host=valkey-primary --port=6379 --custom-labels='role=master' master-node
       ignore_errors: yes
 
     - name: Add the replicas to monitoring
       community.docker.docker_container_exec:
         container: "valkey-replica-{{ item }}"
-        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-replica{{ item }}-svc-{{ random_number }} --host=valkey-replica-{{ item }} --port=6379 --custom-labels='role=replica' valkey-node
+        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-replica{{ item }}-svc-{{ random_number }} --host=valkey-replica-{{ item }} --port=6379 --custom-labels='role=replica' valkey-replica-node-{{ item }}
       loop: "{{ range(1, valkey_replica_count + 1) | list }}"
       ignore_errors: yes
 
     - name: Add Sentinels to monitoring
       community.docker.docker_container_exec:
         container: "sentinel-{{ item }}"
-        command: pmm-admin add valkey --cluster=valkey-cluster --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=sentinel{{ item }}-svc-{{ random_number }} --host=sentinel-{{ item }} --port={{ sentinel_start_port }} --custom-labels='role=sentinel' valkey-node
+        command: pmm-admin add valkey --cluster=valkey-cluster --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=sentinel{{ item }}-svc-{{ random_number }} --host=sentinel-{{ item }} --port={{ sentinel_start_port }} --custom-labels='role=sentinel' sentinel-node-{{ item }}
       loop: "{{ range(1, sentinel_count + 1) | list }}"
       ignore_errors: yes
