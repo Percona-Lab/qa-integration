@@ -202,7 +202,7 @@
     - name: Add the primary to monitoring
       community.docker.docker_container_exec:
         container: "valkey-primary"
-        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-primary-svc-{{ random_number }} --host=valkey-primary --port=6379 --custom-labels='role=primary' valkey-node
+        command: pmm-admin add valkey --cluster=valkey-cluster --replication-set=valkey-repl --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name=valkey-primary-svc-{{ random_number }} --host=valkey-primary --port=6379 --custom-labels='role=master' valkey-node
       ignore_errors: yes
 
     - name: Add the replicas to monitoring
