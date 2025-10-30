@@ -13,7 +13,7 @@
     var: pmm_server_ip
 
 - name: Copy a setup file into the container
-  shell: docker cp {{ roof_folder }}tasks/client_container_ms_setup.sh {{ container_name }}:/pmm3-client-setup.sh
+  shell: docker cp {{ roof_folder }}tasks/pmm3-client-setup.sh {{ container_name }}:/pmm3-client-setup.sh
 
 - name: "PMM Server IP is"
   debug:
