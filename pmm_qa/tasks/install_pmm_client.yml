@@ -84,10 +84,6 @@
   set_fact:
     lsb_release: "{{ lsb_release.stdout }}"
 
-- name: Print expected client version
-  debug:
-    msg: "{{ metrics_mode }}"
-
 - name: Set default value for metrics mode
   set_fact:
     metrics_mode: 'auto'
