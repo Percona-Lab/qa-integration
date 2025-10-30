@@ -800,6 +800,7 @@ def setup_valkey(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     valkey_version = os.getenv('VALKEY_VERSION') or db_version or database_configs[db_type]["versions"][-1]
+    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
 
     # Define environment variables for playbook
     env_vars = {
@@ -807,11 +808,15 @@ def setup_valkey(db_type, db_version=None, db_config=None, args=None):
         'VALKEY_VERSION': valkey_version,
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
+        'SETUP_TYPE': setup_type_value
     }
 
-    # Ansible playbook filename
-    playbook_filename = 'valkey/valkey.yml'
+    # Choose playbook based on SETUP_TYPE (default sentinel/replication vs cluster)
+    if setup_type_value in ("cluster"):
+        playbook_filename = 'valkey/valkey-cluster.yml'
+    else:
+        playbook_filename = 'valkey/valkey.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)

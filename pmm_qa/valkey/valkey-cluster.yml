@@ -1,0 +1,152 @@
+---
+- name: Deploy Valkey Native Cluster
+  hosts: localhost
+  gather_facts: false
+  vars:
+    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+    metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
+    client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
+    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
+    valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('7', true) }}"
+    valkey_image: "valkey/valkey:{{ valkey_version }}"
+    valkey_network_name: "pmm-qa"
+    valkey_password: "VKvl41568AsE"
+    valkey_cluster_node_count: 6 # 3 masters + 3 replicas
+    valkey_cluster_replicas: 1 # --cluster-replicas value
+    valkey_cluster_start_port: 6379 # Base host port to map sequentially
+    valkey_config_dir: "{{ lookup('env', 'HOME') }}/valkey/cluster-config"
+    valkey_data_prefix: "valkey-cluster-node" # Volume/container naming prefix
+    pmm_server_name: "pmm-server"
+
+  tasks:
+    - name: Set Random Number Fact
+      set_fact:
+        random_number: "{{ (10000 | random) | int }}"
+
+    - name: Create Docker network
+      community.docker.docker_network:
+        name: "{{ valkey_network_name }}"
+        driver: bridge
+        state: present
+
+    - name: Create cluster config directory
+      file:
+        path: "{{ valkey_config_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create per-node config subdirectories
+      file:
+        path: "{{ valkey_config_dir }}/{{ valkey_data_prefix }}-{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+
+    - name: Generate base configuration for each cluster node
+      copy:
+        dest: "{{ valkey_config_dir }}/{{ valkey_data_prefix }}-{{ item }}/valkey.conf"
+        mode: "0644"
+        content: |
+          port 6379
+          requirepass {{ valkey_password }}
+          masterauth {{ valkey_password }}
+          protected-mode no
+          appendonly yes
+          cluster-enabled yes
+          cluster-config-file nodes.conf
+          cluster-node-timeout 5000
+          # Minimal persistence & logging
+          save 900 1
+          save 300 10
+          save 60 10000
+          loglevel notice
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+
+    - name: Create docker volumes for nodes
+      community.docker.docker_volume:
+        name: "{{ valkey_data_prefix }}-{{ item }}-data"
+        state: present
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+
+    - name: Start cluster node containers
+      community.docker.docker_container:
+        name: "{{ valkey_data_prefix }}-{{ item }}"
+        image: "{{ valkey_image }}"
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: "{{ valkey_network_name }}"
+        ports:
+          - "{{ valkey_cluster_start_port + item - 1 }}:6379"
+        volumes:
+          - "{{ valkey_data_prefix }}-{{ item }}-data:/data"
+          - "{{ valkey_config_dir }}/{{ valkey_data_prefix }}-{{ item }}/valkey.conf:/usr/local/etc/valkey/valkey.conf:ro"
+        command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
+        healthcheck:
+          test: ["CMD", "valkey-cli", "-a", "{{ valkey_password }}", "ping"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+
+    - name: Wait for cluster node ports
+      wait_for:
+        host: localhost
+        port: "{{ valkey_cluster_start_port + item - 1 }}"
+        timeout: 30
+        delay: 1
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+
+    - name: Build list of internal container addresses
+      set_fact:
+        cluster_node_addresses: "{{ range(1, valkey_cluster_node_count + 1) | map('string') | map('regex_replace', '^(.*)$', valkey_data_prefix ~ '-\\1:6379') | list }}"
+
+    - name: Display cluster node addresses
+      debug:
+        var: cluster_node_addresses
+
+    - name: Create the cluster (run once)
+      community.docker.docker_container_exec:
+        container: "{{ valkey_data_prefix }}-1"
+        command: >-
+          bash -c "yes 'yes' | valkey-cli --cluster create {{ cluster_node_addresses | join(' ') }} --cluster-replicas {{ valkey_cluster_replicas }} -a {{ valkey_password }}"
+      register: cluster_create_output
+      changed_when: "'[OK]' in cluster_create_output.stdout"
+
+    - name: Show cluster creation output
+      debug:
+        msg: "{{ cluster_create_output.stdout_lines }}"
+
+    - name: Check cluster info on first node
+      community.docker.docker_container_exec:
+        container: "{{ valkey_data_prefix }}-1"
+        command: valkey-cli -a "{{ valkey_password }}" cluster info
+      register: cluster_info
+
+    - name: Display cluster info
+      debug:
+        msg: "{{ cluster_info.stdout_lines }}"
+
+    - name: Install PMM Client in each container
+      ansible.builtin.include_tasks: ../tasks/install_pmm_client.yml
+      loop: >-
+        {{ range(1, valkey_cluster_node_count + 1) | map('string') | map('regex_replace', '^(.*)$', valkey_data_prefix ~ '-\1') | list }}
+      loop_control:
+        loop_var: current_container_name
+      vars:
+        container_name: "{{ current_container_name }}"
+
+    - name: Configure pmm-agent on cluster nodes
+      community.docker.docker_container_exec:
+        container: "{{ valkey_data_prefix }}-{{ item }}"
+        command: pmm-admin config {{ valkey_data_prefix }}-{{ item }}-svc-{{ random_number }} generic {{ valkey_data_prefix }}-{{ item }}-node-{{ random_number }}
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+      ignore_errors: yes
+
+    - name: Add cluster nodes to monitoring
+      community.docker.docker_container_exec:
+        container: "{{ valkey_data_prefix }}-{{ item }}"
+        command: >-
+          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default --password="{{ valkey_password }}" --service-name={{ valkey_data_prefix }}-{{ item }}-svc-{{ random_number }} --host={{ valkey_data_prefix }}-{{ item }} --port=6379 --custom-labels='role=cluster-node'
+      loop: "{{ range(1, valkey_cluster_node_count + 1) | list }}"
+      ignore_errors: yes
