@@ -20,3 +20,8 @@ protected-mode no
 # Logging
 loglevel notice
 logfile ""
+
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+appendonly yes
