@@ -75,6 +75,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          slowlog-max-len 500
+          slowlog-log-slower-than 5000
       loop: "{{ range(1, valkey_cluster_primaries + 1) | list }}"
 
     - name: Generate base configuration for each replica
