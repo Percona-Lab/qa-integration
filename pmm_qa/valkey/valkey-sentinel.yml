@@ -227,3 +227,13 @@
           --host=sentinel-{{ item }} --port={{ sentinel_start_port }}  --custom-labels='role=sentinel'
       loop: "{{ range(1, sentinel_count + 1) | list }}"
       ignore_errors: yes
+
+    - name: Seed sample list data on primary (sentinel setup)
+      community.docker.docker_container_exec:
+        container: "valkey-primary"
+        command: valkey-cli -a "{{ valkey_password }}" RPUSH mylist "one" "two" "three" "four" "five"
+
+    - name: Pop one item from sample list (sentinel setup)
+      community.docker.docker_container_exec:
+        container: "valkey-primary"
+        command: valkey-cli -a "{{ valkey_password }}" RPOP mylist
