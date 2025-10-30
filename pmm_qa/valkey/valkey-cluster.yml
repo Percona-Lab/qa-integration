@@ -112,6 +112,7 @@
     - name: Start primary node containers
       community.docker.docker_container:
         name: "{{ valkey_primary_prefix }}{{ item }}"
+        hostname: "{{ valkey_primary_prefix }}{{ item }}-node-{{ random_number }}"
         image: "{{ valkey_image }}"
         state: started
         restart_policy: unless-stopped
@@ -133,6 +134,7 @@
     - name: Start replica node containers
       community.docker.docker_container:
         name: "{{ valkey_replica_prefix }}{{ item }}"
+        hostname: "{{ valkey_replica_prefix }}{{ item }}-node-{{ random_number }}"
         image: "{{ valkey_image }}"
         state: started
         restart_policy: unless-stopped
@@ -210,26 +212,12 @@
       vars:
         container_name: "{{ current_container_name }}"
 
-    - name: Configure pmm-agent on primary nodes
-      community.docker.docker_container_exec:
-        container: "{{ item }}"
-        command: pmm-admin config {{ item }}-svc-{{ random_number }} generic {{ item }}-node-{{ random_number }}
-      loop: "{{ primary_nodes }}"
-      ignore_errors: yes
-
-    - name: Configure pmm-agent on replica nodes
-      community.docker.docker_container_exec:
-        container: "{{ item }}"
-        command: pmm-admin config {{ item }}-svc-{{ random_number }} generic {{ item }}-node-{{ random_number }}
-      loop: "{{ replica_nodes }}"
-      ignore_errors: yes
-
     - name: Add primary nodes to monitoring
       community.docker.docker_container_exec:
         container: "{{ item }}"
         command: >-
-          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default 
-          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} 
+          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default \
+          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} \
           --host={{ item }} --port=6379 --custom-labels='role=primary'
       loop: "{{ primary_nodes }}"
       ignore_errors: yes
@@ -238,8 +226,8 @@
       community.docker.docker_container_exec:
         container: "{{ item }}"
         command: >-
-          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default 
-          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} 
+          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default \
+          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} \
           --host={{ item }} --port=6379 --custom-labels='role=replica'
       loop: "{{ replica_nodes }}"
       ignore_errors: yes
