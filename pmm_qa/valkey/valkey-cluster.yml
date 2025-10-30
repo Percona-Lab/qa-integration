@@ -171,7 +171,10 @@
       set_fact:
         primary_nodes: "{{ range(1, valkey_cluster_primaries + 1) | map('string') | map('regex_replace', '^(.*)$', valkey_primary_prefix ~ '\\1') | list }}"
         replica_nodes: "{{ range(valkey_cluster_primaries + 1, valkey_cluster_node_count + 1) | map('string') | map('regex_replace', '^(.*)$', valkey_replica_prefix ~ '\\1') | list }}"
-        cluster_node_addresses: "{{ primary_nodes | map('regex_replace', '^(.*)$', '\\1:6379') | list + replica_nodes | map('regex_replace', '^(.*)$', '\\1:6379') | list }}"
+
+    - name: Build combined list of internal container addresses
+      set_fact:
+        cluster_node_addresses: "{{ (primary_nodes | map('regex_replace', '^(.*)$', '\\1:6379') | list) + (replica_nodes | map('regex_replace', '^(.*)$', '\\1:6379') | list) }}"
 
     - name: Display cluster node addresses
       debug:
