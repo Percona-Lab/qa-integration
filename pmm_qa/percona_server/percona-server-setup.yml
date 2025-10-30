@@ -26,7 +26,11 @@
     random_service_name_value: ""
 
   tasks:
-    - name: Mofidy the node count for group replication
+    - name: Set root folder path
+      set_fact:
+        roof_folder: "{{ playbook_dir }}"
+
+    - name: Modify the node count for group replication
       set_fact:
         nodes_count: 3
       when: nodes_count | int < 3 and setup_type == "gr"
