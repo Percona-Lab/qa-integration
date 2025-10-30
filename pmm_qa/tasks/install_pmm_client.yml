@@ -88,6 +88,11 @@
   debug:
     msg: "{{ metrics_mode }}"
 
+- name: Set default value for metrics mode
+  set_fact:
+    metrics_mode: 'auto'
+  when: metrics_mode is undefined
+
 - name: Install percona release on Debian-family containers
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
