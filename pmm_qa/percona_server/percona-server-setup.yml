@@ -28,7 +28,7 @@
   tasks:
     - name: Set root folder path
       set_fact:
-        roof_folder: "{{ playbook_dir }}"
+        roof_folder: "{{ playbook_dir | regex_replace('^(.*?/pmm_qa)(?:/.*)?$', '\\1/') }}"
 
     - name: Modify the node count for group replication
       set_fact:
