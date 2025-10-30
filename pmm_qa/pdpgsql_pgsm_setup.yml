@@ -30,11 +30,13 @@
     shell: docker network create pmm-qa
     ignore_errors: true
 
-  - name: Prepare Container for PostgreSQL
+  - name: Prepare Container for Percona Distribution for PostgreSQL
     shell: >
-      sudo docker run -d --name={{ pdpgsql_pgsm_container }}
-      -p {{ pdpgsql_pgsm_port }}:5432
-      phusion/baseimage:jammy-1.0.1
+      sudo docker run -d 
+        --name={{ pdpgsql_pgsm_container }}
+        -p {{ pdpgsql_pgsm_port }}:5432
+        --network="pmm-qa"
+        phusion/baseimage:noble-1.0.2
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
     shell: "{{ item }}"
@@ -42,18 +44,17 @@
       - docker exec {{ pdpgsql_pgsm_container }} mkdir -p artifacts
       - docker cp ./pg_stat_monitor_setup.sh {{ pdpgsql_pgsm_container }}:/
       - docker cp ./pgsm_run_queries.sh {{ pdpgsql_pgsm_container }}:/
-      - docker cp ./pmm3-client-setup.sh {{ pdpgsql_pgsm_container }}:/
 
   - name: Execute Setup script inside the pdpgsql pdpgsql_pgsm_container
     shell: "{{ item }}"
     with_items:
       - docker exec {{ pdpgsql_pgsm_container }} bash -xe ./pg_stat_monitor_setup.sh --distribution {{ distribution }} --pgsql_version {{ pdpgsql_version }} --pgstat_monitor_branch {{ pgstat_monitor_branch }} --pgstat_monitor_repo {{ pgstat_monitor_repo }} > setup_{{ pdpgsql_pgsm_container }}.log
 
-  - name: Install pmm2-client on the pdpgsql_pgsm_container
+  - name: Install PMM Client inside of Percona Distribution for PostgreSQL
+    include_tasks: ./tasks/install_pmm_client.yml
+    vars:
+      container_name: "{{ pdpgsql_pgsm_container }}"
     shell: "{{ item }}"
-    with_items:
-      - docker network connect pmm-qa {{ pdpgsql_pgsm_container }}
-      - docker exec {{ pdpgsql_pgsm_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 
   - name: Set Random Number Fact
     set_fact:
