@@ -19,6 +19,10 @@
     distribution: "{{ lookup('vars', 'extra_pdpgsql_distribution', default=lookup('env','DISTRIBUTION') | default('PPG', true) ) }}"
 
   tasks:
+  - name: Set root folder path
+    set_fact:
+      roof_folder: "{{ playbook_dir | regex_replace('^(.*?/pmm_qa)(?:/.*)?$', '\\1/') }}"
+
   - name: cleanup container for client and DB setup
     shell: >
       docker ps -a --filter "name={{ pdpgsql_pgsm_container }}" | grep -q . && docker stop {{ pdpgsql_pgsm_container }} && docker rm -fv {{ pdpgsql_pgsm_container }}
