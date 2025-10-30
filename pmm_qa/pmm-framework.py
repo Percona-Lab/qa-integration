@@ -812,11 +812,11 @@ def setup_valkey(db_type, db_version=None, db_config=None, args=None):
         'SETUP_TYPE': setup_type_value
     }
 
-    # Choose playbook based on SETUP_TYPE (default sentinel/replication vs cluster)
-    if setup_type_value in ("cluster"):
-        playbook_filename = 'valkey/valkey-cluster.yml'
+    # Choose playbook based on SETUP_TYPE (cluster is default; sentinel only when explicitly requested)
+    if setup_type_value in ("sentinel", "sentinels"):
+        playbook_filename = 'valkey/valkey-sentinel.yml'
     else:
-        playbook_filename = 'valkey/valkey.yml'
+        playbook_filename = 'valkey/valkey-cluster.yml'
 
     # Call the function to run the Ansible playbook
     run_ansible_playbook(playbook_filename, env_vars, args)
