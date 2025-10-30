@@ -95,6 +95,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          slowlog-max-len 500
+          slowlog-log-slower-than 5000
       loop: "{{ range(valkey_cluster_primaries + 1, valkey_cluster_node_count + 1) | list }}"
 
     - name: Create docker volumes for primary nodes
@@ -216,8 +218,8 @@
       community.docker.docker_container_exec:
         container: "{{ item }}"
         command: >-
-          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default \
-          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} \
+          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default 
+          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} 
           --host={{ item }} --port=6379 --custom-labels='role=primary'
       loop: "{{ primary_nodes }}"
       ignore_errors: yes
@@ -226,8 +228,8 @@
       community.docker.docker_container_exec:
         container: "{{ item }}"
         command: >-
-          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default \
-          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} \
+          pmm-admin add valkey --cluster=valkey-native-cluster --environment=valkey-test --username=default 
+          --password="{{ valkey_password }}" --service-name={{ item }}-svc-{{ random_number }} 
           --host={{ item }} --port=6379 --custom-labels='role=replica'
       loop: "{{ replica_nodes }}"
       ignore_errors: yes
