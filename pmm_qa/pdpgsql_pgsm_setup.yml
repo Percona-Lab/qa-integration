@@ -31,11 +31,11 @@
     ignore_errors: true
 
   - name: Prepare Container for Percona Distribution for PostgreSQL
-    shell: >
-      sudo docker run -d 
-        --name={{ pdpgsql_pgsm_container }}
-        -p {{ pdpgsql_pgsm_port }}:5432
-        --network="pmm-qa"
+    shell: |
+      docker run -d \
+        --name={{ pdpgsql_pgsm_container }} \
+        -p {{ pdpgsql_pgsm_port }}:5432 \
+        --network=pmm-qa \
         phusion/baseimage:noble-1.0.2
   
   - name: Copy all required Artifacts to the docker pdpgsql_pgsm_container
