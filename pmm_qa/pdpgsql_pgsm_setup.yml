@@ -54,7 +54,6 @@
     include_tasks: ./tasks/install_pmm_client.yml
     vars:
       container_name: "{{ pdpgsql_pgsm_container }}"
-    shell: "{{ item }}"
 
   - name: Set Random Number Fact
     set_fact:
