@@ -16,9 +16,9 @@
     valkey_cluster_replicas: 1 # replicas per primary
     valkey_cluster_start_port: 6379 # Base host port to map sequentially
     valkey_config_dir: "{{ lookup('env', 'HOME') }}/valkey/cluster-config"
-  valkey_primary_prefix: "valkey-primary-"
-  valkey_replica_prefix: "valkey-replica-"
-  pmm_server_name: "pmm-server"
+    valkey_primary_prefix: "valkey-primary-"
+    valkey_replica_prefix: "valkey-replica-"
+    pmm_server_name: "pmm-server"
 
   tasks:
     - name: Set Random Number Fact
