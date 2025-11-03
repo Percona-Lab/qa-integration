@@ -79,11 +79,9 @@
   ignore_errors: true
 
 - name: Get lsb_release
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: >
+  shell: |
+    docker exec --user root {{ container_name }} \
       bash -c "grep '^VERSION_CODENAME=' /etc/os-release | cut -d '=' -f2 | tr -d '\"'"
-    user: "root"
   register: lsb_release
 
 - name: Set lsb_release
@@ -91,159 +89,139 @@
     lsb_release: "{{ lsb_release.stdout }}"
 
 - name: Install percona release on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /percona-release_latest.{{ lsb_release }}_all.deb https://repo.percona.com/apt/percona-release_latest.{{ lsb_release }}_all.deb &&
-        dpkg -i /percona-release_latest.{{ lsb_release }}_all.deb
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      wget -O /percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb \
+        https://repo.percona.com/apt/percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb &&
+      dpkg -i /percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb
+    '
   when:
     - distro_family == 'debian'
+  ignore_errors: true
 
-- name: Install specific PMM client version on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /percona-release-latest.noarch.rpm https://repo.percona.com/yum/percona-release-latest.noarch.rpm &&
-        rpm -i /percona-release-latest.noarch.rpm
-      '
-  when:
-    - distro_family == 'rhel'
+- name: Install percona release on RHEL-family containers
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      wget -O /percona-release-latest.noarch.rpm \
+        https://repo.percona.com/yum/percona-release-latest.noarch.rpm && \
+      rpm -i /percona-release-latest.noarch.rpm
+    '
+  when: distro_family == 'rhel'
   ignore_errors: true
 
 - name: Install pmm client experimental on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client experimental &&
-        apt-get update &&
-        apt-get -y install pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client experimental &&
+      apt-get update &&
+      apt-get -y install pmm-client
+    '
   when: distro_family == "debian" and client_version == "3-dev-latest"
 
 - name: Install pmm client experimental on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client experimental &&
-        microdnf install -y pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client experimental &&
+      microdnf install -y pmm-client
+    '
   when: distro_family == "rhel" and client_version == "3-dev-latest"
 
 - name: Install pmm client testing on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client testing &&
-        apt-get update &&
-        apt-get -y install pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client testing &&
+      apt-get update &&
+      apt-get -y install pmm-client
+    '
   when: distro_family == "debian" and client_version == "pmm3-rc"
 
 - name: Install pmm client testing on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client testing &&
-        microdnf install -y pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client testing &&
+      microdnf install -y pmm-client
+    '
   when: distro_family == "rhel" and client_version == "pmm3-rc"
 
 - name: Install pmm client release on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client release &&
-        apt-get update &&
-        apt-get -y install pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client release &&
+      apt-get update &&
+      apt-get -y install pmm-client
+    '
   when: distro_family == "debian" and client_version == "pmm3-latest"
 
 - name: Install pmm client release on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        percona-release enable-only pmm3-client release &&
-        microdnf install -y pmm-client
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      percona-release enable-only pmm3-client release &&
+      microdnf install -y pmm-client
+    '
   when: distro_family == "rhel" and client_version == "pmm3-latest"
 
 - name: Install specific PMM client version on Debian-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb &&
-        dpkg -i /pmm-client.deb
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb &&
+      dpkg -i /pmm-client.deb
+    '
   when:
     - distro_family == 'debian'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
 
 - name: Install specific PMM client version on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /pmm-client.rpm https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm &&
-        rpm -i /pmm-client.rpm
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      wget -O /pmm-client.rpm https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm &&
+      rpm -i /pmm-client.rpm
+    '
   when:
     - distro_family == 'rhel'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
 
 - name: Install tarball PMM client version
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
-      sh -c '
-        wget -O /pmm-client.tar.gz "{{ client_version }}" &&
-        tar -zxpf /pmm-client.tar.gz &&
-        PMM_CLIENT=`ls -1td pmm-client* 2>/dev/null | grep -v ".tar" | grep -v ".sh" | head -n1` &&
-        echo ${PMM_CLIENT} &&
-        rm -rf pmm-client &&
-        mv ${PMM_CLIENT} pmm-client &&
-        rm -rf /usr/local/bin/pmm-client &&
-        mv -f pmm-client /usr/local/bin &&
-        bash -x /usr/local/bin/pmm-client/install_tarball &&
-        ln -sf /usr/local/percona/pmm/bin/pmm-admin /usr/local/bin/pmm-admin &&
-        ln -sf /usr/local/percona/pmm/bin/pmm-agent /usr/local/bin/pmm-agent &&
-        pmm-admin --version
-      '
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      wget -O /pmm-client.tar.gz "{{ client_version }}" &&
+      tar -zxpf /pmm-client.tar.gz &&
+      PMM_CLIENT=`ls -1td pmm-client* 2>/dev/null | grep -v ".tar" | grep -v ".sh" | head -n1` &&
+      echo ${PMM_CLIENT} &&
+      rm -rf pmm-client &&
+      mv ${PMM_CLIENT} pmm-client &&
+      rm -rf /usr/local/bin/pmm-client &&
+      mv -f pmm-client /usr/local/bin &&
+      bash -x /usr/local/bin/pmm-client/install_tarball &&
+      ln -sf /usr/local/percona/pmm/bin/pmm-admin /usr/local/bin/pmm-admin &&
+      ln -sf /usr/local/percona/pmm/bin/pmm-agent /usr/local/bin/pmm-agent &&
+      pmm-admin --version
+    '
   when:
     - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
 
 - name: Connect pmm client to pmm server using metrics mode
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --metrics-mode={{ metrics_mode }} --server-username=admin --server-password={{ admin_password }} {{ container_name }}
+  shell: |
+    docker exec --user root {{ container_name }} \
+      pmm-agent setup \
+        --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml \
+        --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} \
+        --server-insecure-tls \
+        --metrics-mode={{ metrics_mode }} \
+        --server-username=admin \
+        --server-password={{ admin_password }} \
+        {{ container_name }}
   when: metrics_mode | length > 0
 
-- name: Connect pmm client to pmm server using metrics mode
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} --server-insecure-tls --server-username=admin --server-password={{ admin_password }} {{ container_name }}
+- name: Connect pmm client to pmm server using default metrics mode
+  shell: |
+    docker exec --user root {{ container_name }} \
+      pmm-agent setup \
+        --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml \
+        --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} \
+        --server-insecure-tls \
+        --server-username=admin \
+        --server-password={{ admin_password }} \
+        {{ container_name }}
   when: metrics_mode | length == 0
 
 - name: Wait 5 seconds for connection to complete
@@ -251,10 +229,8 @@
     seconds: 5
 
 - name: Start pmm client
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    user: "root"
-    command: >
+  shell: |
+    docker exec --user root {{ container_name }} \
       sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
 
 - name: Wait 5 seconds for start to complete
