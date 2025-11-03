@@ -73,3 +73,11 @@ jobs:
       run: |
         PSMDB_VERSION=${{ matrix.psmdb }} ./test-auth.sh
       working-directory: ./pmm_psmdb_diffauth_setup
+    - name: PMM Server container logs
+      if: failure()
+      run: |
+        docker logs pmm-server || true
+    - name: PSMDB Server container logs
+      if: failure()
+      run: |
+        docker logs psmdb-server || true

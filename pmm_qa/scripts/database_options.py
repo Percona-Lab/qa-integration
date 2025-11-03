@@ -30,7 +30,7 @@ database_options = {
     "PS": {
         "versions": ["8.4", "8.0", "5.7"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": "", "NODES_COUNT": 1}
+                           "TARBALL": "", "NODES_COUNT": 1, "MY_ROCKS": "false"}
     },
     "SSL_MYSQL": {
         "versions": ["5.7", "8.4", "8.0"],
@@ -76,5 +76,9 @@ database_options = {
     },
     "BUCKET": {
         "configurations": {"BUCKET_NAMES": 'bcp'}
+    },
+    "VALKEY": {
+        "versions": ["7", "8"],
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "", "TARBALL": ""}
     }
 }

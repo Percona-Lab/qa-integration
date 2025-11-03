@@ -41,7 +41,7 @@ if [ ! -z "$upgrade" ]; then
 fi
 
 port=8443
-if [[  "$pmm_server_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+if [[  "$pmm_server_ip" =~ \. ]]; then
   port=443
 fi
 
@@ -101,21 +101,21 @@ if [[ "$client_version" == http* ]]; then
     pwd
     popd
     pmm-admin --version
-fi    
+fi
 
 ## Check if we are upgrading or attempting fresh install.
 if [[ -z "$upgrade" ]]; then
     if [[ "$use_metrics_mode" == "yes" ]]; then
         echo "setup pmm-agent"
         pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --metrics-mode=${metrics_mode} --server-username=admin --server-password=${admin_password}
-    else 
+    else
         echo "setup pmm-agent"
         pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=${pmm_server_ip}:${port} --server-insecure-tls --server-username=admin --server-password=${admin_password}
-    fi    
+    fi
     sleep 10
     pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > pmm-agent.log 2>&1 &
     sleep 10
-else    
+else
    pid=`ps -ef | grep pmm-agent | grep -v grep | awk -F ' ' '{print $2}'`
    if [[ ! -z "$pid" ]]; then
        kill -9 $pid

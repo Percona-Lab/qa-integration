@@ -24,6 +24,8 @@
     metrics_mode: "{{ lookup('env', 'metrics_mode') }}"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
+    my_rocks: "{{ lookup('env', 'MY_ROCKS') | default(false, true) }}"
+
 
   tasks:
     - name: Set root folder path
@@ -81,6 +83,10 @@
       include_tasks: tasks/percona-server-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
+    - name: Wait 10 seconds for setup to finish
+      pause:
+        seconds: 10
+
     - name: Create slowlog configuration for mysql nodes
       community.docker.docker_container_exec:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
@@ -100,24 +106,9 @@
         container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Get already connected services to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "https://{{ pmm_server_ip }}:{{ '443' if pmm_server_ip is ansible.utils.ipv4 else '8443' }}/v1/management/services" | jq -r ".services[].service_name"'
-      register: pmm_server_services
-
-    - name: Display already connected services to pmm server
-      debug:
-        msg: "{{ pmm_server_services.stdout | split('\n') }}"
-
-    - name: Find out if service is already connected to pmm server
-      block:
-        - name: Loop through percona servers
-          set_fact:
-            random_service_name_value: "_{{ 9999 | random + 1 }}"
-          loop: "{{ range(1, nodes_count | int + 1) | list }}"
-          when: "('ps_pmm_' ~ ps_version ~ '_' ~ item) in pmm_server_services.stdout"
+    - name: Generate random service name suffix
+      set_fact:
+        random_service_name_value: "_{{ 99999 | random + 1 }}"
 
     - name: Add service to pmm server
       community.docker.docker_container_exec:
@@ -270,3 +261,13 @@
           '
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
+
+    - name: Enable MySQL MyRocks
+      community.docker.docker_container_exec:
+        container: "ps_pmm_{{ ps_version }}_{{ item }}"
+        command: >
+          /bin/sh -c '
+            ps-admin --enable-rocksdb -u root -p{{ root_password }}
+          '
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: my_rocks | bool
