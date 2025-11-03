@@ -75,6 +75,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          maxmemory-policy allkeys-lru
+          maxmemory 1gb
       loop: "{{ range(1, valkey_cluster_primaries + 1) | list }}"
 
     - name: Generate base configuration for each replica
@@ -95,6 +97,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          maxmemory-policy allkeys-lru
+          maxmemory 1gb
       loop: "{{ range(valkey_cluster_primaries + 1, valkey_cluster_node_count + 1) | list }}"
 
     - name: Create docker volumes for primary nodes
