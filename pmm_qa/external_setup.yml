@@ -95,7 +95,7 @@
     shell: "{{ item }}"
     with_items:
       - docker exec {{ external_container }} pmm-admin list
-      - docker exec {{ external_container }} pmm-admin add external --listen-port=42200 --group="redis" --service-name=redis_external_service_{{ random_number }}
+#      - docker exec {{ external_container }} pmm-admin add external --listen-port=42200 --group="redis" --service-name=redis_external_service_{{ random_number }}
 
   - name: Add Node Process for Monitoring to PMM via pmm-admin add external command
     shell: "{{ item }}"
