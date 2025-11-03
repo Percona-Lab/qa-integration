@@ -27,9 +27,12 @@
     ignore_errors: true
 
   - name: Prepare Container for External Exporters
-    shell: >
-      sudo docker run -d -p 43100:43100 --name={{ external_container }}
-      phusion/baseimage:jammy-1.0.1
+    shell: |
+      docker run -d \
+        -p 43100:43100 \
+        --name={{ external_container }} \
+        --network=pmm-qa \
+        phusion/baseimage:noble-1.0.2
 
   - name: Copy all required Artifacts to the docker external_container
     shell: "{{ item }}"
