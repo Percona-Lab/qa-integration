@@ -42,10 +42,12 @@
       - docker exec {{ external_container }} apt-get -y install wget curl git gnupg2 lsb-release
 
   - name: Run Redis Container in Host
-    shell: "{{ item }}"
-    with_items:
-      - docker run --name redis_container -d -p 6379:6379 redis '--requirepass oFukiBRg7GujAJXq3tmd'
-      - docker network connect pmm-qa redis_container
+    shell: |
+      docker run -d \
+        --name=redis_container \
+        --network=pmm-qa \
+        -p 6379:6379 \
+        redis '--requirepass oFukiBRg7GujAJXq3tmd'
 
   - name: Setup External Exporters for monitoring
     shell: "{{ item }}"
