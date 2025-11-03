@@ -24,9 +24,7 @@
   when: not (pmm_server_ip | default('') | regex_search('\.'))
 
 - name: Detect OS inside the container
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: cat /etc/os-release
+  shell: docker exec {{ container_name }} cat /etc/os-release
   register: container_os_info
 
 - name: Set distro family (debian/rhel)
@@ -41,28 +39,42 @@
       }}
 
 - name: Install dependencies inside Debian-family container
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: >
-      sh -c '
-      apt-get update &&
-      apt-get install -y wget gnupg2 jq lsb-base lsb-release curl
-      '
-    user: "root"
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      apt-get update && \
+      apt-get install -y \
+        wget \
+        gnupg2 \
+        jq \
+        lsb-base \
+        lsb-release \
+        curl
+    '
   when: distro_family == "debian"
 
-- name: Install dependencies on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: microdnf install -y wget gnupg2 jq
-    user: "root"
+- name: Install dependencies inside Debian-family container
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      microdnf install -y \
+        wget \
+        gnupg2 \
+        jq \
+    '
+  when: distro_family == "debian"
+
+- name: Install dependencies inside Debian-family container
+  shell: |
+    docker exec --user root {{ container_name }} sh -c '
+      microdnf install -y \
+        wget \
+        gnupg2 \
+        jq \
+        '
   when: distro_family == "rhel"
 
 - name: Install curl on RHEL-family containers
-  community.docker.docker_container_exec:
-    container: "{{ container_name }}"
-    command: microdnf install -y curl-minimal
-    user: "root"
+  shell: |
+    docker exec --user root {{ container_name }} sh -c 'microdnf install -y curl-minimal'
   when: distro_family == "rhel"
   ignore_errors: true
 
