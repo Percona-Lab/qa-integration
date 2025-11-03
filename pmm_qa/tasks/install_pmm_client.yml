@@ -1,7 +1,7 @@
 - name: Set default metrics mode
-  register:
+  set_fact:
     metrics_mode: 'auto'
-  when: metrics_mode is undefined
+  when: metrics_mode is not defined
 
 - name: Get PMM server address
   shell: 'docker ps -f name=-server --format "{{ "{{" }}.Names{{ "}}" }}"'
