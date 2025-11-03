@@ -20,6 +20,9 @@
     volumes:
       - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
       - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
+    memory: "2g"
+    memory_reservation: "1g"
+    memory_swap: "4g"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Wait for MySQL to be available

@@ -1,5 +1,4 @@
 #!/bin/bash
-set -ex
 pmm_user=${PMM_USER:-pmm}
 pmm_pass=${PMM_PASS:-pmmpass}
 pbm_user=${PBM_USER:-pbm}
@@ -46,6 +45,8 @@ do
           };
           rs.initiate(config);
 EOF
+
+
     sleep 60
     echo
     echo "configuring root user on primary $node replicaset $rs"
@@ -228,22 +229,56 @@ do
     echo "restarting pbm agent on $node"
     docker compose -f docker-compose-sharded.yaml exec -T $node systemctl restart pbm-agent
 done
-echo
-echo "configuring pmm agents"
+
+echo "Install and setup PMM Client"
+
+PLAYBOOK_FILE="install_pmm_client.yml"
+cat > "$PLAYBOOK_FILE" <<EOF
+- hosts: localhost
+  connection: local
+  tasks:
+    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
+EOF
+
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
 random_number=$RANDOM
 nodes="rs101 rs102 rs103 rs201 rs202 rs203 rscfg01 rscfg02 rscfg03"
+
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
+if [ -z "${ADMIN_PASSWORD+x}" ]; then
+        ADMIN_PASSWORD="password"
+fi
+
 for node in $nodes
 do
-    echo "congiguring pmm agent on $node"
-    rs=$(echo $node | awk -F "0" '{print $1}')
-    docker compose -f docker-compose-sharded.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}_${random_number} $node pmm-agent setup
-    docker compose -f docker-compose-sharded.yaml exec -T $node pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} ${node}_${random_number} 127.0.0.1:27017
+    echo "Configuring PMM Client on $node"
+    ansible_out=$(ansible-playbook install_pmm_client.yml -i localhost, --connection=local -e "container_name=$node pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+
+    if [ $? -ne 0 ]; then
+        echo "Ansible failed for: $node"
+        echo "$ansible_out"
+        exit 1
+    fi
+
+    docker exec $node pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} ${node}_${random_number} 127.0.0.1:27017
 done
 echo "configuring pmm-agent on primary rscfg01 for mongos instance"
 docker compose -f docker-compose-sharded.yaml exec -T rscfg01 pmm-admin add mongodb --agent-password=mypass --cluster=sharded --environment=mongo-sharded-dev --username=${pmm_user} --password=${pmm_pass} mongos_${random_number} mongos:27017
 
 echo "adding some data"
-docker compose -f docker-compose-sharded.yaml exec -T mongos mgodatagen -f /etc/datagen/sharded.json --uri=mongodb://root:root@127.0.0.1:27017
+docker exec mongos yum install -y wget
+docker exec mongos wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
+docker exec mongos tar -xzf mgodatagen_linux_amd64.tar.gz
+docker exec mongos mv mgodatagen /usr/local/bin/
+docker exec mongos chmod +x /usr/local/bin/mgodatagen
+docker exec mongos mgodatagen -f /etc/datagen/sharded.json --uri=mongodb://root:root@127.0.0.1:27017
+
 tests=${TESTS:-yes}
 if [ $tests != "no" ]; then
     echo "running tests"
@@ -252,6 +287,7 @@ if [ $tests != "no" ]; then
     else
     echo "skipping tests"
 fi
+
 cleanup=${CLEANUP:-yes}
 if [ $cleanup != "no" ]; then
     echo "cleanup"

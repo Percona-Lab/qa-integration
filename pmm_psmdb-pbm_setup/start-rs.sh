@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 pmm_server_admin_pass=${ADMIN_PASSWORD:-password}
 profile=${COMPOSE_PROFILES:-classic}

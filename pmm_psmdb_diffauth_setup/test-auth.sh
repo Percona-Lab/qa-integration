@@ -11,7 +11,7 @@
 # TESTS - whether to run tests, by default - yes
 # CLEANUP - whether to remove setup, by default - yes
 
-set -e
+#set -e
 
 # PSMDB 4.2 doesn't support AWS auth
 if [[ -n "$PSMDB_VERSION" ]] && [[ "$PSMDB_VERSION" == *"4.2."* ]]; then
@@ -25,41 +25,58 @@ fi
 
 bash -e ./generate-certs.sh
 
-#Start setup
+echo "Start setup"
 docker compose -f docker-compose-pmm-psmdb.yml down -v --remove-orphans
 docker compose -f docker-compose-pmm-psmdb.yml build
 docker compose -f docker-compose-pmm-psmdb.yml up -d
 
-#Add users
+echo "Add users"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet << EOF
 db.getSiblingDB("admin").createUser({ user: "root", pwd: "root", roles: [ "root", "userAdminAnyDatabase", "clusterAdmin" ] });
 EOF
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mongo --quiet "mongodb://root:root@localhost/?replicaSet=rs0" < init/setup_psmdb.js
 
-#Configure PBM
+echo "Configure PBM"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server bash -c "echo \"PBM_MONGODB_URI=mongodb://pbm:pbmpass@127.0.0.1:27017\" > /etc/sysconfig/pbm-agent"
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server systemctl restart pbm-agent
 
-#Configure PMM
-set +e
-i=1
-while [ $i -le 3 ]; do
-    output=$(docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-agent setup --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --server-address=pmm-server:8443 --metrics-mode=auto --server-username=admin --server-password=${ADMIN_PASSWORD} --server-insecure-tls)
-    exit_code=$?
+echo "Install PMM Client"
 
-    if [ $exit_code -ne 0 ] && [[ $output == *"500 Internal Server Error"* ]]; then
-        i=$((i + 1))
-    else
-        break
-    fi
-    sleep 1
-done
+docker ps -a
 
-#Add Mongo Service
+PLAYBOOK_FILE="install_pmm_client.yml"
+cat > "$PLAYBOOK_FILE" <<EOF
+- hosts: localhost
+  connection: local
+  tasks:
+    - include_tasks: ../pmm_qa/tasks/install_pmm_client.yml
+EOF
+
+if [ -z "${PMM_SERVER_IP+x}" ]; then
+    PMM_SERVER_IP="pmm-server"
+fi
+
+echo "PMM Server IP is: $PMM_SERVER_IP"
+echo "PMM Client version is: $PMM_CLIENT_VERSION"
+echo "Admin Password is: $ADMIN_PASSWORD"
+ansible_out=$(ansible-playbook install_pmm_client.yml -vvv --connection=local --inventory 127.0.0.1, --limit 127.0.0.1 -e "container_name=psmdb-server pmm_server_ip=$PMM_SERVER_IP client_version=$PMM_CLIENT_VERSION admin_password=$ADMIN_PASSWORD" 2>&1)
+
+if [ $? -ne 0 ]; then
+    echo "Ansible failed for: psmdb-server"
+    echo "$ansible_out"
+    exit 1
+fi
+
+echo "Add Mongo Service"
 random_number=$RANDOM
 docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server pmm-admin add mongodb psmdb-server_${random_number} --agent-password=mypass --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tls --tls-certificate-key-file=/mongodb_certs/client.pem --tls-ca-file=/mongodb_certs/ca-certs.pem --cluster=mycluster
-#Add some data
-docker compose -f docker-compose-pmm-psmdb.yml exec -T psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
+
+echo "Add some data"
+docker exec psmdb-server wget -O mgodatagen_linux_amd64.tar.gz https://github.com/feliixx/mgodatagen/releases/download/v0.12.0/mgodatagen_0.12.0_darwin_amd64.tar.gz
+docker exec psmdb-server tar -xzf mgodatagen_linux_amd64.tar.gz
+docker exec psmdb-server mv mgodatagen /usr/local/bin/
+docker exec psmdb-server chmod +x /usr/local/bin/mgodatagen
+docker exec psmdb-server mgodatagen -f /etc/datagen/replicaset.json --username=pmm_mongodb --password="5M](Q%q/U+YQ<^m" --host psmdb-server --port 27017 --tlsCertificateKeyFile=/mongodb_certs/client.pem --tlsCAFile=/mongodb_certs/ca-certs.pem
 
 tests=${TESTS:-yes}
 if [ $tests = "yes" ]; then

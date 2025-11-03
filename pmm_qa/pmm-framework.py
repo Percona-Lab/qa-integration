@@ -422,7 +422,6 @@ def execute_shell_scripts(shell_scripts, project_relative_scripts_dir, env_vars,
     # Get script directory
     current_directory = os.getcwd()
     shell_scripts_path = os.path.abspath(os.path.join(current_directory, os.pardir, project_relative_scripts_dir))
-
     # Get the original working directory
     original_dir = os.getcwd()
 
@@ -555,6 +554,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Define environment variables for playbook
     env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PSMDB_VERSION': psmdb_version,
         'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),
@@ -697,6 +697,7 @@ def setup_ssl_psmdb(db_type, db_version=None, db_config=None, args=None):
 
     # Define environment variables for playbook
     env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'PSMDB_VERSION': psmdb_version,
         'PMM_SERVER_CONTAINER_ADDRESS': server_address,
         'PSMDB_CONTAINER': 'psmdb_pmm_' + str(psmdb_version),

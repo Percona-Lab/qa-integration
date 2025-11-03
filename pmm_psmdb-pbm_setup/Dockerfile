@@ -20,8 +20,7 @@ VOLUME [ "/sys/fs/cgroup" ]
 CMD ["/usr/sbin/init"]
 
 ARG OL_VERSION
-RUN set -ex; \
-    export GNUPGHOME="$(mktemp -d)"; \
+RUN export GNUPGHOME="$(mktemp -d)"; \
     export PERCONA_TELEMETRY_URL="https://check-dev.percona.com/v1/telemetry/GenericReport"; \
     dnf install -y gnupg2; \
     if [ $PSMDB_VERSION != "latest" ]; then export PSMDB_REPO="$(echo "${PSMDB_VERSION}" | awk -F '.' '{print "psmdb-"$1$2}')" ; else export PSMDB_REPO=psmdb-80 ; fi ; \
@@ -58,25 +57,8 @@ RUN set -ex; \
     fi
 
 ARG OL_VERSION
-RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
-        dnf -y install pmm-client && \
-        curl -Lf -o /tmp/pmm-client.tar.gz $PMM_CLIENT_VERSION && \
-        cd /tmp && tar -xvf pmm-client.tar.gz --transform 's,^/*[^/]*,/pmm-client,S' && \
-        cd /tmp/pmm-client && ./install_tarball && cd ../ && rm -rf pmm* ;\
-    elif [[ "$PMM_CLIENT_VERSION" =~ 3-dev-latest|latest ]]; then \
-        dnf -y install pmm-client ; \
-    elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
-        percona-release enable pmm3-client testing  && \
-        dnf update --refresh -y && \
-        dnf -y install pmm-client ; \
-    else \
-        if [[ "$PMM_CLIENT_VERSION" =~ ^([3-9])\.([1-9][0-9]*)\.([0-9]+)$ ]]; then \
-            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-7.el${OL_VERSION} ; \
-        else \
-            dnf -y install pmm-client-${PMM_CLIENT_VERSION}-6.el${OL_VERSION} ; \
-        fi \
-    fi && \
-    sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
+
+RUN sed 's/Type=forking/#Type=forking/' -i /usr/lib/systemd/system/mongod.service && \
     systemctl enable mongod && \
     systemctl enable pbm-agent && \
     sed -i '/ExecStart/a StandardError=file:/var/log/pmm-agent.log' /usr/lib/systemd/system/pmm-agent.service && \

@@ -25,7 +25,7 @@ on:
 jobs:
   test_replica_set:
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -42,7 +42,7 @@ jobs:
 
   test_sharded_cluster:
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +52,12 @@ jobs:
       PMM_IMAGE: ${{ inputs.pmm_image || 'perconalab/pmm-server:3-dev-latest' }}
     steps:
     - uses: actions/checkout@v2
+    - name: Cleanup disk space on a worker according to https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
     - name: Test sharded with PSMDB ${{ matrix.psmdb }}
       run: |
         PSMDB_VERSION=${{ matrix.psmdb }} ./start-sharded.sh
