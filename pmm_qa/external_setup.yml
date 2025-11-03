@@ -35,7 +35,6 @@
     shell: "{{ item }}"
     with_items:
       - docker cp ./external_setup.sh {{ external_container }}:/
-      - docker cp ./pmm3-client-setup.sh {{ external_container }}:/
       - docker exec {{ external_container }} apt-get update
       - docker exec {{ external_container }} apt-get -y install wget curl git gnupg2 lsb-release
 
