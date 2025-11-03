@@ -53,7 +53,7 @@
   - name: Install PMM Client inside of container
     include_tasks: ./tasks/install_pmm_client.yml
     vars:
-      container_name: {{ external_container }}
+      container_name: "{{ external_container }}"
 
   - name: Execute Setup script inside the External container for Redis
     shell: "{{ item }}"
