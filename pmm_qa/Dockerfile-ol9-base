@@ -4,4 +4,4 @@ FROM oraclelinux:9
 RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 
 # Set up systemd as the entrypoint
-CMD ["/sbin/init"]
+ENTRYPOINT ["/sbin/init"]
