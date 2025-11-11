@@ -19,6 +19,11 @@
     shell: docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" phusion/baseimage:noble-1.0.2
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+  - name: Install required dependencies
+    shell: >
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} yum install -y wget
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
   - name: Install Percona Release
     shell: >
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb
