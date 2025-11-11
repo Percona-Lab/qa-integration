@@ -21,10 +21,6 @@
       docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" baseimage:ol9 tail -f /dev/null
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-  - name: Install required dependencies
-    shell: docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} dnf install -y wget
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
   - name: Install Percona Release
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
