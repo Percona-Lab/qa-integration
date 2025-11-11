@@ -1,0 +1,26 @@
+---
+# Percona Server for MongoDB setup
+- name: Setup Percona Server 8.4 and higher. Cluster with Group Replication in Docker
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    psmdb_version: "{{ lookup('env', 'PSMDB_VERSION') | default('7.0', true) }}"
+    network_name: "pmm-qa"
+    psmdb_container:
+    nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('1', true)) | int }}"
+
+  tasks:
+  - name: Create pmm-qa network if not exist
+    shell: docker network create {{ network_name }}
+    ignore_errors: true
+
+  - name: Prepare Container for Percona Server for MongoDB
+    shell: docker run -d -network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" phusion/baseimage:noble-1.0.2
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+  - name: Install Percona Release
+    shell: >
+      docker run psmdb_pmm_{{ psmdb_version }}_{{ item }} wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb
+      docker run psmdb_pmm_{{ psmdb_version }}_{{ item }} dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"

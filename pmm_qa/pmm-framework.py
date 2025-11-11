@@ -568,19 +568,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'CLEANUP': 'no'
     }
 
-    shell_scripts = []
-    scripts_folder = "pmm_psmdb-pbm_setup"
-    setup_type = get_value('SETUP_TYPE', db_type, args, db_config).lower()
-
-    if setup_type in ("pss", "psa"):
-        shell_scripts = ['start-rs-only.sh']
-    elif setup_type in ("shards", "sharding"):
-        shell_scripts = ['start-sharded-no-server.sh']
-        mongo_sharding_setup(shell_scripts[0], args)
-
-    # Execute shell scripts
-    if not shell_scripts == []:
-        execute_shell_scripts(shell_scripts, scripts_folder, env_vars, args)
+    run_ansible_playbook('percona_server_mongodb/percona-server-mongodb-setup.yml', env_vars, args)
 
 
 # Temporary method for Mongo SSL Setup.
