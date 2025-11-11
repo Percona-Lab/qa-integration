@@ -16,7 +16,7 @@
     ignore_errors: true
 
   - name: Prepare Container for Percona Server for MongoDB
-    shell: docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" oraclelinux:9
+    shell: docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" oraclelinux:9 tail -f /dev/null
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install required dependencies
