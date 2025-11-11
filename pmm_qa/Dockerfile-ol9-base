@@ -3,5 +3,7 @@ FROM oraclelinux:9
 # Install systemd and basic utilities
 RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 
+
+VOLUME [ "/sys/fs/cgroup" ]
 # Set up systemd as the entrypoint
-ENTRYPOINT ["/sbin/init"]
+CMD ["/sbin/init"]
