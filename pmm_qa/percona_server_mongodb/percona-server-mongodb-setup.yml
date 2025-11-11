@@ -39,7 +39,6 @@
 
   - name: Start Percona Server for MongoDB
     shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl enable mongod
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl start mongod
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} service mongod start
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
