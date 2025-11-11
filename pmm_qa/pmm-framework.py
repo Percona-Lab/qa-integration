@@ -543,6 +543,8 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     psmdb_version = os.getenv('PSMDB_VERSION') or get_latest_psmdb_version(db_version) or \
                     database_configs[db_type]["versions"][-1]
 
+    print(f'PSMDB Version is: {psmdb_version}')
+
     # Handle port address for external or internal address
     server_hostname = container_name
     port = 8443
