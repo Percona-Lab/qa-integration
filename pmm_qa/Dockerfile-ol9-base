@@ -1,13 +1,9 @@
 FROM oraclelinux:9
 
-# Install systemd and basic utilities
 RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 
-VOLUME ["/sys/fs/cgroup"]
-
-# Write the dummy service file
 RUN echo -e "[Unit]\nDescription=Dummy keepalive\n[Service]\nExecStart=/usr/bin/sleep infinity\n[Install]\nWantedBy=multi-user.target" > /etc/systemd/system/dummy.service \
- && ln -s /etc/systemd/system/dummy.service /etc/systemd/system/multi-user.target.wants/dummy.service
+    && ln -s /etc/systemd/system/dummy.service /etc/systemd/system/multi-user.target.wants/dummy.service
 
-# Set up systemd as the entrypoint
+VOLUME ["/sys/fs/cgroup"]
 CMD ["/sbin/init"]
