@@ -1,0 +1,7 @@
+FROM oraclelinux:9
+
+# Install systemd and basic utilities
+RUN microdnf -y install systemd && microdnf clean all
+
+# Set up systemd as the entrypoint
+CMD ["/sbin/init"]

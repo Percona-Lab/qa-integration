@@ -16,7 +16,9 @@
     ignore_errors: true
 
   - name: Prepare Container for Percona Server for MongoDB
-    shell: docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" oraclelinux:9 tail -f /dev/null
+    shell: |
+      docker build -f ../Dockerfile-ol9-base -t baseimage:ol9 .
+      docker run -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" baseimage:ol9
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install required dependencies
@@ -39,6 +41,7 @@
 
   - name: Start Percona Server for MongoDB
     shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongod --config /etc/mongod.conf --fork
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl enable mongod
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl start mongod
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
