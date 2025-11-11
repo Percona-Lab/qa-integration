@@ -7,3 +7,5 @@ RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 VOLUME [ "/sys/fs/cgroup" ]
 # Set up systemd as the entrypoint
 CMD ["/sbin/init"]
+
+RUN echo -e "[Unit]\nDescription=Dummy keepalive\n[Service]\nExecStart=/usr/bin/sleep infinity\n[Install]\nWantedBy=multi-user.target" > /etc/systemd/system/dummy.service && systemctl enable dummy
