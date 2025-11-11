@@ -5,5 +5,5 @@ RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 RUN echo -e "[Unit]\nDescription=Dummy keepalive\n[Service]\nExecStart=/usr/bin/sleep infinity\n[Install]\nWantedBy=multi-user.target" > /etc/systemd/system/dummy.service \
     && ln -s /etc/systemd/system/dummy.service /etc/systemd/system/multi-user.target.wants/dummy.service
 
-VOLUME ["/sys/fs/cgroup"]
-CMD ["/sbin/init"]
+VOLUME [ "/sys/fs/cgroup" ]
+CMD ["/usr/sbin/init"]
