@@ -544,7 +544,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
                     database_configs[db_type]["versions"][-1]
 
     if psmdb_version == 'latest':
-        psmdb_version = database_configs[db_type]["versions"][-1]
+        psmdb_version = database_configs[db_type]["versions"][-2]
 
     print(f'PSMDB Version is: {psmdb_version}')
 
