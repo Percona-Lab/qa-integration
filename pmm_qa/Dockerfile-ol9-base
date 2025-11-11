@@ -1,7 +1,7 @@
 FROM oraclelinux:9
 
 # Install systemd and basic utilities
-RUN dnf -y install systemd && dnf clean all && rm -rf /var/cache/dnf
+RUN dnf -y install systemd wget && dnf clean all && rm -rf /var/cache/dnf
 
 # Set up systemd as the entrypoint
 CMD ["/sbin/init"]
