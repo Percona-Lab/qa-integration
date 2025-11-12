@@ -14,6 +14,7 @@
     pmm_user_password: "5M](Q%q/U+YQ<^m"
     pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
+    admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     setup_type: "{{ lookup('env', 'MONGO_SETUP_TYPE') }}"
 
   tasks:
@@ -74,7 +75,17 @@
 
   - name: Create SSL certificates
     shell: |
-      openssl genrsa -out /ssl/ca.key 2048
-      openssl req -x509 -new -nodes -key /ssl/ca.key -sha256 -days 3650 -subj '/CN=CA' -out /ssl/ca.crt
-      openssl genrsa -out /ssl/server.key 2048
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl genrsa -out /ssl/ca.key 2048
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl req -x509 -new -nodes -key /ssl/ca.key -sha256 -days 3650 -subj '/CN=CA' -out /ssl/ca.crt
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl genrsa -out /ssl/server.key 2048
     when: setup_type == "ssl"
+
+  - name: Set permissions for server.key to 0600
+    file:
+      path: "{{ ssl_dir }}/server.key"
+      mode: '0600'
+
+  - name: Generate server CSR
+    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl req -new -key /ssl/server.key -config ./ssl-config.cnf -out /ssl/server.csr"
+    args:
+      creates: "{{ ssl_dir }}/server.csr"
