@@ -71,9 +71,36 @@
     pause:
       seconds: 10
 
-  - name: Create pmm user inside of Percona Server for MongoDB
+  - name: Create PMM user and x509 user in Percona MongoDB
     shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval 'db.createUser({user:"{{ pmm_user }}",pwd:"{{ pmm_user_password }}",roles:[{ role:"root",db:"admin" }]})'
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.createUser({
+          user: "{{ pmm_user }}",
+          pwd: "{{ pmm_user_password }}",
+          roles: [ { role: "root", db: "admin" } ]
+        })
+      '
+
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("$external").runCommand({
+          createUser: "emailAddress=test@percona.com,CN=localhost,OU=Percona Unit,O=Percona,L=Prague,ST=Prague,C=CZ",
+          roles: [
+            { role: "readWrite", db: "test" },
+            { role: "explainRole", db: "admin" },
+            { role: "clusterMonitor", db: "admin" },
+            { role: "read", db: "local" },
+            { role: "root", db: "admin" }
+          ],
+          writeConcern: { w: "majority", wtimeout: 5000 }
+        })
+      '
+
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("$external").auth({
+          mechanism: "MONGODB-X509",
+          user: "emailAddress=test@percona.com,CN=localhost,OU=Percona Unit,O=Percona,L=Prague,ST=Prague,C=CZ"
+        })
+      '
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install and add pmm client.
