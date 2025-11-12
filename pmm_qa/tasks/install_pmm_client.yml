@@ -40,37 +40,21 @@
 
 - name: Install dependencies inside Debian-family container
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      apt-get update && \
-      apt-get install -y \
-        wget \
-        gnupg2 \
-        jq \
-        lsb-base \
-        lsb-release \
-        curl
-    '
+    docker exec --user root {{ container_name }} apt-get update
+    docker exec --user root {{ container_name }} apt-get install -y wget gnupg2 jq lsb-base lsb-release curl
   when: distro_family == "debian"
 
 - name: Install microdnf on RHEL-family containers
-  shell: |
-    docker exec --user root {{ container_name }} sh -c 'dnf install -y microdnf'
+  shell: docker exec --user root {{ container_name }} dnf install -y microdnf
   when: distro_family == "rhel"
   ignore_errors: true
 
 - name: Install dependencies inside RHEL-family container
-  shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      microdnf install -y \
-        wget \
-        gnupg2 \
-        jq \
-        '
+  shell: docker exec --user root {{ container_name }} microdnf install -y wget gnupg2 jq
   when: distro_family == "rhel"
 
 - name: Install curl on RHEL-family containers
-  shell: |
-    docker exec --user root {{ container_name }} sh -c 'microdnf install -y curl-minimal'
+  shell: docker exec --user root {{ container_name }} microdnf install -y curl-minimal
   when: distro_family == "rhel"
   ignore_errors: true
 
@@ -84,78 +68,62 @@
 
 - name: Install percona release on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} curl -O https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    docker exec --user root {{ container_name }} wget -O https://repo.percona.com/yum/percona-release-latest.noarch.rpm
     docker exec --user root {{ container_name }} microdnf -y install ./percona-release-latest.noarch.rpm
   when: distro_family == 'rhel'
   ignore_errors: true
 
 - name: Install pmm client experimental on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client experimental &&
-      apt-get update &&
-      apt-get -y install pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client experimental
+    docker exec --user root {{ container_name }} apt-get update
+    docker exec --user root {{ container_name }} apt-get -y install pmm-client
   when: distro_family == "debian" and client_version == "3-dev-latest"
 
 - name: Install pmm client experimental on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client experimental &&
-      microdnf install -y pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client experimental
+    docker exec --user root {{ container_name }} microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "3-dev-latest"
 
 - name: Install pmm client testing on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client testing &&
-      apt-get update &&
-      apt-get -y install pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client testing
+    docker exec --user root {{ container_name }} apt-get update
+    docker exec --user root {{ container_name }} apt-get -y install pmm-client
   when: distro_family == "debian" and client_version == "pmm3-rc"
 
 - name: Install pmm client testing on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client testing &&
-      microdnf install -y pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client testing
+    docker exec --user root {{ container_name }} microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "pmm3-rc"
 
 - name: Install pmm client release on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client release &&
-      apt-get update &&
-      apt-get -y install pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client release
+    docker exec --user root {{ container_name }} apt-get update
+    docker exec --user root {{ container_name }} apt-get -y install pmm-client
   when: distro_family == "debian" and client_version == "pmm3-latest"
 
 - name: Install pmm client release on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      percona-release enable-only pmm3-client release &&
-      microdnf install -y pmm-client
-    '
+    docker exec --user root {{ container_name }} percona-release enable-only pmm3-client release
+    docker exec --user root {{ container_name }} microdnf install -y pmm-client
   when: distro_family == "rhel" and client_version == "pmm3-latest"
 
 - name: Install specific PMM client version on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb &&
-      dpkg -i /pmm-client.deb
-    '
+    docker exec --user root {{ container_name }} wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb
+    docker exec --user root {{ container_name }} dpkg -i /pmm-client.deb
   when:
     - distro_family == 'debian'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
 
 - name: Install specific PMM client version on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      wget -O /pmm-client.rpm https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm &&
-      rpm -i /pmm-client.rpm
-    '
+    docker exec --user root {{ container_name }} wget -O /pmm-client.rpm https://repo.percona.com/pmm3-client/yum/release/9/RPMS/x86_64/pmm-client-{{ client_version }}-7.el9.x86_64.rpm
+    docker exec --user root {{ container_name }} rpm -i /pmm-client.rpm
   when:
     - distro_family == 'rhel'
     - client_version is match('^3\\.[0-9]+\\.[0-9]+$')
