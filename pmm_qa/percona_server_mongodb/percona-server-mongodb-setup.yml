@@ -126,12 +126,14 @@
           roles: [ { role: "root", db: "admin" } ]
         })
       '
-      db.getSiblingDB("\$external").auth(
-        {
-          mechanism: "MONGODB-X509",
-          user: "emailAddress=test@percona.com,CN=localhost,OU=client,O=Percona,L=San Francisco,ST=California,C=US",
-        }
-      );
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
+        db.getSiblingDB("\$external").auth(
+          {
+            mechanism: "MONGODB-X509",
+            user: "emailAddress=test@percona.com,CN=localhost,OU=client,O=Percona,L=San Francisco,ST=California,C=US",
+          }
+        );
+      '
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Verify ssl connection to mongodb
