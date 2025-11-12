@@ -17,7 +17,7 @@
 
   - name: Prepare Container for Percona Server for MongoDB
     shell: |
-      docker run --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" antmelekhin/docker-systemd:rockylinux-9
+      docker run --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:ro -d --network={{ network_name }} --name="psmdb_pmm_{{ psmdb_version }}_{{ item }}" antmelekhin/docker-systemd:rockylinux-9 tail -f /dev/null
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install Percona Release
