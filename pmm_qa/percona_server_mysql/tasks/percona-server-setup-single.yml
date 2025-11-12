@@ -15,7 +15,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
-  shell: apt-get -y install wget
+  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get -y install wget
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Release
@@ -25,7 +25,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Enable Percona Server for MongoDB repository
-  shell: docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + psmdb_version | replace('_', '') }} release
+  shell: docker exec ps_pmm_{{ psmdb_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + psmdb_version | replace('_', '') }} release
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Server for MongoDB
