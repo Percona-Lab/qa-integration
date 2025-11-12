@@ -32,7 +32,7 @@
 
 - name: Install Percona Server for MySQL
   shell: |
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} dnf install -y \
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt install -y \
       percona-server-server \
       percona-server-test \
       percona-server-source \
