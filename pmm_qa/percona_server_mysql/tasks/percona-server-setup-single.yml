@@ -23,7 +23,7 @@
 - name: Install Percona Release
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} dpkg -i ./percona-release-latest.noarch.rpm
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Enable Percona Server for MongoDB repository
@@ -32,9 +32,15 @@
 
 - name: Install Percona Server for MongoDB
   shell: |
-    docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} dnf install -y \
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} dnf install -y \
       percona-server-server \
       percona-server-test \
       percona-server-source \
       percona-server-rocksdb \
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start Percona Server for MongoDB
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl enable mysql 
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl start mysql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
