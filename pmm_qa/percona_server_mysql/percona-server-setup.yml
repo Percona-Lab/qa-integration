@@ -139,20 +139,11 @@
         docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
         docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
       when: setup_type == "gr" or setup_type == "replication"
+      loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare data for sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            prepare
+      shell: |
+        docker exec ps_pmm_{{ ps_version }}_{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 prepare
       when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
