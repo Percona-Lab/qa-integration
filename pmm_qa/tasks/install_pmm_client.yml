@@ -61,16 +61,6 @@
 - name: Install dependencies inside Debian-family container
   shell: |
     docker exec --user root {{ container_name }} sh -c '
-      apt install -y \
-        wget \
-        gnupg2 \
-        jq \
-    '
-  when: distro_family == "debian"
-
-- name: Install dependencies inside Debian-family container
-  shell: |
-    docker exec --user root {{ container_name }} sh -c '
       microdnf install -y \
         wget \
         gnupg2 \
