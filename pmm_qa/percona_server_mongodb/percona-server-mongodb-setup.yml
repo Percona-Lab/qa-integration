@@ -82,22 +82,22 @@
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
         db.getSiblingDB("admin").createRole({
-          role: "explainRole",
-          privileges: [{
-            resource: {
-              db: "",
-              collection: ""
+          "role": "pmmMonitor",
+          "privileges": [
+            {
+              "resource": { "db": "", "collection": "" },
+              "actions": [ "dbHash", "find", "listIndexes", "listCollections", "collStats", "dbStats", "indexStats" ]
             },
-            actions: [
-              "listIndexes",
-              "listCollections",
-              "dbStats",
-              "dbHash",
-              "collStats",
-              "find"
-            ]
-          }],
-        roles: []
+            {
+              "resource": { "db": "", "collection": "system.version" },
+              "actions": [ "find" ]
+            },
+            {
+              "resource": { "db": "", "collection": "system.profile" },
+              "actions": [ "dbStats", "collStats", "indexStats" ]
+            }
+          ],
+          "roles": [ ]
         })
       '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
