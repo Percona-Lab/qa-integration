@@ -1,0 +1,43 @@
+- name: Set default ssl_dir
+  set_fact:
+    ssl_dir: "./ssl"
+
+- name: Create OpenSSL req config with dynamic CN
+  copy:
+    dest: /ssl/openssl.cnf
+    content: |
+      [req]
+      default_bits        = 2048
+      default_keyfile     = privkey.pem
+      distinguished_name  = req_distinguished_name
+      x509_extensions     = v3_req
+      prompt              = no
+
+      [req_distinguished_name]
+      C  = CZ
+      ST = Prague
+      L  = Prague
+      O  = Percona
+      OU = Percona Unit
+      CN = localhost
+
+      [v3_req]
+      keyUsage            = digitalSignature, keyEncipherment
+      extendedKeyUsage    = serverAuth
+      subjectAltName      = @alt_names
+      basicConstraints    = CA:FALSE
+
+      [alt_names]
+      DNS.1 = {{ container_name }}
+      IP.1  = 127.0.0.1
+
+- name: Create SSL certificates
+  shell: |
+    docker exec {{ container_name }} openssl genrsa -out /ssl/ca.key 2048
+    docker exec {{ container_name }} openssl req -x509 -new -nodes -key /ssl/ca.key -sha256 -days 3650 -subj '/CN=CA' -out /ssl/ca.crt
+    docker exec {{ container_name }} openssl genrsa -out /ssl/server.key 2048
+
+- name: Set permissions for server.key to 0600
+  file:
+    path: "{{ ssl_dir }}/server.key"
+    mode: '0600'
