@@ -76,6 +76,13 @@
 #    vars:
 #      container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
 #    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  - name: Get mongod user id
+    shell: psmdb_pmm_{{ psmdb_version }}_1 id -u mongod
+    register: mongod_userid
+
+  - name: Set mongod user id
+    set_fact:
+      mongod_userid: "{{mongod_userid.stdout}}"
 
   - name: Create SSL certificates
     include_tasks: ../tasks/create_ssl_certificates.yml
