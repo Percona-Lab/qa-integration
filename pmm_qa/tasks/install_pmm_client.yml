@@ -54,11 +54,11 @@
 
 - name: Install curl on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c 'microdnf install -y microdnf'
+    docker exec --user root {{ container_name }} sh -c 'dnf install -y microdnf'
   when: distro_family == "rhel"
   ignore_errors: true
 
-- name: Install dependencies inside Debian-family container
+- name: Install dependencies inside RHEL-family container
   shell: |
     docker exec --user root {{ container_name }} sh -c '
       microdnf install -y \
