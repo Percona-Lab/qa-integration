@@ -33,10 +33,6 @@
         nodes_count: 3
       when: nodes_count | int < 3 and setup_type == "gr"
 
-    - name: Install dependencies
-      shell: apt-get -y install wget
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
     - name: Chance to correct nodes count for async replication
       set_fact:
         nodes_count: 2
