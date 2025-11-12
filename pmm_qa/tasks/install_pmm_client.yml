@@ -52,10 +52,16 @@
     '
   when: distro_family == "debian"
 
+- name: Install curl on RHEL-family containers
+  shell: |
+    docker exec --user root {{ container_name }} sh -c 'microdnf install -y microdnf'
+  when: distro_family == "rhel"
+  ignore_errors: true
+
 - name: Install dependencies inside Debian-family container
   shell: |
     docker exec --user root {{ container_name }} sh -c '
-      microdnf install -y \
+      apt install -y \
         wget \
         gnupg2 \
         jq \
