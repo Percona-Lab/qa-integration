@@ -36,11 +36,6 @@
       antmelekhin/docker-systemd:rockylinux-9
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-  - name: Install dependencies
-    shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} dnf install -y openssl
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
   - name: Install Percona Release
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
@@ -81,74 +76,11 @@
     shell: docker exec psmdb_pmm_{{ psmdb_version }}_1 id -u mongod
     register: mongod_userid
 
-  - name: Set mongod user id
-    set_fact:
-      mongod_userid: "{{mongod_userid.stdout}}"
-
-  - name: Create SSL certificates
-    include_tasks: ../tasks/create_ssl_certificates.yml
-    vars:
-      container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
-      user_id: "{{ mongod_userid }}"
+  - name: Setup SSL for Percona Server for MongoDB
+    include_tasks: ./tasks/setup_ssl_percona_server_mongodb.yml
     when: setup_type == "ssl"
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-  - name: Create correct mongodb pem file
-    shell: |
-      cat ./ssl/server.crt ./ssl/server.key > ./ssl/mongodb.pem
-      cat ./ssl/client.crt ./ssl/client.key > ./ssl/client.pem
-
-  - name: Create correct mongodb pem file
-    shell: docker cp ./data/mongod_ssl.conf psmdb_pmm_{{ psmdb_version }}_{{ item }}:/etc/mongod.conf
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-  - name: Restart Percona Server for MongoDB with ssl config
-    shell: docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl restart mongod
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-  - name: Wait 10 seconds for database to start
-    pause:
-      seconds: 10
-
-  - name: Create Role for QAN
-    shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.getSiblingDB("admin").createRole({
-          "role": "pbmAnyAction",
-          "privileges": [{
-            "resource": { "anyResource": true },
-            "actions": [ "anyAction" ]
-          }],
-          "roles": []
-        });
-      '
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.getSiblingDB("admin").createRole({
-          role: "explainRole",
-          privileges: [
-            {
-              resource: { db: "", collection: "" },
-              actions: [
-                "listIndexes",
-                "listCollections",
-                "dbStats",
-                "dbHash",
-                "collStats",
-                "find",
-                "indexStats"
-              ]
-            },
-            {
-              resource: { db: "", collection: "system.profile" },
-              actions: ["dbStats", "collStats", "indexStats"]
-            }
-          ],
-          roles: []
-        });
-      '
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-  - name: Create PMM user and x509 user in Percona MongoDB
+  - name: Create PMM user  user in Percona MongoDB
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
         db.createUser({
@@ -165,32 +97,6 @@
           ]
         })
       '
-
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.getSiblingDB("$external").runCommand({
-          createUser: "C=US,ST=California,L=San Francisco,O=Percona,OU=client,CN=localhost,emailAddress=test@percona.com",
-          roles: [
-            { "db" : "admin", "role": "explainRole" },
-            { "db" : "local", "role": "read" },
-            { "db" : "admin", "role" : "readWrite", "collection": "" },
-            { "db" : "admin", "role" : "backup" },
-            { "db" : "admin", "role" : "clusterMonitor" },
-            { "db" : "admin", "role" : "restore" },
-            { "db" : "admin", "role" : "pbmAnyAction" },
-          ]
-        })
-      '
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.runCommand({ connectionStatus: 1 })
-      '
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-  - name: Verify ssl connection to mongodb
-    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh \"mongodb://127.0.0.1:27017/?tls=true\" --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem --eval 'db.runCommand({ connectionStatus: 1 })'"
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-  - name: Verify ssl connection to mongodb
-    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --tls --username={{ pmm_user }} --password=\"{{ pmm_user_password }}\" --authentication-mechanism=MONGODB-X509 --authentication-database=$external --tls-certificate-key-file=/ssl/client.pem --tls-certificate-key-file-password=/ssl/client.key --tls-ca-file=/ssl/ca.crt psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Run Testing data on Percona Server for MongoDB
