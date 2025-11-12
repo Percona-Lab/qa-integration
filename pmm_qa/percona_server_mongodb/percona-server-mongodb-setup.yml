@@ -45,7 +45,7 @@
 
   - name: Start Percona Server for MongoDB
     shell: |
-      docker exec mongo-container mongosh admin --eval 'db.createUser({user:"{{ pmm_user }}",pwd:"{{ pmm_user_password }}",roles:[{ role:"root",db:"admin" }]})'
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval 'db.createUser({user:"{{ pmm_user }}",pwd:"{{ pmm_user_password }}",roles:[{ role:"root",db:"admin" }]})'
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install and add pmm client.
