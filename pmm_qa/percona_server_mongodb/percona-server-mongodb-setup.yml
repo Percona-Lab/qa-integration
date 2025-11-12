@@ -84,15 +84,15 @@
   - name: Create correct mongodb pem file
     shell: cat ./ssl/server.crt ./ssl/server.key > ./ssl/mongodb.pem
 
-- name: Edit net block in mongod.conf
-  blockinfile:
-    path: ./etc/mongod.conf
-    block: |
-      net:
-        port: 27017
-        bindIp: 0.0.0.0
-        tls:
-          mode: requireTLS
-          certificateKeyFile: /ssl/mongodb.pem
-          CAFile: /ssl/ca.crt
-    marker: "# {mark} ANSIBLE MANAGED NET CONFIG"
+  - name: Edit net block in mongod.conf
+    blockinfile:
+      path: ./etc/mongod.conf
+      block: |
+        net:
+          port: 27017
+          bindIp: 0.0.0.0
+          tls:
+            mode: requireTLS
+            certificateKeyFile: /ssl/mongodb.pem
+            CAFile: /ssl/ca.crt
+      marker: "# {mark} ANSIBLE MANAGED NET CONFIG"
