@@ -121,8 +121,8 @@
       '
 
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.getSiblingDB("\$external").runCommand({
-          createUser: "emailAddress=test@percona.com,CN=localhost,OU=client,O=Percona,L=San Francisco,ST=California,C=US",
+        db.getSiblingDB("$external").runCommand({
+          createUser: "C=US,ST=California,L=San Francisco,O=Percona,OU=client,CN=localhost,emailAddress=test@percona.com",
           roles: [ { role: "root", db: "admin" } ]
         })
       '
