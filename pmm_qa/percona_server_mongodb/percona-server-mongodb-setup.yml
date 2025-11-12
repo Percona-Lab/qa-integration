@@ -5,6 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
+    ssl_dir: "./ssl"
     psmdb_version: "{{ (lookup('env', 'PSMDB_VERSION') | default('7.0', true)) | replace('.', '_') }}"
     network_name: "pmm-qa"
     psmdb_container:
@@ -16,6 +17,12 @@
     setup_type: "{{ lookup('env', 'MONGO_SETUP_TYPE') }}"
 
   tasks:
+  - name: Remove existing ssl folder
+    file:
+      path: "{{ ssl_dir }}"
+      state: absent
+    ignore_errors: true
+
   - name: Create pmm-qa network if not exist
     shell: docker network create {{ network_name }}
     ignore_errors: true
@@ -66,6 +73,8 @@
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Create SSL certificates
-    set_fact:
-      nodes_count: 3
+    shell: |
+      openssl genrsa -out /ssl/ca.key 2048
+      openssl req -x509 -new -nodes -key /ssl/ca.key -sha256 -days 3650 -subj '/CN=CA' -out /ssl/ca.crt
+      openssl genrsa -out /ssl/server.key 2048
     when: setup_type == "ssl"

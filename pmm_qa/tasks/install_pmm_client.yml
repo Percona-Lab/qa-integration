@@ -237,6 +237,11 @@
   when:
     - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
 
+- name: Set metrics_mode if undefined
+  set_fact:
+    metrics_mode: 'auto'
+  when: metrics_mode is not defined
+
 - name: Connect pmm client to pmm server using metrics mode
   community.docker.docker_container_exec:
     container: "{{ container_name }}"
