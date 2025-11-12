@@ -24,6 +24,12 @@
       state: absent
     ignore_errors: true
 
+  - name: Create etc folder
+    file:
+      path: "{{ etc_dir }}"
+      state: directory
+      mode: '0755'
+
   - name: Create pmm-qa network if not exist
     shell: docker network create {{ network_name }}
     ignore_errors: true
