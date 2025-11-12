@@ -71,24 +71,6 @@
     pause:
       seconds: 10
 
-  - name: Create PMM user and x509 user in Percona MongoDB
-    shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
-        db.createUser({
-          user: "{{ pmm_user }}",
-          pwd: "{{ pmm_user_password }}",
-          roles: [ { role: "root", db: "admin" } ]
-        })
-      '
-
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
-        db.getSiblingDB("$external").auth({
-          mechanism: "MONGODB-X509",
-          user: "{{ pmm_user }}"
-        })
-      '
-    loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
   - name: Install and add pmm client.
     include_tasks: ../tasks/install_pmm_client.yml
     vars:
@@ -127,6 +109,24 @@
   - name: Wait 10 seconds for database to start
     pause:
       seconds: 10
+
+  - name: Create PMM user and x509 user in Percona MongoDB
+    shell: |
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.createUser({
+          user: "{{ pmm_user }}",
+          pwd: "{{ pmm_user_password }}",
+          roles: [ { role: "root", db: "admin" } ]
+        })
+      '
+
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("$external").auth({
+          mechanism: "MONGODB-X509",
+          user: "{{ pmm_user }}"
+        })
+      '
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Verify ssl connection to mongodb
     shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh \"mongodb://127.0.0.1:27017/?tls=true\" --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem --eval 'db.runCommand({ connectionStatus: 1 })'"
