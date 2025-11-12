@@ -131,13 +131,10 @@
           user: "{{ pmm_user }}",
           pwd: "{{ pmm_user_password }}",
           roles: [
-            { "db" : "admin", "role": "explainRole" },
-            { "db" : "local", "role": "read" },
-            { "db" : "admin", "role" : "readWrite", "collection": "" },
-            { "db" : "admin", "role" : "backup" },
-            { "db" : "admin", "role" : "clusterMonitor" },
-            { "db" : "admin", "role" : "restore" },
-            { "db" : "admin", "role" : "pbmAnyAction" },
+            { "db": "admin", "role": "pmmMonitor" },
+            { "db": "local", "role": "read" },
+            { "db": "admin", "role": "clusterMonitor" },
+            { "db": "admin", "role": "directShardOperations" }
           ]
         })
       '
