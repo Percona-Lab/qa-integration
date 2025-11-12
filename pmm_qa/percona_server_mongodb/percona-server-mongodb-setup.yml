@@ -80,8 +80,42 @@
     include_tasks: ./tasks/setup_ssl_percona_server_mongodb.yml
     when: setup_type == "ssl"
 
-  - name: Create PMM user  user in Percona MongoDB
+  - name: Create PMM roles and user in Percona MongoDB
     shell: |
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("admin").createRole({
+          "role": "pbmAnyAction",
+          "privileges": [{
+            "resource": { "anyResource": true },
+            "actions": [ "anyAction" ]
+          }],
+          "roles": []
+        });
+      '
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("admin").createRole({
+          role: "explainRole",
+          privileges: [
+            {
+              resource: { db: "", collection: "" },
+              actions: [
+                "listIndexes",
+                "listCollections",
+                "dbStats",
+                "dbHash",
+                "collStats",
+                "find",
+                "indexStats"
+              ]
+            },
+            {
+              resource: { db: "", collection: "system.profile" },
+              actions: ["dbStats", "collStats", "indexStats"]
+            }
+          ],
+          roles: []
+        });
+      '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
         db.createUser({
           user: "{{ pmm_user }}",
