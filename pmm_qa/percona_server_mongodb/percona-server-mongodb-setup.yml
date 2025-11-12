@@ -162,7 +162,6 @@
             { "db" : "admin", "role" : "clusterMonitor" },
             { "db" : "admin", "role" : "restore" },
             { "db" : "admin", "role" : "pbmAnyAction" },
-            { role: 'root', db: 'admin' }
           ]
         })
       '
@@ -178,7 +177,6 @@
             { "db" : "admin", "role" : "clusterMonitor" },
             { "db" : "admin", "role" : "restore" },
             { "db" : "admin", "role" : "pbmAnyAction" },
-            { role: 'root', db: 'admin' }
           ]
         })
       '
