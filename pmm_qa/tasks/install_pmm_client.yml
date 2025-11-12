@@ -86,22 +86,16 @@
 
 - name: Install percona release on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      wget -O /percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb \
-        https://repo.percona.com/apt/percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb &&
-      dpkg -i /percona-release_latest.{{ lsb_release.stdout | trim }}_all.deb
-    '
+    docker exec --user root {{ container_name }} wget -O https://repo.percona.com/apt/percona-release_latest.generic_all.deb 
+    docker exec --user root {{ container_name }} apt install -y ./percona-release_latest.generic_all.deb
   when:
     - distro_family == 'debian'
   ignore_errors: true
 
 - name: Install percona release on RHEL-family containers
   shell: |
-    docker exec --user root {{ container_name }} sh -c '
-      wget -O /percona-release-latest.noarch.rpm \
-        https://repo.percona.com/yum/percona-release-latest.noarch.rpm && \
-      rpm -i /percona-release-latest.noarch.rpm
-    '
+    docker exec --user root {{ container_name }} curl -O https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    docker exec --user root {{ container_name }} microdnf -y install ./percona-release-latest.noarch.rpm
   when: distro_family == 'rhel'
   ignore_errors: true
 
