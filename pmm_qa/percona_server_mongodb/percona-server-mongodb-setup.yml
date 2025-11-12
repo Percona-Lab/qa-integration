@@ -81,6 +81,9 @@
     when: setup_type == "ssl"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Create correct mongodb pem file
+  shell: cat ./ssl/server.crt ./ssl/server.key > ./ssl/mongodb.pem
+
 - name: Edit net block in mongod.conf
   blockinfile:
     path: ./etc/mongod.conf
@@ -91,5 +94,5 @@
         tls:
           mode: requireTLS
           certificateKeyFile: /ssl/mongodb.pem
-          CAFile: /etc/ssl/rootCA.pem
+          CAFile: /ssl/ca.crt
     marker: "# {mark} ANSIBLE MANAGED NET CONFIG"
