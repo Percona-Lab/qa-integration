@@ -110,13 +110,37 @@
     pause:
       seconds: 10
 
+  - name: Create Role for QAN
+    shell: |
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
+       db.getSiblingDB("admin").createRole({
+        role: "explainRole",
+          privileges: [{
+            resource: {
+              db: "",
+              collection: ""
+              },
+            actions: [
+              "listIndexes",
+              "listCollections",
+              "dbStats",
+              "dbHash",
+              "collStats",
+              "find"
+            ]
+          }],
+          roles:[]
+        });
+      '
   - name: Create PMM user and x509 user in Percona MongoDB
     shell: |
+      
+      
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
         db.createUser({
           user: "{{ pmm_user }}",
           pwd: "{{ pmm_user_password }}",
-          roles: [ { role: "root", db: "admin" } ]
+          roles: [{ role: "root", db: "admin" }, { role: "explainRole", db: "admin" }]
         })
       '
 
