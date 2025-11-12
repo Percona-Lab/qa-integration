@@ -49,10 +49,10 @@
     group: "{{ item.owner }}"
     mode: '0600'
   loop:
-    - { path: "{{ ssl_dir }}/ca.crt", owner: "1000" }
+    - { path: "{{ ssl_dir }}/ca.crt", owner: "998" }
     - { path: "{{ ssl_dir }}/server.crt", owner: "998" }
     - { path: "{{ ssl_dir }}/server.key", owner: "998" }
-    - { path: "{{ ssl_dir }}/client.key", owner: "1000" }
-    - { path: "{{ ssl_dir }}/client.crt", owner: "1000" }
-    - { path: "{{ ssl_dir }}/server.key", owner: "1000" }
+    - { path: "{{ ssl_dir }}/client.key", owner: "998" }
+    - { path: "{{ ssl_dir }}/client.crt", owner: "998" }
+    - { path: "{{ ssl_dir }}/server.key", owner: "998" }
   become: yes
