@@ -10,31 +10,59 @@
     dest: "{{ data_dir }}/node{{ item }}/init.sql"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start Percona Server containers with group replication
-  community.docker.docker_container:
-    name: "ps_pmm_{{ ps_version }}_{{ item }}"
-    image: "percona/percona-server:{{ ps_version }}"
-    restart_policy: always
-    state: started
-    networks:
-      - name: "{{ network_name }}"
-    env:
-      MYSQL_ROOT_PASSWORD: "{{ root_password }}"
-    ports:
-      - "{{ mysql_port + item - 1 }}:{{ mysql_listen_port }}"
-      - "{{ group_seeds_port + item - 1 }}:{{ group_seeds_port }}"
-    volumes:
-      - "{{ data_dir }}/node{{ item }}/data:/var/lib/mysql"
-      - "{{ data_dir }}/node{{ item }}/my.cnf:/etc/mysql/my.cnf"
-      - "{{ data_dir }}/node{{ item }}/init.sql:/docker-entrypoint-initdb.d/init.sql"
+- name: Prepare Container for Percona Server for MySQL
+  shell: |
+    docker run --rm -d --name="ps_pmm_{{ ps_version }}_{{ item }}" \
+      --network="pmm-qa" \
+      --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v ./ssl:/ssl \
+      antmelekhin/docker-systemd:ubuntu-24.04
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Wait for MySQL to be available
-  wait_for:
-    host: localhost
-    port: "{{ mysql_port + item - 1 }}"
-    delay: 10
-    timeout: 300
+- name: Install dependencies
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get update
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get -y install wget gnupg2 lsb-release curl
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install Percona Release
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Enable Percona Server for MySQL repository
+  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + ps_version | replace('_', '') }} release
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install Percona Server for MySQL
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt install -y \
+      percona-server-server \
+      percona-server-rocksdb \
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start Percona Server for MySQL
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl enable mysql 
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl start mysql
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Copy config file to docker container
+  shell: docker cp {{ data_dir }}/node{{ item }}/my.cnf ps_pmm_{{ ps_version }}_{{ item }}:/etc/mysql/my.cnf
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Restart Percona Server for MySQL
+  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl restart mysql
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait 5 seconds for MySQL to start
+  pause:
+    seconds: 5
+
+- name: Chance root password
+  shell: "docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Reset configuration for all nodes
