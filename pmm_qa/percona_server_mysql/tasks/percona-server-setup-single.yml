@@ -26,11 +26,11 @@
     docker exec ps_pmm_{{ ps_version }}_{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Enable Percona Server for MongoDB repository
-  shell: docker exec ps_pmm_{{ psmdb_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + psmdb_version | replace('_', '') }} release
+- name: Enable Percona Server for MySQL repository
+  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + ps_version | replace('_', '') }} release
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Install Percona Server for MongoDB
+- name: Install Percona Server for MySQL
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} dnf install -y \
       percona-server-server \
@@ -39,8 +39,10 @@
       percona-server-rocksdb \
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start Percona Server for MongoDB
+- name: Start Percona Server for MySQL
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl enable mysql 
     docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl start mysql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+#  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'YourNewPassword!'; FLUSH PRIVILEGES;"
