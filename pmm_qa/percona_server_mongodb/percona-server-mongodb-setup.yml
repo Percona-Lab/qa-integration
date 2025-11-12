@@ -72,15 +72,35 @@
       container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-  - name: Get mongod user id
-    shell: docker exec psmdb_pmm_{{ psmdb_version }}_1 id -u mongod
-    register: mongod_userid
+  - name: Create PMM roles and user in Percona MongoDB
+    shell: |
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("admin").createRole({
+          role: "explainRole",
+          privileges: [{
+            resource: {
+              db: "",
+              collection: ""
+            },
+            actions: [
+              "listIndexes",
+              "listCollections",
+              "dbStats",
+              "dbHash",
+              "collStats",
+              "find"
+            ]
+          }],
+        roles: []
+        })
+      '
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Setup SSL for Percona Server for MongoDB
     include_tasks: ./tasks/setup_ssl_percona_server_mongodb.yml
     when: setup_type == "ssl"
 
-  - name: Create PMM roles and user in Percona MongoDB
+  - name: Create PMM user in Percona MongoDB
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
         db.getSiblingDB("admin").createRole({
@@ -90,30 +110,6 @@
             "actions": [ "anyAction" ]
           }],
           "roles": []
-        });
-      '
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
-        db.getSiblingDB("admin").createRole({
-          role: "explainRole",
-          privileges: [
-            {
-              resource: { db: "", collection: "" },
-              actions: [
-                "listIndexes",
-                "listCollections",
-                "dbStats",
-                "dbHash",
-                "collStats",
-                "find",
-                "indexStats"
-              ]
-            },
-            {
-              resource: { db: "", collection: "system.profile" },
-              actions: ["dbStats", "collStats", "indexStats"]
-            }
-          ],
-          roles: []
         });
       '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
