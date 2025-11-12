@@ -78,3 +78,4 @@
     vars:
       container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
     when: setup_type == "ssl"
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
