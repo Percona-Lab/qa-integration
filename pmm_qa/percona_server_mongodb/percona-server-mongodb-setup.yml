@@ -15,21 +15,8 @@
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     setup_type: "{{ lookup('env', 'MONGO_SETUP_TYPE') }}"
-    etc_dir: "./etc"
 
   tasks:
-  - name: Remove existing etc folder
-    file:
-      path: "{{ etc_dir }}"
-      state: absent
-    ignore_errors: true
-
-  - name: Create etc folder
-    file:
-      path: "{{ etc_dir }}"
-      state: directory
-      mode: '0755'
-
   - name: Create pmm-qa network if not exist
     shell: docker network create {{ network_name }}
     ignore_errors: true
@@ -41,7 +28,6 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -v ./etc:/etc \
       antmelekhin/docker-systemd:rockylinux-9
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
