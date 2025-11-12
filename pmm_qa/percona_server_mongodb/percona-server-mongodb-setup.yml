@@ -11,6 +11,7 @@
     nodes_count: "{{ (lookup('env', 'NODES_COUNT') | default('1', true)) | int }}"
     pmm_user: "pmm_mongodb"
     pmm_user_password: "5M](Q%q/U+YQ<^m"
+    pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
 
   tasks:
   - name: Create pmm-qa network if not exist
@@ -40,6 +41,11 @@
     shell: |
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl enable mongod
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} systemctl start mongod
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+  - name: Start Percona Server for MongoDB
+    shell: |
+      docker exec mongo-container mongosh admin --eval 'db.createUser({user:"{{ pmm_user }}",pwd:"{{ pmm_user_password }}",roles:[{ role:"root",db:"admin" }]})'
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Install and add pmm client.
