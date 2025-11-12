@@ -74,16 +74,6 @@
   when: distro_family == "rhel"
   ignore_errors: true
 
-- name: Get lsb_release
-  shell: |
-    docker exec --user root {{ container_name }} \
-      bash -c "grep '^VERSION_CODENAME=' /etc/os-release | cut -d '=' -f2 | tr -d '\"'"
-  register: lsb_release
-
-- name: Set lsb_release
-  set_fact:
-    lsb_release: "{{ lsb_release.stdout }}"
-
 - name: Install percona release on Debian-family containers
   shell: |
     docker exec --user root {{ container_name }} wget -O https://repo.percona.com/apt/percona-release_latest.generic_all.deb 
