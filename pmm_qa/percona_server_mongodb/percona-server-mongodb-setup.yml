@@ -147,6 +147,6 @@
     when: setup_type == "ssl"
 
   - name: Add Percona Server for MongoDB for verification
-    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --username={{ pmm_user }} --password={{ pmm_user_password }} psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
+    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --username={{ pmm_user }} --password=\"{{ pmm_user_password }}\" psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
     when: setup_type != "ssl"
