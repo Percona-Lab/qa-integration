@@ -14,12 +14,17 @@
     pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
+    random_service_name_value: ""
     setup_type: "{{ lookup('env', 'MONGO_SETUP_TYPE') }}"
 
   tasks:
   - name: Create pmm-qa network if not exist
     shell: docker network create {{ network_name }}
     ignore_errors: true
+
+  - name: Generate random service name suffix
+    set_fact:
+      random_service_name_value: "_{{ 99999 | random + 1 }}"
 
   - name: Prepare Container for Percona Server for MongoDB
     shell: |
@@ -71,11 +76,11 @@
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval 'db.createUser({user:"{{ pmm_user }}",pwd:"{{ pmm_user_password }}",roles:[{ role:"root",db:"admin" }]})'
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-#  - name: Install and add pmm client.
-#    include_tasks: ../tasks/install_pmm_client.yml
-#    vars:
-#      container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
-#    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  - name: Install and add pmm client.
+    include_tasks: ../tasks/install_pmm_client.yml
+    vars:
+      container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Get mongod user id
     shell: docker exec psmdb_pmm_{{ psmdb_version }}_1 id -u mongod
@@ -114,3 +119,6 @@
     shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh \"mongodb://127.0.0.1:27017/?tls=true\" --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem --eval 'db.runCommand({ connectionStatus: 1 })'"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+  - name: Verify ssl connection to mongodb
+    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --tls --tls-skip-verify --authentication-mechanism=MONGODB-X509 --tls-certificate-key-file=/ssl/client.pem --tls-certificate-key-file-password=/ssl/client.key --tls-ca-file=/ssl/ca.crt psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
