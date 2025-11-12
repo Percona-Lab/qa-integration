@@ -136,7 +136,7 @@
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Verify ssl connection to mongodb
-    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --tls --authentication-mechanism=MONGODB-X509 --authentication-database=$external --tls-certificate-key-file=/ssl/client.pem --tls-certificate-key-file-password=/ssl/client.key --tls-ca-file=/ssl/ca.crt psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
+    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --tls --authentication-mechanism=MONGODB-X509 --authentication-database=$external --tls-certificate-key-file=/ssl/client.pem --tls-certificate-key-file-password=/ssl/client.key --tls-ca-file=/ssl/ca.crt psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Run Testing data on Percona Server for MongoDB
