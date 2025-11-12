@@ -104,3 +104,13 @@
       docker cp ./data/test_data.js psmdb_pmm_{{ psmdb_version }}_{{ item }}:/test_data.js
       docker exec -d psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin school --file /test_data.js
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Add Percona Server for MongoDB for verification using SSL
+  shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --tls --authentication-mechanism=MONGODB-X509 --authentication-database=$external --tls-certificate-key-file=/ssl/client.pem --tls-certificate-key-file-password=/ssl/client.key --tls-ca-file=/ssl/ca.crt psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: setup_type == "ssl"
+
+- name: Add Percona Server for MongoDB for verification
+  shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} pmm-admin add mongodb --enable-all-collectors --username={{ pmm_user }} --password={{ pmm_user_password }} psmdb_pmm_{{ psmdb_version }}_{{ item }}_{{ random_service_name_value }}"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: setup_type != "ssl"
