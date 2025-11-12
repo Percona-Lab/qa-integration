@@ -70,6 +70,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
         dnf update --refresh -y && \
         dnf -y install pmm-client ; \
     else \
+        percona-release enable pmm3-client release && \
         if [[ "$PMM_CLIENT_VERSION" =~ ^([3-9])\.([1-9][0-9]*)\.([0-9]+)$ ]]; then \
             dnf -y install pmm-client-${PMM_CLIENT_VERSION}-7.el${OL_VERSION} ; \
         else \

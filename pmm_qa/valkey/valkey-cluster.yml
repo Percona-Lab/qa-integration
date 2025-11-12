@@ -8,7 +8,7 @@
     client_version: "{{ lookup('vars', 'extra_client_version', default=lookup('env','CLIENT_VERSION') | default('3-dev-latest', true) ) }}"
     admin_password: "{{ lookup('vars', 'extra_admin_password', default=lookup('env','ADMIN_PASSWORD') | default('admin', true) ) }}"
     valkey_version: "{{ lookup('env', 'VALKEY_VERSION') | default('7', true) }}"
-    valkey_image: "valkey/valkey:{{ valkey_version }}"
+    valkey_image: "valkey/valkey:{{ valkey_version }}-bookworm"
     valkey_network_name: "pmm-qa"
     valkey_password: "VKvl41568AsE"
     valkey_cluster_node_count: 6 # total nodes
@@ -75,6 +75,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          maxmemory-policy allkeys-lru
+          maxmemory 1gb
       loop: "{{ range(1, valkey_cluster_primaries + 1) | list }}"
 
     - name: Generate base configuration for each replica
@@ -95,6 +97,8 @@
           save 300 10
           save 60 10000
           loglevel notice
+          maxmemory-policy allkeys-lru
+          maxmemory 1gb
       loop: "{{ range(valkey_cluster_primaries + 1, valkey_cluster_node_count + 1) | list }}"
 
     - name: Create docker volumes for primary nodes
