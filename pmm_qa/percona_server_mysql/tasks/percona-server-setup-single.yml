@@ -17,7 +17,7 @@
 - name: Install dependencies
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get update
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get -y install wget gnupg2 lsb-release
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get -y install wget gnupg2 lsb-release curl
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Release
