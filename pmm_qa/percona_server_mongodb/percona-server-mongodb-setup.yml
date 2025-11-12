@@ -123,24 +123,29 @@
         });
       '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-       db.getSiblingDB("admin").createRole({
-        role: "explainRole",
-          privileges: [{
-            resource: {
-              db: "",
-              collection: ""
-              },
-            actions: [
-              "listIndexes",
-              "listCollections",
-              "dbStats",
-              "dbHash",
-              "collStats",
-              "find"
-            ]
-          }],
-          roles:[]
+        db.getSiblingDB("admin").createRole({
+          role: "explainRole",
+          privileges: [
+            {
+              resource: { db: "", collection: "" },
+              actions: [
+                "listIndexes",
+                "listCollections",
+                "dbStats",
+                "dbHash",
+                "collStats",
+                "find",
+                "indexStats"
+              ]
+            },
+            {
+              resource: { db: "", collection: "system.profile" },
+              actions: ["dbStats", "collStats", "indexStats"]
+            }
+          ],
+          roles: []
         });
+      '
       '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
         db.getSiblingDB("admin").updateRole(
@@ -174,7 +179,8 @@
             { "db" : "admin", "role" : "backup" },
             { "db" : "admin", "role" : "clusterMonitor" },
             { "db" : "admin", "role" : "restore" },
-            { "db" : "admin", "role" : "pbmAnyAction" }
+            { "db" : "admin", "role" : "pbmAnyAction" },
+            { role: 'root', db: 'admin' }
           ]
         })
       '
@@ -189,7 +195,8 @@
             { "db" : "admin", "role" : "backup" },
             { "db" : "admin", "role" : "clusterMonitor" },
             { "db" : "admin", "role" : "restore" },
-            { "db" : "admin", "role" : "pbmAnyAction" }
+            { "db" : "admin", "role" : "pbmAnyAction" },
+            { role: 'root', db: 'admin' }
           ]
         })
       '
