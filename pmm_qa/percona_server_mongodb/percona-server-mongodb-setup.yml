@@ -74,18 +74,7 @@
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Create SSL certificates
-    shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl genrsa -out /ssl/ca.key 2048
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl req -x509 -new -nodes -key /ssl/ca.key -sha256 -days 3650 -subj '/CN=CA' -out /ssl/ca.crt
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl genrsa -out /ssl/server.key 2048
+    include_tasks: ../tasks/create_ssl_certificates.yml
+    vars:
+      container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
     when: setup_type == "ssl"
-
-  - name: Set permissions for server.key to 0600
-    file:
-      path: "{{ ssl_dir }}/server.key"
-      mode: '0600'
-
-  - name: Generate server CSR
-    shell: "docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} openssl req -new -key /ssl/server.key -config ./ssl-config.cnf -out /ssl/server.csr"
-    args:
-      creates: "{{ ssl_dir }}/server.csr"

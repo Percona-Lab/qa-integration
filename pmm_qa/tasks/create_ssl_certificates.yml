@@ -41,3 +41,6 @@
   file:
     path: "{{ ssl_dir }}/server.key"
     mode: '0600'
+
+- name: Generate server CSR
+  shell: "docker exec {{ {{ container_name }} }} openssl req -new -key /ssl/server.key -config ./ssl/openssl.cnf -out /ssl/server.csr"
