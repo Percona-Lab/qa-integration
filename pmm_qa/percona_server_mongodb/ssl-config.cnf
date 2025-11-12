@@ -21,4 +21,5 @@ basicConstraints    = CA:FALSE
 
 [alt_names]
 DNS.1 = external-postgres-ssl
+DNS.2 = localhost
 IP.1  = 127.0.0.1
