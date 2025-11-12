@@ -12,6 +12,7 @@
     pmm_user: "pmm_mongodb"
     pmm_user_password: "5M](Q%q/U+YQ<^m"
     pmm_server_ip: "{{ lookup('vars', 'extra_pmm_server_ip', default=lookup('env','PMM_SERVER_IP') | default('127.0.0.1', true) ) }}"
+    setup_type: "{{ lookup('env', 'MONGO_SETUP_TYPE') }}"
 
   tasks:
   - name: Create pmm-qa network if not exist
@@ -53,3 +54,8 @@
     vars:
       container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+  - name: Create SSL certificates
+    set_fact:
+      nodes_count: 3
+    when: setup_type == "ssl"
