@@ -94,6 +94,16 @@
         roles: []
         })
       '
+      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
+        db.getSiblingDB("admin").createRole({
+          "role": "pbmAnyAction",
+          "privileges": [{
+            "resource": { "anyResource": true },
+            "actions": [ "anyAction" ]
+          }],
+          "roles": []
+        });
+      '
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Restart Percona Server for MongoDB with ssl config
@@ -110,16 +120,6 @@
 
   - name: Create PMM user in Percona MongoDB
     shell: |
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
-        db.getSiblingDB("admin").createRole({
-          "role": "pbmAnyAction",
-          "privileges": [{
-            "resource": { "anyResource": true },
-            "actions": [ "anyAction" ]
-          }],
-          "roles": []
-        });
-      '
       docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh admin --eval '
         db.createUser({
           user: "{{ pmm_user }}",
