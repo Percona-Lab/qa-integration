@@ -142,5 +142,5 @@
   - name: Run Testing data on Percona Server for MongoDB
     shell: |
       docker cp ./data/test_data.js psmdb_pmm_{{ psmdb_version }}_{{ item }}:/test_data.js
-      docker exec -d psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin school < /test_data.js
+      docker exec -d psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin school --file /test_data.js
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
