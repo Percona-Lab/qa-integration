@@ -148,35 +148,11 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Prepare data for sysbench inside of first percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_1"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            prepare
+      shell: docker exec ps_pmm_{{ ps_version }}_1 sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 prepare
       when: setup_type == "gr" or setup_type == "replication"
 
     - name: Run load for sysbench inside of all percona server nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          sysbench /usr/share/sysbench/oltp_read_write.lua 
-            --mysql-host=127.0.0.1 
-            --mysql-port=3306 
-            --mysql-user=sbtest 
-            --mysql-password=password 
-            --mysql-db=sbtest 
-            --tables=10 
-            --table-size=100000 
-            --threads=16 
-            --time=60
-            run
+      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Copy a load file into the container
