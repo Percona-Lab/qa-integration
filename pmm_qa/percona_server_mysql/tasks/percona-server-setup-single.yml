@@ -47,9 +47,13 @@
   shell: docker cp {{ data_dir }}/node{{ item }}/my.cnf ps_pmm_{{ ps_version }}_{{ item }}:/etc/mysql/my.cnf
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start Percona Server for MySQL
+- name: Restart Percona Server for MySQL
   shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} systemctl restart mysql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait 5 seconds for MySQL to start
+  pause:
+    seconds: 5
 
 - name: Chance root password
   shell: "docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
