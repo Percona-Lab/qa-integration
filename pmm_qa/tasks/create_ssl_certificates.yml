@@ -4,7 +4,7 @@
 
 - name: Create OpenSSL req config with dynamic CN
   copy:
-    dest: /ssl/openssl.cnf
+    dest: ./ssl/openssl.cnf
     content: |
       [req]
       default_bits        = 2048
@@ -43,4 +43,25 @@
     mode: '0600'
 
 - name: Generate server CSR
-  shell: "docker exec {{ {{ container_name }} }} openssl req -new -key /ssl/server.key -config ./ssl/openssl.cnf -out /ssl/server.csr"
+  shell: |
+    docker exec {{ container_name }} openssl req -new -key /ssl/server.key -config ./ssl/openssl.cnf -out /ssl/server.csr
+    docker exec {{ container_name }} openssl x509 -req -in {{ ssl_dir }}/server.csr -CA /ssl/ca.crt -CAkey /ssl/ca.key -CAcreateserial -out /ssl/server.crt -days 365 -extensions v3_req -extfile /ssl/openssl.cnf
+    docker exec {{ container_name }} openssl genrsa -out {{ ssl_dir }}/client.key 2048
+    docker exec {{ container_name }} openssl req -new -key /ssl/client.key -subj '{{ client_subj }}' -out /ssl/client.csr
+    docker exec {{ container_name }} openssl x509 -req -in /ssl/client.csr -CA {{ ssl_dir }}/ca.crt -CAkey {{ ssl_dir }}/ca.key -CAcreateserial -out /ssl/client.crt -days 365 -sha256
+
+
+- name: Set permissions for cert files
+  file:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: '0600'
+  loop:
+    - { path: "{{ ssl_dir }}/ca.crt", owner: "1000" }
+    - { path: "{{ ssl_dir }}/server.crt", owner: "26" }
+    - { path: "{{ ssl_dir }}/server.key", owner: "26" }
+    - { path: "{{ ssl_dir }}/client.key", owner: "1000" }
+    - { path: "{{ ssl_dir }}/client.crt", owner: "1000" }
+    - { path: "{{ ssl_dir }}/server.key", owner: "1000" }
+  become: yes
