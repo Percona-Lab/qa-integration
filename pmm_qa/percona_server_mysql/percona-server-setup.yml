@@ -38,9 +38,8 @@
       when: nodes_count | int < 2 and setup_type == "replication"
 
     - name: Create Docker network
-      community.docker.docker_network:
-        name: "{{ network_name }}"
-        state: present
+      shell: docker network create {{ network_name }}
+      ignore_errors: true
 
     - name: Remove old data folders
       shell: 'rm -fr {{ data_dir }}'
@@ -74,15 +73,9 @@
         seconds: 10
 
     - name: Create slowlog configuration for mysql nodes
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: >
-          mysql -uroot -p{{ root_password }} -e "
-          SET GLOBAL slow_query_log='ON';
-          SET GLOBAL long_query_time=0;
-          SET GLOBAL log_slow_admin_statements=ON;
-          SET GLOBAL log_slow_slave_statements=ON;
-          "
+      shell: |
+        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL slow_query_log='ON'; SET GLOBAL long_query_time=0;"
+        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL log_slow_admin_statements=ON; SET GLOBAL log_slow_slave_statements=ON;"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: query_source == "slowlog"
 
@@ -97,23 +90,17 @@
         random_service_name_value: "_{{ 99999 | random + 1 }}"
 
     - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "replication"
 
     - name: Add service to pmm server
-      community.docker.docker_container_exec:
-        container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        command: pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=ps-single-dev-cluster --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=ps-single-dev-cluster --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
