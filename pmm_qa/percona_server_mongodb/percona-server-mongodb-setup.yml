@@ -146,24 +146,6 @@
           roles: []
         });
       '
-      '
-      docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} mongosh --tls --tlsCAFile /ssl/ca.crt --tlsCertificateKeyFile /ssl/client.pem admin --eval '
-        db.getSiblingDB("admin").updateRole(
-          "explainRole",
-          {
-            "privileges": [
-              {
-                "resource": { "db": "", "collection": "" },
-                "actions": [ "collStats", "dbStats", "indexStats" ]
-              },
-              {
-                "resource": { "db": "", "collection": "system.profile" },
-                "actions": [ "dbStats", "collStats", "indexStats" ]
-              },
-            ]
-          }
-        )
-      '
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
   - name: Create PMM user and x509 user in Percona MongoDB
