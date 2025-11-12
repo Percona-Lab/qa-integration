@@ -117,7 +117,7 @@
           "role": "pbmAnyAction",
           "privileges": [{
             "resource": { "anyResource": true },
-	        "actions": [ "anyAction" ]
+            "actions": [ "anyAction" ]
           }],
           "roles": []
         });
