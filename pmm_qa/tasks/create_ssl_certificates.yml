@@ -47,7 +47,7 @@
     docker exec {{ container_name }} openssl req -new -key /ssl/server.key -config ./ssl/openssl.cnf -out /ssl/server.csr
     docker exec {{ container_name }} openssl x509 -req -in {{ ssl_dir }}/server.csr -CA /ssl/ca.crt -CAkey /ssl/ca.key -CAcreateserial -out /ssl/server.crt -days 365 -extensions v3_req -extfile /ssl/openssl.cnf
     docker exec {{ container_name }} openssl genrsa -out {{ ssl_dir }}/client.key 2048
-    docker exec {{ container_name }} openssl req -new -key /ssl/client.key -subj '{{ client_subj }}' -out /ssl/client.csr
+    docker exec {{ container_name }} openssl req -new -key /ssl/client.key -subj '/CN=client' -out /ssl/client.csr
     docker exec {{ container_name }} openssl x509 -req -in /ssl/client.csr -CA {{ ssl_dir }}/ca.crt -CAkey {{ ssl_dir }}/ca.key -CAcreateserial -out /ssl/client.crt -days 365 -sha256
 
 
