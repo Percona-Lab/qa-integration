@@ -79,7 +79,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
             'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
         }
 
-        run_ansible_playbook('percona_server/percona-server-setup.yml', env_vars, args)
+        run_ansible_playbook('percona_server_mysql/percona-server-setup.yml', env_vars, args)
     else:
         # Define environment variables for playbook
         env_vars = {

@@ -5,7 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
-    ps_version: "{{ lookup('env', 'PS_VERSION') | default('8.4', true) }}"
+    ps_version: "{{ (lookup('env', 'PS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
     cluster_name: "mysql_cluster"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"

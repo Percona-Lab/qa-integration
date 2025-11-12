@@ -1,0 +1,25 @@
+- name: Generate my.cnf for each node
+  template:
+    src: ./data/my.cnf.j2
+    dest: "{{ data_dir }}/node{{ item }}/my.cnf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Prepare Container for Percona Server for MySQL
+  shell: |
+    docker run --rm -d --name="ps_pmm_{{ ps_version }}_{{ item }}" \
+      --network="pmm-qa" \
+      --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v ./ssl:/ssl \
+      antmelekhin/docker-systemd:ubuntu-24.04
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install Percona Release
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} dpkg -i ./percona-release-latest.noarch.rpm
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Enable Percona Server for MongoDB repository
+  shell: docker exec psmdb_pmm_{{ psmdb_version }}_{{ item }} percona-release enable {{ 'ps-84-lts' if ps_version == '8_4' else 'ps-' + psmdb_version | replace('_', '') }} release
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
