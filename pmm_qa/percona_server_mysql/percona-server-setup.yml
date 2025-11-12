@@ -58,15 +58,6 @@
         mode: '0755'
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Remove old percona server containers
-      community.docker.docker_container:
-        name: "ps_pmm_{{ ps_version }}_{{ item }}"
-        image: "percona/percona-server:{{ ps_version }}"
-        restart_policy: always
-        state: absent
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      ignore_errors: yes
-
     - name: Recursively change ownership of a directory
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
