@@ -89,6 +89,7 @@
     include_tasks: ../tasks/create_ssl_certificates.yml
     vars:
       container_name: "psmdb_pmm_{{ psmdb_version }}_{{ item }}"
+      user_id: "{{ mongod_userid }}"
     when: setup_type == "ssl"
     loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
