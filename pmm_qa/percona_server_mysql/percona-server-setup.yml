@@ -143,7 +143,7 @@
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Copy a load file into the container
-      shell: docker exec ./data/ps_load.sql ps_pmm_{{ ps_version }}_{{ item }}:/ps_load.sql
+      shell: docker cp ./data/ps_load.sql ps_pmm_{{ ps_version }}_{{ item }}:/ps_load.sql
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Wait 10 seconds for node to be connected
