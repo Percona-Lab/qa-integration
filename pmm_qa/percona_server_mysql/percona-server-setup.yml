@@ -127,21 +127,6 @@
         docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
       when: setup_type == "gr" or setup_type == "replication" # and ps_version | replace('_', '') | int >= 84
 
-#    - name: Prepare sysbench inside of all percona server nodes
-#      shell: |
-#        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE DATABASE IF NOT EXISTS sbtest; CREATE USER IF NOT EXISTS 'sbtest'@'localhost' IDENTIFIED BY 'password'; CREATE USER IF NOT EXISTS 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
-#        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';"
-#        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "FLUSH PRIVILEGES;"
-#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#      when: setup_type != "gr" or setup_type != "replication" #and ps_version | replace('_', '') | int < 84
-
-#    - name: Prepare sysbench inside of primary percona server node
-#      shell: |
-#        docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE IF NOT EXISTS sbtest; CREATE USER IF NOT EXISTS 'sbtest'@'localhost' IDENTIFIED BY 'password'; CREATE USER IF NOT EXISTS 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
-#        docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1';"
-#        docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "FLUSH PRIVILEGES;"
-#      when: setup_type == "gr" or setup_type == "replication" and ps_version | replace('_', '') | int < 84
-
     - name: Prepare data for sysbench inside of all percona server nodes
       shell: |
         docker exec ps_pmm_{{ ps_version }}_{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 prepare
@@ -155,6 +140,11 @@
     - name: Run load for sysbench inside of all percona server nodes
       shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
+      when: setup_type != "gr" and setup_type != "replication"
+
+    - name: Run load for sysbench inside of primary percona server node
+      shell: docker exec ps_pmm_{{ ps_version }}_1 sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
+      when: setup_type == "gr" and setup_type == "replication"
 
     - name: Copy a load file into the container
       shell: docker cp ./data/ps_load.sql ps_pmm_{{ ps_version }}_{{ item }}:/ps_load.sql
