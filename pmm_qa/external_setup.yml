@@ -27,34 +27,37 @@
     ignore_errors: true
 
   - name: Prepare Container for External Exporters
-    shell: >
-      sudo docker run -d -p 43100:43100 --name={{ external_container }}
-      phusion/baseimage:jammy-1.0.1
+    shell: |
+      docker run -d \
+        -p 43100:43100 \
+        --name={{ external_container }} \
+        --network=pmm-qa \
+        phusion/baseimage:noble-1.0.2
 
   - name: Copy all required Artifacts to the docker external_container
     shell: "{{ item }}"
     with_items:
       - docker cp ./external_setup.sh {{ external_container }}:/
-      - docker cp ./pmm3-client-setup.sh {{ external_container }}:/
       - docker exec {{ external_container }} apt-get update
       - docker exec {{ external_container }} apt-get -y install wget curl git gnupg2 lsb-release
 
   - name: Run Redis Container in Host
-    shell: "{{ item }}"
-    with_items:
-      - docker run --name redis_container -d -p 6379:6379 redis '--requirepass oFukiBRg7GujAJXq3tmd'
-      - docker network connect pmm-qa redis_container
+    shell: |
+      docker run -d \
+        --name=redis_container \
+        --network=pmm-qa \
+        -p 6379:6379 \
+        redis '--requirepass oFukiBRg7GujAJXq3tmd'
 
   - name: Setup External Exporters for monitoring
     shell: "{{ item }}"
     with_items:
       - docker exec {{ external_container }} bash -x ./external_setup.sh > setup_external.log
 
-  - name: Install pmm2-client on the external_container
-    shell: "{{ item }}"
-    with_items:
-      - docker network connect pmm-qa {{ external_container }}
-      - docker exec {{ external_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
+  - name: Install PMM Client inside of container
+    include_tasks: ./tasks/install_pmm_client.yml
+    vars:
+      container_name: "{{ external_container }}"
 
   - name: Execute Setup script inside the External container for Redis
     shell: "{{ item }}"
@@ -91,11 +94,11 @@
   - name: Add Redis for Monitoring to PMM via pmm-admin add external command
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ external_container }} bash -c 'source ~/.bash_profile || true; pmm-admin list'
-      - docker exec {{ external_container }} bash -c 'source ~/.bash_profile || true; pmm-admin add external --listen-port=42200 --group="redis" --service-name=redis_external_service_{{ random_number }}'
+      - docker exec {{ external_container }} pmm-admin list
+      - docker exec {{ external_container }} pmm-admin add external --listen-port=42200 --group="redis" --service-name=redis_external_service_{{ random_number }}
 
   - name: Add Node Process for Monitoring to PMM via pmm-admin add external command
     shell: "{{ item }}"
     with_items:
-      - docker exec {{ external_container }} bash -c 'source ~/.bash_profile || true; pmm-admin list'
-      - docker exec {{ external_container }} bash -c 'source ~/.bash_profile || true; pmm-admin add external --group=processes  --listen-port=9256 --service-name=nodeprocess_service_{{ random_number }}'
+      - docker exec {{ external_container }} pmm-admin list
+      - docker exec {{ external_container }} pmm-admin add external --group=processes  --listen-port=9256 --service-name=nodeprocess_service_{{ random_number }}
