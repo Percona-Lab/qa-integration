@@ -1,6 +1,7 @@
 [mysqld]
 # General server configuration
 server_id={{ server_id_start + item - 1 }}
+binlog_format=ROW
 bind-address=0.0.0.0
 port={{ mysql_listen_port }}
 userstat=1
@@ -8,6 +9,9 @@ userstat=1
 # 5.7 General replication settings
 gtid_mode=ON
 enforce_gtid_consistency=ON
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+transaction_write_set_extraction=XXHASH64
 binlog_checksum=NONE
 log_bin=binlog
 log_slave_updates=ON
