@@ -93,6 +93,11 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: ps_version|replace('_', '')|int < 84
 
+- name: Install group replication plugin for MySQL 5.7
+  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "INSTALL PLUGIN group_replication SONAME 'group_replication.so';"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: ps_version|replace('_', '')|int < 84
+
 - name: Bootstrap first node in the cluster
   community.docker.docker_container_exec:
     container: "ps_pmm_{{ ps_version }}_1"
