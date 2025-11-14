@@ -3,22 +3,22 @@
 -- ========================================
 
 CREATE TABLE students (
-    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     birth_date DATE
 );
 
 CREATE TABLE classes (
-    class_id INT AUTO_INCREMENT PRIMARY KEY,
+    class_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     teacher VARCHAR(100)
 );
 
 CREATE TABLE enrollments (
-    enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT,
-    class_id INT,
+    enrollment_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    student_id INT UNSIGNED,
+    class_id INT UNSIGNED,
     enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
