@@ -51,8 +51,8 @@
 - name: Install Percona Server for MySQL
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} apt install -y \
-      percona-server-server{{ '-5.7' if ps_version | replace('_', '') | int == '57' else '' }} \
-      percona-server-rocksdb{{ '-5.7' if ps_version | replace('_', '') | int == '57' else '' }} \
+      percona-server-server{{ '-5.7' if ps_version | replace('_', '') == '57' else '' }} \
+      percona-server-rocksdb{{ '-5.7' if ps_version | replace('_', '') == '57' else '' }} \
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start Percona Server for MySQL
