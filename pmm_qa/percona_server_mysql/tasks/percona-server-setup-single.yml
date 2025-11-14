@@ -4,7 +4,7 @@
     dest: "{{ data_dir }}/node{{ item }}/my.cnf"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Prepare Container for Percona Server for MySQL
+- name: Prepare Container for Percona Server for MySQL 8.0+
   shell: |
     docker run --rm -d --name="ps_pmm_{{ ps_version }}_{{ item }}" \
       --network="pmm-qa" \
@@ -12,6 +12,18 @@
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
       antmelekhin/docker-systemd:ubuntu-24.04
+  when: ps_version | replace('_', '') | int >= 80
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Prepare Container for Percona Server for MySQL 5.7
+  shell: |
+    docker run --rm -d --name="ps_pmm_{{ ps_version }}_{{ item }}" \
+      --network="pmm-qa" \
+      --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v ./ssl:/ssl \
+      antmelekhin/docker-systemd:ubuntu-22.04
+  when: ps_version | replace('_', '') | int < 80
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
@@ -33,8 +45,8 @@
 - name: Install Percona Server for MySQL
   shell: |
     docker exec ps_pmm_{{ ps_version }}_{{ item }} apt install -y \
-      percona-server-server \
-      percona-server-rocksdb \
+      percona-server-server{{ '-5.7' if ps_version | replace('_', '') | int == '57' else '' }} \
+      percona-server-rocksdb{{ '-5.7' if ps_version | replace('_', '') | int == '57' else '' }} \
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start Percona Server for MySQL
