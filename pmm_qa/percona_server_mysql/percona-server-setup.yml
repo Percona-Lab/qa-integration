@@ -29,7 +29,7 @@
   tasks:
     - name: Fail if setup_type is gr or replication and version is less than 80
       fail:
-        msg: "This setup_type ({{ setup_type }}) with version {{ ps_version }} is not supported!"
+        msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
       when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
 
     - name: Modify the node count for group replication
