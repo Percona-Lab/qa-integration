@@ -114,7 +114,7 @@
 
 - name: Install specific PMM client version on Debian-family containers
   shell: |
-    docker exec --user root {{ container_name }} wget -O /pmm-client.deb https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb
+    docker exec --user root {{ container_name }} bash -c 'wget -O /pmm-client.deb "https://repo.percona.com/pmm3-client/apt/pool/main/p/pmm-client/pmm-client_{{ client_version }}-7.$(lsb_release -sc)_amd64.deb"'
     docker exec --user root {{ container_name }} dpkg -i /pmm-client.deb
   when:
     - distro_family == 'debian'
