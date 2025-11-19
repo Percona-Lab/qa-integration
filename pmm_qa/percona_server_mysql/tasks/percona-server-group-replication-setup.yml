@@ -40,8 +40,6 @@
 
     -- Configure recovery channel credentials (explicit host/port to primary node)
     CHANGE REPLICATION SOURCE TO
-      SOURCE_HOST='ps_pmm_{{ ps_version }}_1',
-      SOURCE_PORT=3306,
       SOURCE_USER='{{ replication_user }}',
       SOURCE_PASSWORD='{{ replication_password }}'
     FOR CHANNEL 'group_replication_recovery';
