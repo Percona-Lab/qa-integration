@@ -43,9 +43,9 @@
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=OFF;"
 
-- name: Wait 5 seconds for bootstrap to complete
+- name: Wait 10 seconds for bootstrap to complete
   pause:
-    seconds: 5
+    seconds: 10
 
 - name: Start group replication on other nodes
   shell: |
