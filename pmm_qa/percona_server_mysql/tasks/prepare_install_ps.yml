@@ -75,4 +75,6 @@
   shell: |
     docker cp {{ data_dir }}/node{{ item }}/init.sql ps_pmm_{{ ps_version }}_{{ item }}:/init.sql
     docker exec ps_pmm_{{ ps_version }}_{{ item }} bash -c "mysql -uroot -p{{ root_password }} < /init.sql"
+    sleep 10
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password}} -e "SELECT user, host FROM mysql.user WHERE user = 'repl';"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
