@@ -72,42 +72,42 @@
       include_tasks: tasks/percona-server-setup-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
-    - name: Wait 10 seconds for setup to finish
-      pause:
-        seconds: 10
-
-    - name: Create slowlog configuration for mysql nodes
-      shell: |
-        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL slow_query_log='ON'; SET GLOBAL long_query_time=0;"
-        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL log_slow_admin_statements=ON; SET GLOBAL log_slow_slave_statements=ON;"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: query_source == "slowlog"
-
-    - name: Install and add pmm client.
-      include_tasks: ../tasks/install_pmm_client.yml
-      vars:
-        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-    - name: Generate random service name suffix
-      set_fact:
-        random_service_name_value: "_{{ 99999 | random + 1 }}"
-
-    - name: Add service to pmm server
-      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "gr"
-
-    - name: Add service to pmm server
-      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type == "replication"
-
-    - name: Add service to pmm server
-      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=ps-single-dev-cluster --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr" and setup_type != "replication"
-
+#    - name: Wait 10 seconds for setup to finish
+#      pause:
+#        seconds: 10
+#
+#    - name: Create slowlog configuration for mysql nodes
+#      shell: |
+#        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL slow_query_log='ON'; SET GLOBAL long_query_time=0;"
+#        docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL log_slow_admin_statements=ON; SET GLOBAL log_slow_slave_statements=ON;"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: query_source == "slowlog"
+#
+#    - name: Install and add pmm client.
+#      include_tasks: ../tasks/install_pmm_client.yml
+#      vars:
+#        container_name: "ps_pmm_{{ ps_version }}_{{ item }}"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#    - name: Generate random service name suffix
+#      set_fact:
+#        random_service_name_value: "_{{ 99999 | random + 1 }}"
+#
+#    - name: Add service to pmm server
+#      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type == "gr"
+#
+#    - name: Add service to pmm server
+#      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type == "replication"
+#
+#    - name: Add service to pmm server
+#      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=ps-single-dev-cluster --environment=ps-dev ps_pmm_{{ ps_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: setup_type != "gr" and setup_type != "replication"
+#
 #    - name: Install sysbench inside of all percona server nodes
 #      shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} apt-get install -y sysbench
 #      loop: "{{ range(1, nodes_count | int + 1) | list }}"
