@@ -12,8 +12,6 @@ SET SQL_LOG_BIN=1;
 
 -- Configure group replication recovery credentials
 CHANGE REPLICATION SOURCE TO SOURCE_USER='{{ replication_user }}', SOURCE_PASSWORD='{{ replication_password }}' FOR CHANNEL 'group_replication_recovery';
-SET GLOBAL group_replication_recovery_user = '{{ replication_user }}';
-SET GLOBAL group_replication_recovery_password = '{{ replication_password }}';
 
 CHANGE MASTER TO MASTER_USER='{{ replication_user }}', MASTER_PASSWORD='{{ replication_password }}' FOR CHANNEL 'group_replication_recovery';
 
