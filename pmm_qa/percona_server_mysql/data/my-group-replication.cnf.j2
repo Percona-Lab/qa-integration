@@ -4,6 +4,8 @@ server_id={{ server_id_start + item - 1 }}
 bind-address=0.0.0.0
 port={{ mysql_listen_port }}
 userstat=1
+group_replication_recovery_user = {{ replication_user }}
+group_replication_recovery_password = {{ replication_password }}
 
 # General replication settings
 gtid_mode=ON
