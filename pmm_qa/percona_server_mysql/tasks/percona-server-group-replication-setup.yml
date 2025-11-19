@@ -27,7 +27,7 @@
 
 - name: Init configuration for group replication (single exec per node, no binlog)
   shell: |
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} <<'EOSQL'
+    docker exec -i ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} <<'EOSQL'
     SET SQL_LOG_BIN=0;
     CREATE USER IF NOT EXISTS '{{ replication_user }}'@'%' IDENTIFIED BY '{{ replication_password }}';
     GRANT REPLICATION SLAVE ON *.* TO '{{ replication_user }}'@'%';
