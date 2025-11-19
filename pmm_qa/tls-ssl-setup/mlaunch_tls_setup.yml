@@ -25,7 +25,8 @@
       - cleanup
 
   - name: Create a network
-    shell: docker network create "{{ mongodb_ssl_container }}_network"
+    shell: docker network create pmm-qa
+    ignore_errors: true
 
   - name: Create pmm-qa network if not exist
     shell: docker network create pmm-qa
@@ -34,7 +35,8 @@
   - name: Prepare Container for mongodb ssl container
     shell: >
       docker run -d --name={{ mongodb_ssl_container }}
-      --network "{{ mongodb_ssl_container }}_network"
+      --network "pmm-qa"
+      -e HOST="{{ mongodb_ssl_container }}"
       phusion/baseimage:jammy-1.0.1
 
   - name: Copy all required Artifacts to the docker mongodb_ssl_container

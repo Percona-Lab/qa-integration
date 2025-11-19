@@ -1,7 +1,13 @@
 #!/bin/sh
 
 export PWD=$(pwd)
-export HOST=localhost
+
+if [ -z "$HOST" ]; then
+    export HOST=localhost
+fi
+
+echo "Host is: $HOST"
+
 mkdir -p certificates
 pushd certificates
 echo -e "\n=== Generating SSL certificates in ${PWD}/certificates ==="
