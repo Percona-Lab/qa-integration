@@ -14,34 +14,55 @@
   include_tasks: ./tasks/prepare_install_ps.yml
 
 - name: Reset configuration for all nodes for MySQL 8.4
-  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL;SET GLOBAL gtid_purged='';"
+  shell: >
+    docker exec ps_pmm_{{ ps_version }}_{{ item }}
+    env MYSQL_PWD="{{ root_password }}"
+    mysql -uroot -e
+    "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL; SET GLOBAL gtid_purged='';"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: ps_version|replace('_', '')|int >= 84
+  when: ps_version | replace('_', '') | int >= 84
 
-#- name: Reset configuration for all nodes for MySQL 8.0
-#  shell: docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "RESET MASTER; RESET SLAVE ALL; SET GLOBAL gtid_purged='';"
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#  when: ps_version|replace('_', '')|int < 84
+- name: Reset configuration for all nodes for MySQL 8.0
+  shell: >
+    docker exec ps_pmm_{{ ps_version }}_{{ item }}
+    env MYSQL_PWD="{{ root_password }}"
+    mysql -uroot -e
+    "RESET MASTER; RESET SLAVE ALL;"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: ps_version | replace('_', '') | int < 84
 
-- name: Init configuration for group replication
+- name: Init configuration for group replication (single exec per node, no binlog)
   shell: |
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE USER '{{ replication_user }}'@'%' IDENTIFIED BY '{{ replication_password }}';"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT REPLICATION SLAVE ON *.* TO '{{ replication_user }}'@'%';"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT CONNECTION_ADMIN ON *.* TO '{{ replication_user }}'@'%';"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT BACKUP_ADMIN ON *.* TO '{{ replication_user }}'@'%';"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT GROUP_REPLICATION_STREAM ON *.* TO '{{ replication_user }}'@'%';"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "FLUSH PRIVILEGES;"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "SET SQL_LOG_BIN=1;"
-    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "CHANGE REPLICATION SOURCE TO SOURCE_USER='{{ replication_user }}', SOURCE_PASSWORD='{{ replication_password }}' FOR CHANNEL 'group_replication_recovery';"
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} <<'EOSQL'
+    SET SQL_LOG_BIN=0;
+    CREATE USER IF NOT EXISTS '{{ replication_user }}'@'%' IDENTIFIED BY '{{ replication_password }}';
+    GRANT REPLICATION SLAVE ON *.* TO '{{ replication_user }}'@'%';
+    GRANT CONNECTION_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+    GRANT BACKUP_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+    GRANT GROUP_REPLICATION_STREAM ON *.* TO '{{ replication_user }}'@'%';
+    GRANT SERVICE_CONNECTION_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+    GRANT SYSTEM_VARIABLES_ADMIN ON *.* TO '{{ replication_user }}'@'%';
+    FLUSH PRIVILEGES;
+
+    -- Configure recovery channel credentials (explicit host/port to primary node)
+    CHANGE REPLICATION SOURCE TO
+      SOURCE_HOST='ps_pmm_{{ ps_version }}_1',
+      SOURCE_PORT=3306,
+      SOURCE_USER='{{ replication_user }}',
+      SOURCE_PASSWORD='{{ replication_password }}'
+    FOR CHANNEL 'group_replication_recovery';
+
+    SET SQL_LOG_BIN=1;
+    EOSQL
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Bootstrap first node in the cluster for MySQL 8.4
+- name: Bootstrap first node (primary) for MySQL 8.4/8.0
   shell: |
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=ON;"
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=OFF;"
 
-- name: Wait 10 seconds for bootstrap to complete
+- name: Wait for bootstrap to complete
   pause:
     seconds: 10
 
