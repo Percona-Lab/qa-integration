@@ -15,21 +15,15 @@
 
 - name: Reset configuration for all nodes for MySQL 8.4
   shell: >
-    docker exec ps_pmm_{{ ps_version }}_{{ item }}
-    env MYSQL_PWD="{{ root_password }}"
-    mysql -uroot -e
-    "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL; SET GLOBAL gtid_purged='';"
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e"RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL; SET GLOBAL gtid_purged='';"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#  when: ps_version | replace('_', '') | int >= 84
+  when: ps_version | replace('_', '') | int >= 84
 
-#- name: Reset configuration for all nodes for MySQL 8.0
-#  shell: >
-#    docker exec ps_pmm_{{ ps_version }}_{{ item }}
-#    env MYSQL_PWD="{{ root_password }}"
-#    mysql -uroot -e
-#    "RESET MASTER; RESET SLAVE ALL;"
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#  when: ps_version | replace('_', '') | int < 84
+- name: Reset configuration for all nodes for MySQL 8.0
+  shell: >
+    docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "RESET MASTER; RESET SLAVE ALL;"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: ps_version | replace('_', '') | int < 84
 
 - name: Init configuration for group replication (single exec per node, no binlog)
   shell: |
