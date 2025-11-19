@@ -23,21 +23,12 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: ps_version|replace('_', '')|int < 84
 
-- name: Bootstrap first node in the cluster for MySQL 8.0
-  shell: |
-    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=ON;"
-    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_recovery_user = '{{ replication_user }}';"
-    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_recovery_password = '{{ replication_password }}';"
-    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
-    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=OFF;"
-  when: ps_version|replace('_', '')|int < 84
-
 - name: Bootstrap first node in the cluster for MySQL 8.4
   shell: |
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=ON;"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "CHANGE REPLICATION SOURCE TO SOURCE_USER='{{ replication_user }}', SOURCE_PASSWORD='GRgrO9301RuF' FOR CHANNEL 'group_replication_recovery';"
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
     docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=OFF;"
-  when: ps_version|replace('_', '')|int >= 84
 
 - name: Wait 5 seconds for bootstrap to complete
   pause:
@@ -45,6 +36,7 @@
 
 - name: Start group replication on other nodes
   shell: |
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "CHANGE REPLICATION SOURCE TO SOURCE_USER='{{ replication_user }}', SOURCE_PASSWORD='GRgrO9301RuF' FOR CHANNEL 'group_replication_recovery';"
     docker exec ps_pmm_{{ ps_version }}_{{ item }} mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
