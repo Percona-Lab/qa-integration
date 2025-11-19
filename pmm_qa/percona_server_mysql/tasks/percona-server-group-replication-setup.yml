@@ -32,15 +32,13 @@
   when: ps_version|replace('_', '')|int < 84
 
 - name: Bootstrap first node in the cluster
-  community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_1"
-    command: >
-      mysql -uroot -p{{ root_password }} -e "
-      SET GLOBAL group_replication_bootstrap_group=ON;
-      START GROUP_REPLICATION;
-      SET GLOBAL group_replication_bootstrap_group=OFF;"
-  retries: 5
-  delay: 10
+  shell: |
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=ON;"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "INSTALL PLUGIN group_replication SONAME 'group_replication.so';"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_recovery_user = '{{ replication_user }}';"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_recovery_password = '{{ replication_password }}';"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "START GROUP_REPLICATION;"
+    docker exec ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }} -e "SET GLOBAL group_replication_bootstrap_group=OFF;"
 
 - name: Wait 5 seconds for bootstrap to complete
   pause:
