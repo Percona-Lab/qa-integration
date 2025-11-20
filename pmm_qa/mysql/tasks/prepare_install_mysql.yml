@@ -61,5 +61,5 @@
 
 - name: Install MySQL
   shell: |
-    docker exec {{ container_prefix }}{{ item }} apt-get install -y mysql-server{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }} mysql-client-5.7={{ mysql_server_package_name } mysql-server-core-5.7={{ mysql_server_package_name }
+    docker exec {{ container_prefix }}{{ item }} apt-get install -y mysql-server{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }} mysql-client-5.7={{ mysql_server_package_name } mysql-server-core-5.7={{ mysql_server_package_name }}
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
