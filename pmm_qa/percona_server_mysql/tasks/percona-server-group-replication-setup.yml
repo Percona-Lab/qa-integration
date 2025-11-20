@@ -68,19 +68,16 @@
     seconds: 10
 
 - name: Create and seed a test database on primary
-  community.docker.docker_container_exec:
-    container: "{{ container_prefix }}1"
-    command: >
-      mysql -uroot -p{{ root_password}} -e "
+  shell: >
+    docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "
       CREATE DATABASE testdb;
       USE testdb;
       CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
-      INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');"
+      INSERT INTO testdb VALUES (1, 'Initial data from node mysql1');
+    "
 
 - name: Check replication status on first node
-  community.docker.docker_container_exec:
-    container: "{{ container_prefix }}1"
-    command: mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
+  shell: docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "SELECT * FROM performance_schema.replication_group_members;"
   register: replication_status
 
 - name: Display replication status
@@ -88,9 +85,7 @@
     var: replication_status.stdout
 
 - name: Check replication group members count
-  community.docker.docker_container_exec:
-    container: "{{ container_prefix }}1"
-    command: mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
+  shell: docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "SELECT COUNT(*) AS count FROM performance_schema.replication_group_members;"
   register: member_count
 
 - name: Display member count
