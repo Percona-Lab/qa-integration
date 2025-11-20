@@ -108,7 +108,7 @@
     seconds: 5
 
 - name: Chance root password Percona Server for MySQL 5.7
-  shell: "docker exec {{ container_prefix }}{{ item }} mysql -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version|replace('_', '')|int < 80
 
