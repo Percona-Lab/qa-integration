@@ -37,12 +37,19 @@
 - name: Install MySQL 5.7
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
-    groupadd mysql
-    useradd -r -g mysql -s /bin/false mysql
-    tar zxvf mysql.tar.gz
-    mv mysql-5.7.44-linux-glibc2.12-x86_64 /usr/local/mysql
-    ln -s /usr/local/mysql-5.7.44-linux-glibc2.12-x86_64 mysql
-    chown -R mysql:mysql /usr/local/mysql
+    docker exec {{ container_prefix }}{{ item }} groupadd mysql
+    docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
+    docker exec {{ container_prefix }}{{ item }} tar zxvf mysql.tar.gz
+    docker exec {{ container_prefix }}{{ item }} mv mysql-5.7.44-linux-glibc2.12-x86_64 /usr/local/mysql
+    docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql-5.7.44-linux-glibc2.12-x86_64 mysql
+    docker exec {{ container_prefix }}{{ item }} chown -R mysql:mysql /usr/local/mysql
+    docker exec {{ container_prefix }}{{ item }} mkdir /usr/local/mysql/data
+    docker exec {{ container_prefix }}{{ item }} chown mysql:mysql /usr/local/mysql/data
+    docker exec {{ container_prefix }}{{ item }} bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+    docker exec {{ container_prefix }}{{ item }} cp support-files/mysql.server /etc/init.d/mysql
+    docker exec {{ container_prefix }}{{ item }} chmod +x /etc/init.d/mysql
+    docker exec {{ container_prefix }}{{ item }} export PATH=/usr/local/mysql/bin:$PATH
+    docker exec {{ container_prefix }}{{ item }} source ~/.bashrc
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
 
