@@ -64,7 +64,7 @@
 
 - name: Store Mysql root password
   set_fact:
-    mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') }}"
+    mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1')[0] }}"
   when: mysql_version | replace('_', '') | int == 57
 
 - name: Set MySQl server package name to install
