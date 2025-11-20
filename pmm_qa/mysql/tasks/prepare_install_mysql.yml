@@ -56,6 +56,7 @@
     docker exec {{ container_prefix }}{{ item }} cp /usr/local/mysql/support-files/mysql.server /etc/init.d/mysql
     docker exec {{ container_prefix }}{{ item }} chmod +x /etc/init.d/mysql
     docker exec {{ container_prefix }}{{ item }} sh -c "echo 'export PATH=/usr/local/mysql/bin:\$PATH' >> /etc/profile"
+    docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
