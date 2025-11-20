@@ -6,7 +6,7 @@
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
       antmelekhin/docker-systemd:ubuntu-24.04
-  when: ms_version | replace('_', '') | int >= 80
+  when: mysql_version | replace('_', '') | int >= 80
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Prepare Container for MySQL 5.7
@@ -17,7 +17,7 @@
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
       antmelekhin/docker-systemd:ubuntu-18.04
-  when: ms_version | replace('_', '') | int < 80
+  when: mysql_version | replace('_', '') | int < 80
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
@@ -35,7 +35,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Set MySQl package name to install
-  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server | grep {{ ms_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
+  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
   register: mysql_package_name
 
 - name: Set MySQl package name to install
@@ -45,5 +45,5 @@
 - name: Install MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
-    docker exec {{ container_prefix }}{{ item }} apt-get install -y mysql-server{{ '-5.7' if ms_version | replace('_', '') == '57' else '' }}={{ mysql_package_name }}
+    docker exec {{ container_prefix }}{{ item }} apt-get install -y mysql-server{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_package_name }}
   loop: "{{ range(1, nodes_count | int + 1) | list }}"

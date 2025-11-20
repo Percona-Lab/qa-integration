@@ -5,7 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
-    ms_version: "{{ (lookup('env', 'MS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
+    mysql_version: "{{ (lookup('env', 'MS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
     root_password: "GRgrO9301RuF"
@@ -24,13 +24,13 @@
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
     my_rocks: "{{ lookup('env', 'MY_ROCKS') | default(false, true) }}"
-    container_prefix: "mysql_pmm{{ '_' + setup_type if setup_type is defined else '' }}_{{ ms_version }}_"
+    container_prefix: "mysql_pmm{{ '_' + setup_type if setup_type is defined else '' }}_{{ mysql_version }}_"
 
   tasks:
 #    - name: Fail if setup_type is gr or replication and version is less than 80
 #      fail:
-#        msg: "This setup_type ({{ setup_type }}) with version {{ ms_version | replace('_', '.') }} is not supported!"
-#      when: (setup_type == 'gr' or setup_type == 'replication') and (ms_version | replace('_', '') | int < 80)
+#        msg: "This setup_type ({{ setup_type }}) with version {{ mysql_version | replace('_', '.') }} is not supported!"
+#      when: (setup_type == 'gr' or setup_type == 'replication') and (mysql_version | replace('_', '') | int < 80)
 
     - name: Modify the node count for group replication
       set_fact:
@@ -123,14 +123,14 @@
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr" and setup_type != "replication" #and ms_version | replace('_', '') | int >= 84
+      when: setup_type != "gr" and setup_type != "replication" #and mysql_version | replace('_', '') | int >= 84
 
     - name: Prepare sysbench inside of primary mysql node
       shell: |
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE sbtest; CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
-      when: setup_type == "gr" or setup_type == "replication" # and ms_version | replace('_', '') | int >= 84
+      when: setup_type == "gr" or setup_type == "replication" # and mysql_version | replace('_', '') | int >= 84
 
     - name: Prepare data for sysbench inside of all mysql nodes
       shell: |
@@ -163,11 +163,11 @@
       shell: |
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}1 sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
-      when: setup_type in ['gr', 'replication'] and (ms_version | replace('_','') | int) >= 80
+      when: setup_type in ['gr', 'replication'] and (mysql_version | replace('_','') | int) >= 80
 
     - name: Run load inside of all mysql nodes
       shell: |
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}{{ item }} sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type not in ['gr', 'replication'] and (ms_version | replace('_','') | int) >= 80
+      when: setup_type not in ['gr', 'replication'] and (mysql_version | replace('_','') | int) >= 80
