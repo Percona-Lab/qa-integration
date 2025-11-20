@@ -63,8 +63,8 @@
   when: mysql_version | replace('_', '') | int == 57
 
 - name: Store Mysql root password
-  debug:
-    msg: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') }}"
+  set_fact:
+    mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') }}"
   when: mysql_version | replace('_', '') | int == 57
 
 - name: Set MySQl server package name to install
@@ -96,3 +96,17 @@
       mysql-server-core{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }}
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
+
+- name: Wait 5 seconds for MySQL to start
+  pause:
+    seconds: 5
+
+- name: Chance root password Percona Server for MySQL 5.7
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ mysql_root_password }} -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: ps_version|replace('_', '')|int < 80
+
+- name: Chance root password Percona Server for MySQL 8.0+
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: ps_version|replace('_', '')|int >= 80
