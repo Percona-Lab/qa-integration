@@ -97,6 +97,12 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
+- name: Start MySQL
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} systemctl enable mysql 
+    docker exec {{ container_prefix }}{{ item }} systemctl start mysql
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Wait 5 seconds for MySQL to start
   pause:
     seconds: 5
