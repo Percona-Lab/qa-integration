@@ -1,11 +1,11 @@
 ---
 
-- name: Setup Percona Server for MySQL single, cluster with group Replication in Docker
+- name: MySQL single, cluster with group Replication in Docker
   hosts: localhost
   connection: local
   gather_facts: yes
   vars:
-    ps_version: "{{ (lookup('env', 'PS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
+    ms_version: "{{ (lookup('env', 'MS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
     root_password: "GRgrO9301RuF"
@@ -24,13 +24,13 @@
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
     my_rocks: "{{ lookup('env', 'MY_ROCKS') | default(false, true) }}"
-    container_prefix: "ps_pmm{{ '_' + setup_type if setup_type is defined else '' }}_{{ ps_version }}_"
+    container_prefix: "mysql_pmm{{ '_' + setup_type if setup_type is defined else '' }}_{{ ms_version }}_"
 
   tasks:
 #    - name: Fail if setup_type is gr or replication and version is less than 80
 #      fail:
-#        msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
-#      when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
+#        msg: "This setup_type ({{ setup_type }}) with version {{ ms_version | replace('_', '.') }} is not supported!"
+#      when: (setup_type == 'gr' or setup_type == 'replication') and (ms_version | replace('_', '') | int < 80)
 
     - name: Modify the node count for group replication
       set_fact:
@@ -61,16 +61,16 @@
       shell: "sudo chown -R 1001:1001 {{ data_dir }}/node{{ item }}/data"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Setup Percona Server group replication
+    - name: Setup MySQL group replication
       include_tasks: ./tasks/percona-server-group-replication-setup.yml
       when: setup_type == "gr"
 
-    - name: Setup Percona Server with async replication
+    - name: Setup MySQL with async replication
       include_tasks: ./tasks/percona-server-async-replication-setup.yml
       when: setup_type == "replication"
 
-    - name: Setup Percona Server
-      include_tasks: tasks/percona-server-setup-single.yml
+    - name: Setup MySQL
+      include_tasks: tasks/mysql-single.yml
       when: setup_type != "gr" and setup_type != "replication"
 
     - name: Wait 10 seconds for setup to finish
@@ -95,59 +95,59 @@
         random_service_name_value: "_{{ 99999 | random + 1 }}"
 
     - name: Add service to pmm server
-      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-gr-dev --cluster=ps-gr-dev-cluster --replication-set=ps-gr-replication {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=mysql-gr-dev --cluster=mysql-gr-dev-cluster --replication-set=mysql-gr-replication {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "gr"
 
     - name: Add service to pmm server
-      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=ps-replication-dev --cluster=ps-replication-dev-cluster --replication-set=ps-async-replication {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --environment=mysql-replication-dev --cluster=mysql-replication-dev-cluster --replication-set=mysql-async-replication {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type == "replication"
 
     - name: Add service to pmm server
-      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=ps-single-dev-cluster --environment=ps-dev {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
+      shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add mysql --query-source={{ query_source }} --username=root --password={{ root_password }} --cluster=mysql-single-dev-cluster --environment=mysql-dev {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:3306
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
-    - name: Install sysbench inside of all percona server nodes
+    - name: Install sysbench inside of all mysql nodes
       shell: docker exec {{ container_prefix }}{{ item }} apt-get install -y sysbench
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare sysbench inside of all percona server nodes
+    - name: Prepare sysbench inside of all mysql nodes
       shell: docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "SET GLOBAL super_read_only = OFF; SET GLOBAL read_only = OFF;"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare sysbench inside of all percona server nodes
+    - name: Prepare sysbench inside of all mysql nodes
       shell: |
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE DATABASE sbtest; CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr" and setup_type != "replication" #and ps_version | replace('_', '') | int >= 84
+      when: setup_type != "gr" and setup_type != "replication" #and ms_version | replace('_', '') | int >= 84
 
-    - name: Prepare sysbench inside of primary percona server node
+    - name: Prepare sysbench inside of primary mysql node
       shell: |
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE sbtest; CREATE USER 'sbtest'@'localhost' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'localhost'; CREATE USER 'sbtest'@'127.0.0.1' IDENTIFIED BY 'password';"
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "GRANT ALL PRIVILEGES ON *.* TO 'sbtest'@'127.0.0.1'; FLUSH PRIVILEGES;"
-      when: setup_type == "gr" or setup_type == "replication" # and ps_version | replace('_', '') | int >= 84
+      when: setup_type == "gr" or setup_type == "replication" # and ms_version | replace('_', '') | int >= 84
 
-    - name: Prepare data for sysbench inside of all percona server nodes
+    - name: Prepare data for sysbench inside of all mysql nodes
       shell: |
         docker exec {{ container_prefix }}{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 prepare
       when: setup_type != "gr" and setup_type != "replication"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-    - name: Prepare data for sysbench inside of first percona server nodes
+    - name: Prepare data for sysbench inside of first mysql nodes
       shell: docker exec {{ container_prefix }}1 sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 prepare
       when: setup_type == "gr" or setup_type == "replication"
 
-    - name: Run load for sysbench inside of all percona server nodes
+    - name: Run load for sysbench inside of all mysql nodes
       shell: docker exec {{ container_prefix }}{{ item }} sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
       when: setup_type != "gr" and setup_type != "replication"
 
-    - name: Run load for sysbench inside of primary percona server node
+    - name: Run load for sysbench inside of primary mysql node
       shell: docker exec {{ container_prefix }}1 sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
       when: setup_type == "gr" and setup_type == "replication"
 
@@ -159,18 +159,18 @@
       pause:
         seconds: 10
 
-    - name: Run load inside of first percona server node
+    - name: Run load inside of first mysql node
       shell: |
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}1 sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
-      when: setup_type in ['gr', 'replication'] and (ps_version | replace('_','') | int) >= 80
+      when: setup_type in ['gr', 'replication'] and (ms_version | replace('_','') | int) >= 80
 
-    - name: Run load inside of all percona server nodes
+    - name: Run load inside of all mysql nodes
       shell: |
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}{{ item }} sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type not in ['gr', 'replication'] and (ps_version | replace('_','') | int) >= 80
+      when: setup_type not in ['gr', 'replication'] and (ms_version | replace('_','') | int) >= 80
 
     - name: Enable MySQL MyRocks
       shell: docker exec {{ container_prefix }}{{ item }} ps-admin --enable-rocksdb -u root -p{{ root_password }}
