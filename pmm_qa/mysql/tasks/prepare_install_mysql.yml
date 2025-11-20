@@ -77,15 +77,15 @@
     mysql_server_package_name: "{{ mysql_server_package_name.stdout }}"
   when: mysql_version | replace('_', '') | int >= 80
 
-- name: Set MySQl common package name to install
-  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server-core-{{ mysql_version | replace('_', '.') }} | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
-  register: mysql_server_core_package_name
-  when: mysql_version | replace('_', '') | int >= 80
-
-- name: Set MySQl common package name to install
-  set_fact:
-    mysql_server_core_package_name: "{{ mysql_server_core_package_name.stdout }}"
-  when: mysql_version | replace('_', '') | int >= 80
+#- name: Set MySQl common package name to install
+#  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server-core-{{ mysql_version | replace('_', '.') }} | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
+#  register: mysql_server_core_package_name
+#  when: mysql_version | replace('_', '') | int >= 80
+#
+#- name: Set MySQl common package name to install
+#  set_fact:
+#    mysql_server_core_package_name: "{{ mysql_server_core_package_name.stdout }}"
+#  when: mysql_version | replace('_', '') | int >= 80
 
 - name: Install MySQL
   shell: |
