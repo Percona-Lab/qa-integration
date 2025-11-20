@@ -29,7 +29,6 @@
 - name: Download Mysql APT Repo package
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -O mysql-apt.deb https://dev.mysql.com/get/mysql-apt-config_0.8.10-1_all.deb
-    docker exec {{ container_prefix }}{{ item }} wget https://repo.mysql.com/RPM-GPG-KEY-mysql-2022 -O /etc/apt/keyrings/mysql.asc
     docker exec {{ container_prefix }}{{ item }} apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
     docker exec {{ container_prefix }}{{ item }} dpkg -i ./mysql-apt.deb
     docker exec {{ container_prefix }}{{ item }} apt-get update
