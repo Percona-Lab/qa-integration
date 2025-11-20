@@ -19,14 +19,14 @@ log_slave_updates=ON
 lower_case_table_names=2
 
 # Report host for replication/monitoring
-report_host=ps_pmm_{{ps_version}}_{{ item }}
+report_host={{ container_prefix }}{{ item }}
 
 # Group Replication Settings
 # (Available in MySQL 5.7.17+ and must be installed as plugin)
 plugin_load_add='group_replication.so'
 loose-group_replication_group_name='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
-loose-group_replication_local_address='ps_pmm_{{ps_version}}_{{ item }}:{{ group_seeds_port }}'
-loose-group_replication_group_seeds={% for i in range(1, nodes_count | int + 1) %}ps_pmm_{{ps_version}}_{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}
+loose-group_replication_local_address='{{ container_prefix }}{{ item }}:{{ group_seeds_port }}'
+loose-group_replication_group_seeds={% for i in range(1, nodes_count | int + 1) %}{{ container_prefix }}{{ i }}:{{ group_seeds_port }}{% if not loop.last %},{% endif %}{% endfor %}
 loose-group_replication_communication_stack=XCOM
 
 # Group replication behavior
@@ -40,7 +40,7 @@ loose-group_replication_recovery_retry_count=10
 loose-group_replication_recovery_reconnect_interval=60
 
 # Crash-safe replication settings
-relay-log=ps_pmm_{{ps_version}}_{{ item }}-relay-bin
+relay-log={{ container_prefix }}{{ item }}-relay-bin
 relay_log_recovery=ON
 relay_log_purge=ON
 

@@ -14,36 +14,28 @@
   include_tasks: ./tasks/prepare_install_ps.yml
 
 - name: Reset configuration for all nodes
-  community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
-    command: >
-      mysql -uroot -p{{ root_password }} -e "
-      RESET BINARY LOGS AND GTIDS;
-      RESET REPLICA ALL;
-      "
+  shell: docker exec container_prefix{{ item }} mysql -uroot -p{{ root_password }} -e "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL;"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   ignore_errors: yes
 
 - name: Configure replica servers (container2-containerN)
-  community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
-    command: >
-      mysql -uroot -p{{ root_password }} -e "
-      CHANGE REPLICATION SOURCE TO 
-      SOURCE_HOST='ps_pmm_{{ ps_version }}_1', 
-      SOURCE_PORT={{ mysql_listen_port }},
-      SOURCE_USER='{{ replication_user }}', 
-      SOURCE_PASSWORD='{{ replication_password }}',
-      SOURCE_AUTO_POSITION=1,
-      SOURCE_PUBLIC_KEY_PATH='',
-      GET_SOURCE_PUBLIC_KEY=1;
-      START REPLICA;
-      "
+  shell: >
+    docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "
+    CHANGE REPLICATION SOURCE TO
+    SOURCE_HOST='{{ container prefix }}1',
+    SOURCE_PORT={{ mysql_listen_port }},
+    SOURCE_USER='{{ replication_user }}',
+    SOURCE_PASSWORD='{{ replication_password }}',
+    SOURCE_AUTO_POSITION=1,
+    SOURCE_PUBLIC_KEY_PATH='',
+    GET_SOURCE_PUBLIC_KEY=1;
+    START REPLICA;
+    "
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Create and seed a test database on primary
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_1"
+    container: "{{ container_prefix }}1"
     command: >
       mysql -uroot -p{{ root_password}} -e "
       CREATE DATABASE testdb;
@@ -53,7 +45,7 @@
 
 - name: Check replication status on replica nodes
   community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_{{ item }}"
+    container: "{{ container prefix }}{{ item }}"
     command: mysql -uroot -p{{ root_password }} -e "SHOW REPLICA STATUS\G"
   register: replication_status
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
@@ -70,15 +62,15 @@
       MySQL Cluster setup complete with asynchronous replication!
 
       To verify replication is working:
-        1. Connect to the primary (ps_pmm_{{ ps_version }}_1):
-            docker exec -it ps_pmm_{{ ps_version }}_1 mysql -uroot -p{{ root_password }}
+        1. Connect to the primary ({{ container prefix }}1):
+            docker exec -it {{ container prefix }}1 mysql -uroot -p{{ root_password }}
 
         2. Insert data in the test database:
            USE testdb;
            INSERT INTO testdb VALUES (100, 'Test replication');
 
         3. Connect to replicas and verify data is replicated:
-            docker exec -it ps_pmm_{{ ps_version }}_2 mysql -uroot -p{{ root_password }}
+            docker exec -it {{ container prefix }}2 mysql -uroot -p{{ root_password }}
              USE testdb;
              SELECT * FROM testdb;
 
