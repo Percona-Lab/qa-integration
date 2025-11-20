@@ -24,21 +24,6 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   ignore_errors: yes
 
-- name: Get primary ps_pmm_{{ ps_version }}_1 binary log status
-  community.docker.docker_container_exec:
-    container: "ps_pmm_{{ ps_version }}_1"
-    command: >
-      mysql -uroot -p{{ root_password }} -e "
-      SHOW BINARY LOG STATUS\G
-      "
-  register: primary_status
-  changed_when: false
-
-
-- name: Display binary log status for primary
-  debug:
-    msg: "{{ primary_status.stdout | split('\n') }}"
-
 - name: Configure replica servers (container2-containerN)
   community.docker.docker_container_exec:
     container: "ps_pmm_{{ ps_version }}_{{ item }}"
