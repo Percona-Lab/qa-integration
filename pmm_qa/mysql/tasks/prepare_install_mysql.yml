@@ -1,0 +1,36 @@
+- name: Prepare Container for MySQL 8.0+
+  shell: |
+    docker run --rm -d --name="{{ container_prefix }}{{ item }}" \
+      --network="pmm-qa" \
+      --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v ./ssl:/ssl \
+      antmelekhin/docker-systemd:ubuntu-24.04
+  when: ms_version | replace('_', '') | int >= 80
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Prepare Container for MySQL 5.7
+  shell: |
+    docker run --rm -d --name="{{ container_prefix }}{{ item }}" \
+      --network="pmm-qa" \
+      --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v ./ssl:/ssl \
+      antmelekhin/docker-systemd:ubuntu-22.04
+  when: ms_version | replace('_', '') | int < 80
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install dependencies
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Download Mysql APT Repo package
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} wget -O mysql-apt.deb https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
+    docker exec {{ container_prefix }}{{ item }} dpkg -i ./mysql-apt.deb
+    docker exec {{ container_prefix }}{{ item }} echo "mysql-apt-config mysql-apt-config/select-server select mysql-{{ ms_version | replace('_', '.') }}" | sudo debconf-set-selections
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get install -y mysql-server
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
