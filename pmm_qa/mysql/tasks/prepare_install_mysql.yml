@@ -36,6 +36,8 @@
 
 - name: Install MySQL 5.7
   shell: |
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get install -y libaio1
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
     docker exec {{ container_prefix }}{{ item }} groupadd mysql
     docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
@@ -45,7 +47,7 @@
     docker exec {{ container_prefix }}{{ item }} chown -R mysql:mysql /usr/local/mysql
     docker exec {{ container_prefix }}{{ item }} mkdir /usr/local/mysql/data
     docker exec {{ container_prefix }}{{ item }} chown mysql:mysql /usr/local/mysql/data
-    docker exec {{ container_prefix }}{{ item }} bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+    docker exec {{ container_prefix }}{{ item }} /usr/local/mysql/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
 #  docker exec {{ container_prefix }}{{ item }} cp support-files/mysql.server /etc/init.d/mysql > /dev/null
