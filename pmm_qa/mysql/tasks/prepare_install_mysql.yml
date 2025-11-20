@@ -64,7 +64,7 @@
 
 - name: Store Mysql root password
   debug:
-    msg: "{{ mysql_root_password.results[0] }}"
+    msg: "{{ mysql_root_password.results[0].msg.stderr | select('search', 'temporary password is generated for root@localhost:') }}"
 
 - name: Fail if setup_type is gr or replication and version is less than 80
   fail:
