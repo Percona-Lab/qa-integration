@@ -34,7 +34,7 @@ replica_preserve_commit_order=1
 {% endif %}
 
 # Crash-safe replication settings
-relay-log={{ container prefix }}{{ item }}-relay-bin
+relay-log={{ container_prefix }}{{ item }}-relay-bin
 relay_log_recovery=ON
 relay_log_purge=ON
 
