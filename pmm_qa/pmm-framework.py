@@ -65,7 +65,6 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-    ps_version_int = int(ps_version.replace(".", ""))
     # Define environment variables for playbook
     env_vars = {
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
@@ -89,8 +88,10 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-    ms_version_int = int(ms_version.replace(".", ""))
-    setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+    print(f"Setting up MySQL version: {ms_version}")
+    print(f"Setting up MySQL version: {os.getenv('MS_VERSION')}")
+    print(f"Setting up MySQL version: {db_version}")
+    print(f"Setting up MySQL version: {database_configs[db_type]["versions"][-1]}")
     # Check Setup Types
     setup_type = ''
     no_of_nodes = 1
