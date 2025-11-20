@@ -163,14 +163,14 @@
       shell: |
         docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}1 sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
-      when: setup_type == "gr" or setup_type == "replication"
+      when: setup_type == "gr" or setup_type == "replication" and ps_version | replace('_', '') | int >= 80
 
     - name: Run load inside of all percona server nodes
       shell: |
         docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "CREATE DATABASE school;"
         docker exec {{ container_prefix }}{{ item }} sh -c "mysql -uroot -p{{ root_password }} school < /ps_load.sql"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: setup_type != "gr" and setup_type != "replication"
+      when: setup_type != "gr" and setup_type != "replication" and ps_version | replace('_', '') | int >= 80
 
     - name: Enable MySQL MyRocks
       shell: docker exec {{ container_prefix }}{{ item }} ps-admin --enable-rocksdb -u root -p{{ root_password }}
