@@ -59,7 +59,12 @@
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  register: mysql_root_password
   when: mysql_version | replace('_', '') | int == 57
+
+- name: Store Mysql root password
+  debug:
+    msg: "{{ mysql_root_password }}"
 
 - name: Fail if setup_type is gr or replication and version is less than 80
   fail:
