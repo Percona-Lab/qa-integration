@@ -34,14 +34,17 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
-- name: Download Mysql APT Repo package
+- name: Install MySQL 5.7
   shell: |
-    docker exec {{ container_prefix }}{{ item }} wget -O mysql-apt.deb https://dev.mysql.com/get/mysql-apt-config_0.8.10-1_all.deb
-    docker exec {{ container_prefix }}{{ item }} apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
-    docker exec {{ container_prefix }}{{ item }} dpkg -i ./mysql-apt.deb
-    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} wget -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
+    groupadd mysql
+    useradd -r -g mysql -s /bin/false mysql
+    tar zxvf mysql.tar.gz
+    mv mysql-5.7.44-linux-glibc2.12-x86_64 /usr/local/mysql
+    ln -s /usr/local/mysql-5.7.44-linux-glibc2.12-x86_64 mysql
+    chown -R mysql:mysql /usr/local/mysql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: mysql_version | replace('_', '') | int < 80
+  when: mysql_version | replace('_', '') | int == 57
 
 - name: Set MySQl server package name to install
   shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
