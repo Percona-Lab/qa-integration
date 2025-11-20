@@ -36,7 +36,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Set MySQl package name to install
-  shell: docker exec {{ container_prefix }}{{ item }} apt-cache policy mysql-server #| grep {{ ms_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
+  shell: docker exec {{ container_prefix }}{{ item }} apt-cache policy mysql-server | grep {{ ms_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
   register: mysql_package_name
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
