@@ -40,9 +40,9 @@
   register: mysql_package_name
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Set MySQl package name to install
-  set_fact:
-    mysql_package_name: "{{ mysql_package_name.stdout }}"
+#- name: Set MySQl package name to install
+#  set_fact:
+#    mysql_package_name: "{{ mysql_package_name.stdout }}"
 
 - debug:
     var: mysql_package_name
