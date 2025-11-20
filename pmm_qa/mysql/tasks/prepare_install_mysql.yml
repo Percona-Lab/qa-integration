@@ -51,17 +51,18 @@
   set_fact:
     mysql_server_package_name: "{{ mysql_server_package_name.stdout }}"
 
-#- name: Set MySQl common package name to install
-#  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-common | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
-#  register: mysql_common_package_name
-#
-#- name: Set MySQl common package name to install
-#  set_fact:
-#    mysql_common_package_name: "{{ mysql_common_package_name.stdout }}"
+- name: Set MySQl common package name to install
+  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-common | grep {{  '5.8' if mysql_version | replace('_', '') == '57' else mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
+  register: mysql_common_package_name
+
+- name: Set MySQl common package name to install
+  set_fact:
+    mysql_common_package_name: "{{ mysql_common_package_name.stdout }}"
 
 - name: Install MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get install -y \
+      mysql-commong={{ mysql_common_package_name }} \
       mysql-server{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }} \
       mysql-client{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }} \
       mysql-server-core{{ '-5.7' if mysql_version | replace('_', '') == '57' else '' }}={{ mysql_server_package_name }}
