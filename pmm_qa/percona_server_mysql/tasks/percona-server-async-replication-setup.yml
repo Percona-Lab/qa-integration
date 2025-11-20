@@ -62,6 +62,14 @@
   register: replication_status
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
   changed_when: false
+  when: ps_version | replace('_', '') | int >= 80
+
+- name: Check replication status on replica nodes
+  shell: docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "SHOW SLAVE STATUS\G"
+  register: replication_status
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+  changed_when: false
+  when: ps_version | replace('_', '') | int < 80
 
 - name: Display replication status for each replica
   debug:
