@@ -39,7 +39,7 @@
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
     docker exec {{ container_prefix }}{{ item }} groupadd mysql
     docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
-    docker exec {{ container_prefix }}{{ item }} tar zxvf mysql.tar.gz
+    docker exec {{ container_prefix }}{{ item }} tar zxf mysql.tar.gz
 
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
