@@ -35,7 +35,7 @@
 
 - name: Create and seed a test database on primary
   shell: >
-    docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "
+    docker exec {{ container_prefix }}1 mysql -uroot -p{{ root_password }} -e "
       CREATE DATABASE testdb;
       USE testdb;
       CREATE TABLE testdb (id INT PRIMARY KEY, data VARCHAR(100));
