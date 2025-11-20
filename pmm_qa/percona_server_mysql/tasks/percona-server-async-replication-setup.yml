@@ -14,11 +14,11 @@
   include_tasks: ./tasks/prepare_install_ps.yml
 
 - name: Reset configuration for all nodes
-  shell: docker exec container_prefix{{ item }} mysql -uroot -p{{ root_password }} -e "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL;"
+  shell: docker exec {{ container_prefix}}{{ item }} mysql -uroot -p{{ root_password }} -e "RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL;"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   ignore_errors: yes
 
-- name: Configure replica servers (container2-containerN)
+- name: Configure replica servers (container2-containerN) for MySQL 8.0 and above
   shell: >
     docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "
     CHANGE REPLICATION SOURCE TO
@@ -32,6 +32,21 @@
     START REPLICA;
     "
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
+  when: ps_version | replace('_', '') | int >= 80
+
+- name: Configure replica servers (container2-containerN) for Mysql 5.7
+  shell: >
+    docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "
+    CHANGE MASTER TO
+    MASTER_HOST='{{ container_prefix }}1',
+    MASTER_PORT={{ mysql_listen_port }},
+    MASTER_USER='{{ replication_user }}',
+    MASTER_PASSWORD='{{ replication_password }}',
+    MASTER_AUTO_POSITION=1;
+    START SLAVE;
+    "
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+  when: ps_version | replace('_', '') | int < 80
 
 - name: Create and seed a test database on primary
   shell: >
