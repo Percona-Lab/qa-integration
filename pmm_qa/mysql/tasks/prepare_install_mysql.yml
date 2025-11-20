@@ -30,7 +30,7 @@
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -O mysql-apt.deb https://dev.mysql.com/get/mysql-apt-config_0.8.10-1_all.deb
     docker exec {{ container_prefix }}{{ item }} wget https://repo.mysql.com/RPM-GPG-KEY-mysql-2022 -O /etc/apt/keyrings/mysql.asc
-    docker exec {{ container_prefix }}{{ item }} sh -c "echo 'deb [signed-by=/etc/apt/keyrings/mysql.asc] http://repo.mysql.com/apt/ubuntu/ noble mysql-apt-config' > /etc/apt/sources.list.d/mysql.list"
+    docker exec {{ container_prefix }}{{ item }} apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B7B3B788A8D3785C
     docker exec {{ container_prefix }}{{ item }} dpkg -i ./mysql-apt.deb
     docker exec {{ container_prefix }}{{ item }} apt-get update
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
