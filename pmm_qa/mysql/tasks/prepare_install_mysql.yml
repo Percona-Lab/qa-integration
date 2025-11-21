@@ -67,32 +67,13 @@
     mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Set MySQl server package name to install
-  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
-  register: mysql_server_package_name
-  when: mysql_version | replace('_', '') | int >= 80
-
-- name: Set MySQl server package name to install
-  set_fact:
-    mysql_server_package_name: "{{ mysql_server_package_name.stdout }}"
-  when: mysql_version | replace('_', '') | int >= 80
-
-- name: Set MySQl common package name to install
-  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-common | grep {{  '5.8' if mysql_version | replace('_', '') == '57' else mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
-  register: mysql_common_package_name
-  when: mysql_version | replace('_', '') | int >= 80
-
-- name: Set MySQl common package name to install
-  set_fact:
-    mysql_common_package_name: "{{ mysql_common_package_name.stdout }}"
-  when: mysql_version | replace('_', '') | int >= 80
-
 - name: Install MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get install -y \
       mysql-server-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
       mysql-server{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
       mysql-client{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
+      mysql-client-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }}
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
