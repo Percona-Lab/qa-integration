@@ -7,7 +7,6 @@
       -v ./ssl:/ssl \
       antmelekhin/docker-systemd:ubuntu-24.04
   when: mysql_version | replace('_', '') | int >= 80
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Prepare Container for MySQL 5.7
   shell: |
@@ -18,27 +17,23 @@
       -v ./ssl:/ssl \
       antmelekhin/docker-systemd:ubuntu-22.04
   when: mysql_version | replace('_', '') | int < 80
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
     docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl xz-utils libnuma1
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install MySQL 8.0+ dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
     docker exec {{ container_prefix }}{{ item }} apt-get install -y libncurses6 libaio1t64
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
 - name: Install MySQL 5.7 dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
     docker exec {{ container_prefix }}{{ item }} apt-get install -y libaio1 libncurses5
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
 
 - name: Query Docker Hub for MySQL tags
@@ -69,7 +64,6 @@
     docker exec {{ container_prefix }}{{ item }} sh -c "echo 'export PATH=/usr/local/mysql/bin:\$PATH' >> /etc/profile"
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
   register: mysql_80_root_password
   when: mysql_version | replace('_', '') | int >= 80
 
@@ -90,53 +84,32 @@
     docker exec {{ container_prefix }}{{ item }} sh -c "echo 'export PATH=/usr/local/mysql/bin:\$PATH' >> /etc/profile"
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
   register: mysql_57_root_password
   when: mysql_version | replace('_', '') | int == 57
 
-- debug: var=mysql_80_root_password
-
-- name: Initialize the list of passwords for MySQL 8.0+
-  set_fact:
-    mylist: "{{ mysql_root_passwords_80 | default([]) }}"
-
 - name: Store Mysql root password for MySQL 8.0+
   set_fact:
-    mysql_root_passwords_80: >-
-      {{ mysql_root_passwords_80 | default([]) +
-        ([ (mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1'))[0] ] if (mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1')) else [])
-      }}
-  when: (mysql_version | replace('_', '') | int) >= 80
+    mysql_root_password: "{{ mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+  when: mysql_version | replace('_', '') | int >= 80
 
-- name: Store Mysql root password for MySQL 8.0+
+- name: Store Mysql root password for MySQL 5.7
   set_fact:
-    mysql_root_passwords_57: >-
-      {{ mysql_root_passwords_80 | default([]) +
-        ([ (mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1'))[0] ] if (mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1')) else [])
-      }}
-  when: (mysql_version | replace('_', '') | int) == 57
-
-- name: Fail if setup_type is gr or replication and version is less than 80
-  fail:
-    msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
-  when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
+    mysql_root_password: "{{ mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+  when: mysql_version | replace('_', '') | int == 57
 
 - name: Start MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} systemctl enable mysql 
     docker exec {{ container_prefix }}{{ item }} systemctl start mysql
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Wait 5 seconds for MySQL to start
   pause:
     seconds: 5
 
 - name: Chance root password Percona Server for MySQL 5.7
-  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_passwords_80[item - 1] }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
   when: mysql_version|replace('_', '')|int < 80
 
 - name: Chance root password Percona Server for MySQL 8.0+
-  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_passwords_80[item - 1] }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
   when: mysql_version|replace('_', '')|int >= 80
