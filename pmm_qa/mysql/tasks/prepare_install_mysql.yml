@@ -44,6 +44,7 @@
 - name: Download MySQL 8.0+
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-8.0.44-linux-glibc2.28-x86_64.tar.xz
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install MySQL 5.7
   shell: |
