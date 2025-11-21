@@ -50,8 +50,8 @@
 
 - name: Download MySQL 8.0+
   shell: |
-    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-{{ mysql_exact_version }}-linux-glibc2.28-x86_64.tar.xz
-    docker exec {{ container_prefix }}{{ item }} tar -xf mysql.tar.gz
+    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.xz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-{{ mysql_exact_version }}-linux-glibc2.28-x86_64.tar.xz
+    docker exec {{ container_prefix }}{{ item }} tar -xf mysql.tar.xz
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
