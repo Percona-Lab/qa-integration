@@ -20,6 +20,17 @@
   when: mysql_version | replace('_', '') | int < 80
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Query Docker Hub for MySQL tags
+  uri:
+    url: "https://hub.docker.com/v2/repositories/library/mysql/tags?page_size=1000&name={{ mysql_version | replace('_', '.') }}"
+    method: GET
+    return_content: yes
+  register: mysql_exact_version
+
+- name: Extract tag names (only versions)
+  set_fact:
+    mysql_exact_version: "{{ mysql_version.json.results | map(attribute='name') | select('match', '^[0-9]+\\.[0-9]+\\.[0-9]+$') | list | first }}"
+
 - name: Install dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
@@ -35,7 +46,7 @@
 
 - name: Download MySQL 8.0+
   shell: |
-    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-8.0.44-linux-glibc2.28-x86_64.tar.xz
+    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-{{ mysql_exact_version }}-linux-glibc2.28-x86_64.tar.xz
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
@@ -65,20 +76,7 @@
   register: mysql_root_password
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Query Docker Hub for MySQL tags
-  uri:
-    url: "https://hub.docker.com/v2/repositories/library/mysql/tags?page_size=100&name={{ mysql_version | replace('_', '.') }}"
-    method: GET
-    return_content: yes
-  register: mysql_tags_response
 
-- name: Extract tag names (only versions)
-  set_fact:
-    mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | select('match', '^8\\.0\\.\\d+$') | list }}"
-
-- name: Show MySQL tag versions
-  debug:
-    var: mysql_versions
 
 - name: Fail if setup_type is gr or replication and version is less than 80
   fail:
