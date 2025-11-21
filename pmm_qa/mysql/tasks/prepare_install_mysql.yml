@@ -26,14 +26,6 @@
     docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Download Mysql APT Repo package
-  shell: |
-    docker exec {{ container_prefix }}{{ item }} wget -O mysql-apt.deb https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb
-    docker exec {{ container_prefix }}{{ item }} dpkg -i ./mysql-apt.deb
-    docker exec {{ container_prefix }}{{ item }} apt-get update
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: mysql_version | replace('_', '') | int >= 80
-
 - name: Install MySQL 5.7 dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
@@ -45,10 +37,16 @@
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-8.0.44-linux-glibc2.28-x86_64.tar.xz
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: mysql_version | replace('_', '') | int >= 80
 
-- name: Install MySQL 5.7
+- name: Download MySQL 8.0+
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: mysql_version | replace('_', '') | int == 57
+
+- name: Install MySQL
+  shell: |
     docker exec {{ container_prefix }}{{ item }} groupadd mysql
     docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
     docker exec {{ container_prefix }}{{ item }} tar zxf mysql.tar.gz
@@ -76,7 +74,7 @@
 
 - name: Extract tag names (only versions)
   set_fact:
-    mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | list }}"
+    mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | select('match', '^8\\.0\\.\\d+$') | list }}"
 
 - name: Show MySQL tag versions
   debug:
@@ -85,7 +83,6 @@
 - name: Fail if setup_type is gr or replication and version is less than 80
   fail:
     msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
-  when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
 
 - name: Store Mysql root password
   set_fact:
