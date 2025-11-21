@@ -24,7 +24,7 @@
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
     my_rocks: "{{ lookup('env', 'MY_ROCKS') | default(false, true) }}"
-    container_prefix: "mysql_pmm{{ '_' + setup_type if setup_type is defined else '' }}_{{ mysql_version }}_"
+    container_prefix: "mysql_pmm{{ ('_' + setup_type) if setup_type is defined else '' }}_{{ mysql_version }}_"
 
   tasks:
 #    - name: Fail if setup_type is gr or replication and version is less than 80
