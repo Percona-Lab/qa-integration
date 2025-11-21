@@ -51,12 +51,14 @@
 - name: Download MySQL 8.0+
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-{{ mysql_exact_version }}-linux-glibc2.28-x86_64.tar.xz
+    docker exec {{ container_prefix }}{{ item }} tar -xf mysql.tar.gz
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
 - name: Download MySQL 5.7
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
+    docker exec {{ container_prefix }}{{ item }} tar zxf mysql.tar.gz
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
 
@@ -64,7 +66,6 @@
   shell: |
     docker exec {{ container_prefix }}{{ item }} groupadd mysql
     docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
-    docker exec {{ container_prefix }}{{ item }} tar zxf mysql.tar.gz
     docker exec {{ container_prefix }}{{ item }} mv mysql-5.7.44-linux-glibc2.12-x86_64 /usr/local/mysql
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql-5.7.44-linux-glibc2.12-x86_64 mysql
     docker exec {{ container_prefix }}{{ item }} chown -R mysql:mysql /usr/local/mysql
