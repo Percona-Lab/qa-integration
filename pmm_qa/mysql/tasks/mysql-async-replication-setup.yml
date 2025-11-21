@@ -74,11 +74,6 @@
   changed_when: false
   when: mysql_version | replace('_', '') | int < 80
 
-- name: Display replication status for each replica
-  debug:
-    msg: "{{ replication_status.results[item - 2].stdout_lines }}"
-  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
 - name: Set verification instructions
   set_fact:
     verification_msg: |
