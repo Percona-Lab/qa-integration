@@ -70,7 +70,7 @@
 - name: Install MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get install -y \
-      mysql-common \
+      mysql-common=5.8+1.1.0build1 \
       mysql-server-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
       mysql-server{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
       mysql-client{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
