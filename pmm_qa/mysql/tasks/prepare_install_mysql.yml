@@ -41,6 +41,10 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int == 57
 
+- name: Download MySQL 8.0+
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version | replace('_', '.') }}/mysql-8.0.44-linux-glibc2.28-x86_64.tar.xz
+
 - name: Install MySQL 5.7
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
@@ -61,6 +65,30 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   register: mysql_root_password
   when: mysql_version | replace('_', '') | int == 57
+
+- name: Get MySQL Docker tags from Docker Hub
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Query Docker Hub for MySQL tags
+      uri:
+        url: "https://hub.docker.com/v2/repositories/library/mysql/tags?page_size=100&name={{ mysql_version | replace('_', '.') }}"
+        method: GET
+        return_content: yes
+      register: mysql_tags_response
+
+    - name: Extract tag names (only versions)
+      set_fact:
+        mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | list }}"
+
+    - name: Show MySQL tag versions
+      debug:
+        var: mysql_versions
+
+- name: Fail if setup_type is gr or replication and version is less than 80
+  fail:
+    msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
+      when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
 
 - name: Store Mysql root password
   set_fact:
