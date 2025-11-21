@@ -44,6 +44,10 @@
 - name: Install MySQL 5.7
   shell: |
     docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
+
+- name: Install MySQL 5.7
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} wget -q -O mysql.tar.gz https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.44-linux-glibc2.12-x86_64.tar.gz
     docker exec {{ container_prefix }}{{ item }} groupadd mysql
     docker exec {{ container_prefix }}{{ item }} useradd -r -g mysql -s /bin/false mysql
     docker exec {{ container_prefix }}{{ item }} tar zxf mysql.tar.gz
@@ -77,24 +81,21 @@
     mysql_server_package_name: "{{ mysql_server_package_name.stdout }}"
   when: mysql_version | replace('_', '') | int >= 80
 
-#- name: Set MySQl common package name to install
-#  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-server-core-{{ mysql_version | replace('_', '.') }} | grep {{ mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
-#  register: mysql_server_core_package_name
-#  when: mysql_version | replace('_', '') | int >= 80
-#
-#- name: Set MySQl common package name to install
-#  set_fact:
-#    mysql_server_core_package_name: "{{ mysql_server_core_package_name.stdout }}"
-#  when: mysql_version | replace('_', '') | int >= 80
+- name: Set MySQl common package name to install
+  shell: docker exec {{ container_prefix }}1 apt-cache policy mysql-common | grep {{  '5.8' if mysql_version | replace('_', '') == '57' else mysql_version | replace('_', '.') }} | head -n1 | awk '{print $1}'
+  register: mysql_common_package_name
+  when: mysql_version | replace('_', '') | int >= 80
+
+- name: Set MySQl common package name to install
+  set_fact:
+    mysql_common_package_name: "{{ mysql_common_package_name.stdout }}"
+  when: mysql_version | replace('_', '') | int >= 80
 
 - name: Install MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get install -y \
-      mysql-server-{{ mysql_version | replace('_', '.') }}={{ mysql_server_package_name }} \
-      mysql-client-{{ mysql_version | replace('_', '.') }}={{ mysql_server_package_name }} \
-      mysql-server-core-{{ mysql_version | replace('_', '.') }}={{ mysql_server_package_name }} \
-      mysql-client-{{ mysql_version | replace('_', '.') }}={{ mysql_server_package_name }} \
-      mysql-client-core-{{ mysql_version | replace('_', '.') }}={{ mysql_server_package_name }}
+      mysql-server-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
+      mysql-server{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version | replace('_', '') | int >= 80
 
