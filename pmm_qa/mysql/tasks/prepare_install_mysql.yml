@@ -23,8 +23,15 @@
 - name: Install dependencies
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get update
-    docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl xz-utils libnuma1 libaio1 libncurses5
+    docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl xz-utils libnuma1
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install MySQL 5.7 dependencies
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get install -y libaio1 libncurses5
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  when: mysql_version | replace('_', '') | int == 57
 
 - name: Query Docker Hub for MySQL tags
   uri:
