@@ -66,6 +66,7 @@ if [[ "$client_version" == "pmm3-rc" ]]; then
 fi
 
 if [[ "$client_version" == "pmm3-latest" ]]; then
+    percona-release enable-only pmm3-client release
     apt-get -y install pmm-client
     apt-get -y update
     percona-release enable-only pmm3-client experimental
