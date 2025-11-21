@@ -1,6 +1,6 @@
 - name: Generate my.cnf for each node
   template:
-    src: ./data/my-group-replication{{ '-57' if ps_version | replace('_', '') == '57' else '' }}.cnf.j2
+    src: ./data/my-group-replication{{ '-57' if mysql_version | replace('_', '') == '57' else '' }}.cnf.j2
     dest: "{{ data_dir }}/node{{ item }}/my.cnf"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -11,19 +11,19 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Prepare docker container and install Percona Server for MySQL
-  include_tasks: ./tasks/prepare_install_ps.yml
+  include_tasks: ./tasks/prepare_install_mysql.yml
 
 - name: Reset configuration for all nodes for MySQL 8.4
   shell: >
     docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e"RESET BINARY LOGS AND GTIDS; RESET REPLICA ALL; SET GLOBAL gtid_purged='';"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: ps_version | replace('_', '') | int >= 84
+  when: mysql_version | replace('_', '') | int >= 84
 
 - name: Reset configuration for all nodes for MySQL 8.0
   shell: >
     docker exec {{ container_prefix }}{{ item }} mysql -uroot -p{{ root_password }} -e "RESET MASTER; RESET SLAVE ALL;"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: ps_version | replace('_', '') | int < 84
+  when: mysql_version | replace('_', '') | int < 84
 
 - name: Init configuration for group replication (single exec per node, no binlog) for MySQL 8.0+
   shell: |
@@ -47,7 +47,7 @@
     SET SQL_LOG_BIN=1;
     EOSQL
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: ps_version | replace('_', '') | int >= 80
+  when: mysql_version | replace('_', '') | int >= 80
 
 - name: Init configuration for group replication (single exec per node, no binlog) for MySQL 5.7
   shell: |
@@ -66,7 +66,7 @@
     SET SQL_LOG_BIN=1;
     EOSQL
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: ps_version | replace('_', '') | int < 80
+  when: mysql_version | replace('_', '') | int < 80
 
 - name: Bootstrap first node (primary) for MySQL 8.4/8.0
   shell: |
