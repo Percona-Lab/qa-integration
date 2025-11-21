@@ -70,7 +70,7 @@
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  register: mysql_root_password
+  register: mysql_80_root_password
   when: mysql_version | replace('_', '') | int >= 80
 
 - name: Install MySQL 5.7
@@ -91,16 +91,20 @@
     docker exec {{ container_prefix }}{{ item }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
     docker exec {{ container_prefix }}{{ item }} bash -c 'source ~/.bashrc'
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  register: mysql_root_password
+  register: mysql_57_root_password
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Debug MySQL root password
+- name: Debug MySQL root password for MySQL 8.0+
   debug:
-    msg: "{{ mysql_root_password }}"
+    msg: "{{ mysql_80_root_password }}"
 
-- name: Store Mysql root password
+- name: Store Mysql root password for MySQL 5.7
   set_fact:
-    mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+    mysql_root_password: "{{ mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+
+- name: Store Mysql root password for MySQL 5.7
+  set_fact:
+    mysql_root_password: "{{ mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
 
 - name: Start MySQL
   shell: |
