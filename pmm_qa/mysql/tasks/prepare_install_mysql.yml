@@ -66,24 +66,20 @@
   register: mysql_root_password
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Get MySQL Docker tags from Docker Hub
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Query Docker Hub for MySQL tags
-      uri:
-        url: "https://hub.docker.com/v2/repositories/library/mysql/tags?page_size=100&name={{ mysql_version | replace('_', '.') }}"
-        method: GET
-        return_content: yes
-      register: mysql_tags_response
+- name: Query Docker Hub for MySQL tags
+  uri:
+    url: "https://hub.docker.com/v2/repositories/library/mysql/tags?page_size=100&name={{ mysql_version | replace('_', '.') }}"
+    method: GET
+    return_content: yes
+  register: mysql_tags_response
 
-    - name: Extract tag names (only versions)
-      set_fact:
-        mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | list }}"
+- name: Extract tag names (only versions)
+  set_fact:
+    mysql_versions: "{{ mysql_tags_response.json.results | map(attribute='name') | list }}"
 
-    - name: Show MySQL tag versions
-      debug:
-        var: mysql_versions
+- name: Show MySQL tag versions
+  debug:
+    var: mysql_versions
 
 - name: Fail if setup_type is gr or replication and version is less than 80
   fail:
