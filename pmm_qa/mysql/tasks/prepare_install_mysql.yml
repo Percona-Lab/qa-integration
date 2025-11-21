@@ -98,13 +98,15 @@
   debug:
     msg: "{{ mysql_80_root_password }}"
 
-- name: Store Mysql root password for MySQL 5.7
+- name: Store Mysql root password for MySQL 8.0+
   set_fact:
     mysql_root_password: "{{ mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+  when: mysql_version | replace('_', '') | int >= 80
 
 - name: Store Mysql root password for MySQL 5.7
   set_fact:
     mysql_root_password: "{{ mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
+  when: mysql_version | replace('_', '') | int == 57
 
 - name: Start MySQL
   shell: |
