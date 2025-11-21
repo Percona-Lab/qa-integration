@@ -94,19 +94,32 @@
   register: mysql_57_root_password
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Debug MySQL root password for MySQL 8.0+
-  debug:
-    msg: "{{ mysql_80_root_password }}"
+- debug: var=mysql_80_root_password
+
+- name: Initialize the list of passwords for MySQL 8.0+
+  set_fact:
+    mylist: "{{ mysql_root_passwords_80 | default([]) }}"
 
 - name: Store Mysql root password for MySQL 8.0+
   set_fact:
-    mysql_root_password: "{{ mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
-  when: mysql_version | replace('_', '') | int >= 80
+    mysql_root_passwords_80: >-
+      {{ mysql_root_passwords_80 | default([]) +
+        ([ (mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1'))[0] ] if (mysql_80_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1')) else [])
+      }}
+  when: (mysql_version | replace('_', '') | int) >= 80
 
-- name: Store Mysql root password for MySQL 5.7
+- name: Store Mysql root password for MySQL 8.0+
   set_fact:
-    mysql_root_password: "{{ mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
-  when: mysql_version | replace('_', '') | int == 57
+    mysql_root_passwords_57: >-
+      {{ mysql_root_passwords_80 | default([]) +
+        ([ (mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1'))[0] ] if (mysql_57_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1')) else [])
+      }}
+  when: (mysql_version | replace('_', '') | int) == 57
+
+- name: Fail if setup_type is gr or replication and version is less than 80
+  fail:
+    msg: "This setup_type ({{ setup_type }}) with version {{ ps_version | replace('_', '.') }} is not supported!"
+  when: (setup_type == 'gr' or setup_type == 'replication') and (ps_version | replace('_', '') | int < 80)
 
 - name: Start MySQL
   shell: |
@@ -119,11 +132,11 @@
     seconds: 5
 
 - name: Chance root password Percona Server for MySQL 5.7
-  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_passwords_80[item - 1] }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ root_password }}';\""
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version|replace('_', '')|int < 80
 
 - name: Chance root password Percona Server for MySQL 8.0+
-  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_password }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
+  shell: "docker exec {{ container_prefix }}{{ item }} mysql --connect-expired-password -uroot -p'{{ mysql_root_passwords_80[item - 1] }}' -e \"ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '{{ root_password }}';\""
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: mysql_version|replace('_', '')|int >= 80
