@@ -105,6 +105,12 @@
     docker exec {{ container_prefix }}{{ index }} systemctl enable mysql 
     docker exec {{ container_prefix }}{{ index }} systemctl start mysql
 
+- name: Copy config file to docker container
+  shell: docker cp {{ data_dir }}/node{{ index }}/my.cnf {{ container_prefix }}{{ item }}:/etc/mysql/my.cnf
+
+- name: Restart Percona Server for MySQL
+  shell: docker exec {{ container_prefix }}{{ index }} systemctl restart mysql
+
 - name: Wait 5 seconds for MySQL to start
   pause:
     seconds: 5
