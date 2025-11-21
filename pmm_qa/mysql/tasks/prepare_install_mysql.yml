@@ -98,17 +98,6 @@
     mysql_root_password: "{{ mysql_root_password.results[0].stderr | regex_search('root@localhost: (.+)', '\\1') | first }}"
   when: mysql_version | replace('_', '') | int == 57
 
-- name: Install MySQL
-  shell: |
-    docker exec {{ container_prefix }}{{ item }} apt-get install -y \
-      mysql-common=5.8+1.1.0build1 \
-      mysql-server-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
-      mysql-server{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
-      mysql-client{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }} \
-      mysql-client-core{{ '-' + (mysql_version | replace('_', '.')) if mysql_version | replace('_', '') | int != 84 else '' }}
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: mysql_version | replace('_', '') | int >= 80
-
 - name: Start MySQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} systemctl enable mysql 
