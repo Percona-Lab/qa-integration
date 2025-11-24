@@ -12,7 +12,7 @@ CREATE TABLE students (
 CREATE TABLE classes (
     class_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
-    teacher VARCHAR(100)
+    teacher VARCHAR(2000)
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE enrollments (
