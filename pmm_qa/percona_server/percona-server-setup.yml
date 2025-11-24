@@ -229,7 +229,7 @@
     - name: Copy a load file into the container
       community.docker.docker_container_copy_into:
         container: "ps_pmm_{{ ps_version }}_{{ item }}"
-        path: ./data/ps_load.sql
+        path: ../data/mysql_load.sql
         container_path: /ps_load.sql
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 

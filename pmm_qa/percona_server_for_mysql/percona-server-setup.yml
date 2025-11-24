@@ -147,7 +147,7 @@
       when: setup_type == "gr" and setup_type == "replication"
 
     - name: Copy a load file into the container
-      shell: docker cp ./data/ps_load.sql {{ container_prefix }}{{ item }}:/ps_load.sql
+      shell: docker cp ../data/mysql_load.sql {{ container_prefix }}{{ item }}:/ps_load.sql
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
     - name: Wait 10 seconds for node to be connected
