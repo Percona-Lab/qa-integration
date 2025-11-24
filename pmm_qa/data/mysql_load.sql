@@ -94,89 +94,136 @@ DELETE FROM students
 WHERE first_name = 'Alice' AND last_name = 'Smith';
 
 -- ========================================
--- COMPRESSION METRIC BOOSTER (MINIMAL)
+-- AGGRESSIVE COMPRESSION METRIC CHURN
 -- ========================================
 
--- 1. Confirm row format (should say "Compressed")
-SHOW TABLE STATUS LIKE 'students'\G
-SHOW TABLE STATUS LIKE 'classes'\G
-SHOW TABLE STATUS LIKE 'enrollments'\G
+-- Inspect buffer pool size (bytes)
+SHOW VARIABLES LIKE 'innodb_buffer_pool_size';
 
--- 2. Add a compressible TEXT column (if not already present)
-ALTER TABLE students ADD COLUMN notes TEXT NULL;
+-- 1. Create a LARGE compressed table (bigger than buffer pool)
+DROP TABLE IF EXISTS big_students;
+CREATE TABLE big_students (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pad1 VARCHAR(100),
+  pad2 VARCHAR(100),
+  notes TEXT,
+  filler TEXT
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
--- 3. Bulk-fill extra rows with highly compressible data
---    Adjust @rows if you want more.
-SET @rows := 20000;
+-- 2. Create a LARGE uncompressed (eviction) table
+DROP TABLE IF EXISTS evict_buffer;
+CREATE TABLE evict_buffer (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  junk VARCHAR(100),
+  blobdata TEXT
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
--- Build a numbers helper inline (100 x 200 = 20,000 rows)
-INSERT INTO students (first_name, last_name, birth_date, notes)
-SELECT CONCAT('Extra', n.seq)      AS first_name,
-       CONCAT('User',  n.seq)      AS last_name,
-       DATE('2005-01-01') + INTERVAL (n.seq % 365) DAY AS birth_date,
-       RPAD('LoremIpsum ', 800, 'LoremIpsum ')         AS notes
+-- 3. Bulk insert rows into big_students (compressible data)
+--    Adjust @rows_big upward (e.g. 2_000_000) if buffer pool is large.
+SET @rows_big := 800000;
+
+-- Insert in chunks using a numbers generator (10 x 10 x 10 x 8,000 expansion)
+-- We construct ~@rows_big rows of highly compressible text.
+INSERT INTO big_students (pad1, pad2, notes, filler)
+SELECT
+  CONCAT('P1_', n.seq),
+  CONCAT('P2_', n.seq),
+  RPAD('COMPRESSIBLE_', 1200, 'COMPRESSIBLE_'),
+  RPAD('FILL', 800, 'FILL')
 FROM (
-  SELECT (a.i*200) + b.i AS seq
-  FROM (SELECT 0 i UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a
-  CROSS JOIN (
-    SELECT 0 i UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-         UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-         UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14
-         UNION ALL SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19
-         UNION ALL SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23 UNION ALL SELECT 24
-         UNION ALL SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27 UNION ALL SELECT 28 UNION ALL SELECT 29
-         UNION ALL SELECT 30 UNION ALL SELECT 31 UNION ALL SELECT 32 UNION ALL SELECT 33 UNION ALL SELECT 34
-         UNION ALL SELECT 35 UNION ALL SELECT 36 UNION ALL SELECT 37 UNION ALL SELECT 38 UNION ALL SELECT 39
-         UNION ALL SELECT 40 UNION ALL SELECT 41 UNION ALL SELECT 42 UNION ALL SELECT 43 UNION ALL SELECT 44
-         UNION ALL SELECT 45 UNION ALL SELECT 46 UNION ALL SELECT 47 UNION ALL SELECT 48 UNION ALL SELECT 49
-         UNION ALL SELECT 50 UNION ALL SELECT 51 UNION ALL SELECT 52 UNION ALL SELECT 53 UNION ALL SELECT 54
-         UNION ALL SELECT 55 UNION ALL SELECT 56 UNION ALL SELECT 57 UNION ALL SELECT 58 UNION ALL SELECT 59
-         UNION ALL SELECT 60 UNION ALL SELECT 61 UNION ALL SELECT 62 UNION ALL SELECT 63 UNION ALL SELECT 64
-         UNION ALL SELECT 65 UNION ALL SELECT 66 UNION ALL SELECT 67 UNION ALL SELECT 68 UNION ALL SELECT 69
-         UNION ALL SELECT 70 UNION ALL SELECT 71 UNION ALL SELECT 72 UNION ALL SELECT 73 UNION ALL SELECT 74
-         UNION ALL SELECT 75 UNION ALL SELECT 76 UNION ALL SELECT 77 UNION ALL SELECT 78 UNION ALL SELECT 79
-         UNION ALL SELECT 80 UNION ALL SELECT 81 UNION ALL SELECT 82 UNION ALL SELECT 83 UNION ALL SELECT 84
-         UNION ALL SELECT 85 UNION ALL SELECT 86 UNION ALL SELECT 87 UNION ALL SELECT 88 UNION ALL SELECT 89
-         UNION ALL SELECT 90 UNION ALL SELECT 91 UNION ALL SELECT 92 UNION ALL SELECT 93 UNION ALL SELECT 94
-         UNION ALL SELECT 95 UNION ALL SELECT 96 UNION ALL SELECT 97 UNION ALL SELECT 98 UNION ALL SELECT 99
-  ) b
-  WHERE (a.i*200)+b.i < @rows
+  SELECT (@row := @row + 1) AS seq
+  FROM
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t3,
+    (SELECT @row := 0) init
+  LIMIT @rows_big
 ) n;
 
--- 4. View current compression counters
+-- 4. Bulk insert rows into evict_buffer (uncompressed & less compressible)
+SET @rows_evict := 600000;
+INSERT INTO evict_buffer (junk, blobdata)
+SELECT
+  CONCAT('J', n.seq),
+  -- Less compressible pseudo-random-ish data (vary characters)
+  CONCAT(
+    MD5(RAND()), '_', MD5(RAND()), '_',
+    RPAD(MD5(RAND()), 300, 'Z')
+  )
+FROM (
+  SELECT (@row2 := @row2 + 1) AS seq
+  FROM
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a,
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) b,
+    (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+     UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) c,
+    (SELECT @row2 := 0) init
+  LIMIT @rows_evict
+) n;
+
+-- 5. Check row formats & sizes
+SHOW TABLE STATUS LIKE 'big_students'\G
+SHOW TABLE STATUS LIKE 'evict_buffer'\G
+
+-- 6. Initial compression counters
 SELECT PAGE_SIZE, COMPRESS_OPS, COMPRESS_TIME, UNCOMPRESS_OPS, UNCOMPRESS_TIME
 FROM information_schema.INNODB_CMP;
 
--- 5. Flush table metadata (does NOT guarantee eviction, but harmless)
-FLUSH TABLE students;
-
--- 6. Workload generator: random range reads to stimulate uncompress
+-- 7. Workload procedures (interleaved access)
 DELIMITER $$
-CREATE PROCEDURE run_students_reads(IN loops INT)
+CREATE PROCEDURE churn(IN loops INT)
 BEGIN
   DECLARE i INT DEFAULT 0;
-  DECLARE start_id INT;
+  DECLARE rstart INT;
   DECLARE dummy BIGINT;
   WHILE i < loops DO
-    SET start_id = FLOOR(RAND()*@rows) + 1;
-    -- Use SQL_NO_CACHE to skip the query cache (if enabled)
+    -- Random range read on compressed table (SQL_NO_CACHE)
+    SET rstart = FLOOR(RAND() * @rows_big) + 1;
+    SELECT /*+ SQL_NO_CACHE */ SUM(id) INTO dummy
+    FROM big_students
+    WHERE id BETWEEN rstart AND rstart + 150;
+
+    -- Scan slice of eviction table to evict pages
+    SET rstart = FLOOR(RAND() * @rows_evict) + 1;
     SELECT /*+ SQL_NO_CACHE */ COUNT(*) INTO dummy
-    FROM students
-    WHERE student_id BETWEEN start_id AND start_id + 50;
+    FROM evict_buffer
+    WHERE id BETWEEN rstart AND rstart + 2000;
+
+    -- Occasional full-ish scan segment to push more evictions
+    IF (i % 50 = 0) THEN
+      SELECT /*+ SQL_NO_CACHE */ AVG(id) INTO dummy
+      FROM evict_buffer
+      WHERE id BETWEEN rstart AND rstart + 25000;
+    END IF;
+
+    -- Update chunk on compressed table (forces page writes & reads)
+    IF (i % 20 = 0) THEN
+      UPDATE big_students
+      SET filler = CONCAT(filler, 'X')
+      WHERE id BETWEEN rstart AND rstart + 120;
+    END IF;
+
     SET i = i + 1;
   END WHILE;
 END$$
 DELIMITER ;
 
-CALL run_students_reads(5000);
+-- 8. Run churn more than once (increase loops if needed)
+CALL churn(2000);
+CALL churn(2000);
+CALL churn(3000);
 
--- 7. Check counters again
+-- 9. Re-check counters
 SELECT PAGE_SIZE, COMPRESS_OPS, COMPRESS_TIME, UNCOMPRESS_OPS, UNCOMPRESS_TIME
 FROM information_schema.INNODB_CMP;
 
--- If still zero, optionally rebuild (forces new compressed pages) then re-run reads:
- ALTER TABLE students FORCE;
- CALL run_students_reads(8000);
+-- 10. Optional: FORCE table rebuild (creates new compressed pages) then churn again
+ ALTER TABLE big_students FORCE;
+ CALL churn(3000);
  SELECT UNCOMPRESS_OPS, UNCOMPRESS_TIME FROM information_schema.INNODB_CMP;
 
