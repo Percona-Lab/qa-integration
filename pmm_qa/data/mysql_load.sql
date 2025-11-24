@@ -1,83 +1,64 @@
 -- =========================================================
 -- InnoDB Compression Stress & Metrics Script (MySQL 8.4+)
 -- =========================================================
--- Adjust these first if desired
-SET @rows_per_table := 100000;      -- Base row count (increase for more stress)
-SET @update_touch_fraction := 0.30; -- Fraction of rows to update (approx)
-SET @delete_fraction := 0.10;       -- Fraction of rows to delete (approx)
+-- Adjust row count here (start smaller if resource constrained)
+SET @rows_per_table := 100000;
+SET @cte_depth := @rows_per_table + 10;  -- headroom for recursion
+SET SESSION cte_max_recursion_depth = @cte_depth;
 
--- Raise recursion depth for large CTE generation
-SET SESSION cte_max_recursion_depth = 200000;
-
--- Drop & recreate schema
 DROP DATABASE IF EXISTS innodb_compress_lab;
 CREATE DATABASE innodb_compress_lab;
 USE innodb_compress_lab;
 
--- Optional: ensure per-table tablespace (generally default ON now)
--- SHOW VARIABLES LIKE 'innodb_file_per_table';
+-- Drop any leftover tables (defensive)
+DROP TABLE IF EXISTS t_comp_2;
+DROP TABLE IF EXISTS t_comp_4;
+DROP TABLE IF EXISTS t_comp_8;
+DROP TABLE IF EXISTS t_comp_16;
+DROP TABLE IF EXISTS t_mixed_8;
 
 -- =========================================================
--- Helper CTE for generating N numbers (1..@rows_per_table)
+-- Create compressed tables (classic InnoDB compression)
 -- =========================================================
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-SELECT COUNT(*) AS generated_rows INTO @generated_rows
-FROM seq;
--- At this point seq can be re-used inside each INSERT ... SELECT (we'll redefine per table).
-
--- =========================================================
--- TABLE CREATION (different KEY_BLOCK_SIZE values)
--- =========================================================
--- Highly compressible: repeated patterns
 CREATE TABLE t_comp_2 (
-  id INT PRIMARY KEY AUTO_INCREMENT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   compressible TEXT,
   semi_random TEXT
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=2;
 
 CREATE TABLE t_comp_4 (
-  id INT PRIMARY KEY AUTO_INCREMENT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   compressible TEXT,
   semi_random TEXT
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;
 
 CREATE TABLE t_comp_8 (
-  id INT PRIMARY KEY AUTO_INCREMENT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   compressible TEXT,
   semi_random TEXT
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE t_comp_16 (
-  id INT PRIMARY KEY AUTO_INCREMENT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   compressible TEXT,
   semi_random TEXT
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=16;
 
--- A mixed workload table (different patterns) reusing KEY_BLOCK_SIZE=8
 CREATE TABLE t_mixed_8 (
-  id INT PRIMARY KEY AUTO_INCREMENT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
   pattern_a TEXT,
   pattern_b TEXT,
   pattern_c TEXT
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 -- =========================================================
--- BEFORE METRICS SNAPSHOT
+-- Initial metrics snapshot
 -- =========================================================
-SELECT 'BEFORE' AS phase, * FROM information_schema.innodb_cmp ORDER BY page_size;
+SELECT 'BEFORE' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
 
 -- =========================================================
--- DATA LOAD SECTION
--- Each table: insert @rows_per_table rows with varied compressibility
+-- Bulk Inserts (declare CTE separately for each table)
 -- =========================================================
-
--- Utility function via inline expressions:
--- compressible: REPEAT('A', 5000) + REPEAT('B', 5000) etc.
--- semi_random: CONCAT of pseudo-random fragments using MD5(RAND())
 
 -- t_comp_2
 WITH RECURSIVE seq AS (
@@ -111,7 +92,7 @@ WITH RECURSIVE seq AS (
 )
 INSERT INTO t_comp_8 (compressible, semi_random)
 SELECT
-  REPEAT('LONGPATTERN1234567890', 600),  -- ~12000 chars compressible
+  REPEAT('LONGPATTERN1234567890', 600),  -- ~12k chars
   CONCAT(MD5(RAND()), MD5(RAND()), MD5(RAND()), MD5(RAND()))
 FROM seq;
 
@@ -123,11 +104,11 @@ WITH RECURSIVE seq AS (
 )
 INSERT INTO t_comp_16 (compressible, semi_random)
 SELECT
-  REPEAT('QQQQQQQQQQ', 1500),  -- 15000 chars of repeated Q
+  REPEAT('QQQQQQQQQQ', 1500),  -- 15k repeated Q
   CONCAT(MD5(RAND()), '-', MD5(RAND()), '-', MD5(RAND()), '-', MD5(RAND()))
 FROM seq;
 
--- t_mixed_8 (three distinct patterns)
+-- t_mixed_8
 WITH RECURSIVE seq AS (
   SELECT 1 AS n
   UNION ALL
@@ -141,18 +122,16 @@ SELECT
 FROM seq;
 
 -- =========================================================
--- INTERMEDIATE METRICS (after inserts)
+-- Metrics after inserts
 -- =========================================================
-SELECT 'AFTER_INSERTS' AS phase, * FROM information_schema.innodb_cmp ORDER BY page_size;
+SELECT 'AFTER_INSERTS' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
 
 -- =========================================================
--- HEAVY UPDATE CYCLES (touch ~30% of rows)
+-- Heavy updates (approx fractions via modular predicates)
 -- =========================================================
--- Use modulus predicates for approximate fractions
-
 UPDATE t_comp_2
 SET compressible = CONCAT(REPEAT('UPDATEDA', 3000), REPEAT('UPDATEDB', 3000))
-WHERE id % 10 IN (0,1,2); -- ~30%
+WHERE id % 10 IN (0,1,2);
 
 UPDATE t_comp_4
 SET semi_random = CONCAT(MD5(RAND()), MD5(RAND()), REPEAT('UPD', 2000))
@@ -160,18 +139,18 @@ WHERE id % 10 IN (0,1,2);
 
 UPDATE t_comp_8
 SET compressible = REPEAT('UP8_', 4000)
-WHERE id % 5 = 0;  -- 20%
+WHERE id % 5 = 0;
 
 UPDATE t_comp_16
 SET semi_random = CONCAT(REPEAT('CHANGED', 1000), MD5(RAND()))
-WHERE id % 4 = 0;  -- 25%
+WHERE id % 4 = 0;
 
 UPDATE t_mixed_8
 SET pattern_b = REPEAT('REWRITEPATTERN', 3000)
-WHERE id % 3 = 0;  -- ~33%
+WHERE id % 3 = 0;
 
 -- =========================================================
--- DELETE FRACTION (approx 10%) to cause page reorganizations
+-- Deletes (~10%) to force page reorganization
 -- =========================================================
 DELETE FROM t_comp_2   WHERE id % 10 = 0;
 DELETE FROM t_comp_4   WHERE id % 10 = 0;
@@ -180,8 +159,8 @@ DELETE FROM t_comp_16  WHERE id % 10 = 0;
 DELETE FROM t_mixed_8  WHERE id % 10 = 0;
 
 -- =========================================================
--- OPTIMIZE TABLE (forces rebuild & compression) - optional & expensive
--- You can comment these out if runtime is too long.
+-- Optional: OPTIMIZE (expensive; triggers further compression)
+-- Comment these out if runtime is excessive
 -- =========================================================
 OPTIMIZE TABLE t_comp_2;
 OPTIMIZE TABLE t_comp_4;
@@ -190,19 +169,20 @@ OPTIMIZE TABLE t_comp_16;
 OPTIMIZE TABLE t_mixed_8;
 
 -- =========================================================
--- FINAL METRICS SNAPSHOT
+-- Final metrics snapshots
 -- =========================================================
-SELECT 'FINAL' AS phase, * FROM information_schema.innodb_cmp ORDER BY page_size;
+SELECT 'FINAL' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
 
--- Focused view (selected columns)
 SELECT 'FINAL_FOCUSED' AS phase,
-       page_size, compress_ops, compress_time, uncompress_ops, uncompress_time
-FROM information_schema.innodb_cmp
+       ic.page_size,
+       ic.compress_ops,
+       ic.compress_time,
+       ic.uncompress_ops,
+       ic.uncompress_time
+FROM information_schema.innodb_cmp ic
 ORDER BY page_size;
 
--- =========================================================
--- OPTIONAL: Show table sizes
--- =========================================================
+-- Table size overview
 SELECT table_name,
        engine,
        row_format,
@@ -213,7 +193,5 @@ FROM information_schema.tables
 WHERE table_schema='innodb_compress_lab'
 ORDER BY total_mb DESC;
 
--- =========================================================
--- CLEANUP (uncomment if you want to drop everything at end)
--- =========================================================
+-- Cleanup option (leave commented if you want to inspect)
 -- DROP DATABASE innodb_compress_lab;
