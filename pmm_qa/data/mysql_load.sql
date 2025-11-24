@@ -7,13 +7,13 @@ CREATE TABLE students (
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     birth_date DATE
-);
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE classes (
     class_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     teacher VARCHAR(100)
-);
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE enrollments (
     enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE enrollments (
     enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
-);
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 -- ========================================
 -- INSERT INITIAL DATA
