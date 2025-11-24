@@ -1,197 +1,94 @@
--- =========================================================
--- InnoDB Compression Stress & Metrics Script (MySQL 8.4+)
--- =========================================================
--- Adjust row count here (start smaller if resource constrained)
-SET @rows_per_table := 100000;
-SET @cte_depth := @rows_per_table + 10;  -- headroom for recursion
-SET SESSION cte_max_recursion_depth = @cte_depth;
+-- ========================================
+-- CREATE TABLES
+-- ========================================
 
-DROP DATABASE IF EXISTS innodb_compress_lab;
-CREATE DATABASE innodb_compress_lab;
-USE innodb_compress_lab;
-
--- Drop any leftover tables (defensive)
-DROP TABLE IF EXISTS t_comp_2;
-DROP TABLE IF EXISTS t_comp_4;
-DROP TABLE IF EXISTS t_comp_8;
-DROP TABLE IF EXISTS t_comp_16;
-DROP TABLE IF EXISTS t_mixed_8;
-
--- =========================================================
--- Create compressed tables (classic InnoDB compression)
--- =========================================================
-CREATE TABLE t_comp_2 (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  compressible TEXT,
-  semi_random TEXT
-) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=2;
-
-CREATE TABLE t_comp_4 (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  compressible TEXT,
-  semi_random TEXT
-) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;
-
-CREATE TABLE t_comp_8 (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  compressible TEXT,
-  semi_random TEXT
+CREATE TABLE students (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    birth_date DATE
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
-CREATE TABLE t_comp_16 (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  compressible TEXT,
-  semi_random TEXT
-) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=16;
-
-CREATE TABLE t_mixed_8 (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  pattern_a TEXT,
-  pattern_b TEXT,
-  pattern_c TEXT
+CREATE TABLE classes (
+    class_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    teacher VARCHAR(100)
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
--- =========================================================
--- Initial metrics snapshot
--- =========================================================
-SELECT 'BEFORE' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
+CREATE TABLE enrollments (
+    enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    class_id INT,
+    enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (class_id) REFERENCES classes(class_id)
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
--- =========================================================
--- Bulk Inserts (declare CTE separately for each table)
--- =========================================================
+-- ========================================
+-- INSERT INITIAL DATA
+-- ========================================
 
--- t_comp_2
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-INSERT INTO t_comp_2 (compressible, semi_random)
-SELECT
-  CONCAT(REPEAT('A', 4000), REPEAT('B', 4000), REPEAT('C', 2000)),
-  CONCAT(MD5(RAND()), MD5(RAND()), MD5(RAND()))
-FROM seq;
+INSERT INTO students (first_name, last_name, birth_date) VALUES
+('Alice', 'Smith', '2005-04-10'),
+('Bob', 'Johnson', '2006-08-15'),
+('Charlie', 'Brown', '2004-12-01');
 
--- t_comp_4
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-INSERT INTO t_comp_4 (compressible, semi_random)
-SELECT
-  CONCAT(REPEAT('X', 3000), REPEAT('Y', 3000), REPEAT('Z', 4000)),
-  CONCAT(MD5(RAND()), ':', MD5(RAND()), ':', MD5(RAND()))
-FROM seq;
+INSERT INTO classes (name, teacher) VALUES
+('Mathematics', 'Mrs. Taylor'),
+('History', 'Mr. Anderson'),
+('Science', 'Dr. Reynolds');
 
--- t_comp_8
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-INSERT INTO t_comp_8 (compressible, semi_random)
-SELECT
-  REPEAT('LONGPATTERN1234567890', 600),  -- ~12k chars
-  CONCAT(MD5(RAND()), MD5(RAND()), MD5(RAND()), MD5(RAND()))
-FROM seq;
+INSERT INTO enrollments (student_id, class_id) VALUES
+(1, 1),
+(1, 2),
+(2, 2),
+(3, 1),
+(3, 3);
 
--- t_comp_16
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-INSERT INTO t_comp_16 (compressible, semi_random)
-SELECT
-  REPEAT('QQQQQQQQQQ', 1500),  -- 15k repeated Q
-  CONCAT(MD5(RAND()), '-', MD5(RAND()), '-', MD5(RAND()), '-', MD5(RAND()))
-FROM seq;
+-- ========================================
+-- SELECT: View all data after insert
+-- ========================================
 
--- t_mixed_8
-WITH RECURSIVE seq AS (
-  SELECT 1 AS n
-  UNION ALL
-  SELECT n + 1 FROM seq WHERE n < @rows_per_table
-)
-INSERT INTO t_mixed_8 (pattern_a, pattern_b, pattern_c)
-SELECT
-  REPEAT('M', 8000),
-  CONCAT(REPEAT('N1', 2000), REPEAT('N2', 2000)),
-  CONCAT(MD5(RAND()), REPEAT('R', 1000), MD5(RAND()))
-FROM seq;
+-- View all students
+SELECT * FROM students;
 
--- =========================================================
--- Metrics after inserts
--- =========================================================
-SELECT 'AFTER_INSERTS' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
+-- View all classes
+SELECT * FROM classes;
 
--- =========================================================
--- Heavy updates (approx fractions via modular predicates)
--- =========================================================
-UPDATE t_comp_2
-SET compressible = CONCAT(REPEAT('UPDATEDA', 3000), REPEAT('UPDATEDB', 3000))
-WHERE id % 10 IN (0,1,2);
+-- View all enrollments
+SELECT * FROM enrollments;
 
-UPDATE t_comp_4
-SET semi_random = CONCAT(MD5(RAND()), MD5(RAND()), REPEAT('UPD', 2000))
-WHERE id % 10 IN (0,1,2);
+-- View students enrolled in Mathematics
+SELECT s.first_name, s.last_name
+FROM students s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN classes c ON e.class_id = c.class_id
+WHERE c.name = 'Mathematics';
 
-UPDATE t_comp_8
-SET compressible = REPEAT('UP8_', 4000)
-WHERE id % 5 = 0;
+-- Count students per class
+SELECT c.name AS class_name, COUNT(e.student_id) AS student_count
+FROM classes c
+LEFT JOIN enrollments e ON c.class_id = e.class_id
+GROUP BY c.name;
 
-UPDATE t_comp_16
-SET semi_random = CONCAT(REPEAT('CHANGED', 1000), MD5(RAND()))
-WHERE id % 4 = 0;
+-- ========================================
+-- UPDATE DATA
+-- ========================================
 
-UPDATE t_mixed_8
-SET pattern_b = REPEAT('REWRITEPATTERN', 3000)
-WHERE id % 3 = 0;
+UPDATE students
+SET last_name = 'Williams'
+WHERE first_name = 'Bob' AND last_name = 'Johnson';
 
--- =========================================================
--- Deletes (~10%) to force page reorganization
--- =========================================================
-DELETE FROM t_comp_2   WHERE id % 10 = 0;
-DELETE FROM t_comp_4   WHERE id % 10 = 0;
-DELETE FROM t_comp_8   WHERE id % 10 = 0;
-DELETE FROM t_comp_16  WHERE id % 10 = 0;
-DELETE FROM t_mixed_8  WHERE id % 10 = 0;
+UPDATE classes
+SET teacher = 'Ms. Carter'
+WHERE name = 'History';
 
--- =========================================================
--- Optional: OPTIMIZE (expensive; triggers further compression)
--- Comment these out if runtime is excessive
--- =========================================================
-OPTIMIZE TABLE t_comp_2;
-OPTIMIZE TABLE t_comp_4;
-OPTIMIZE TABLE t_comp_8;
-OPTIMIZE TABLE t_comp_16;
-OPTIMIZE TABLE t_mixed_8;
+-- ========================================
+-- DELETE DATA
+-- ========================================
 
--- =========================================================
--- Final metrics snapshots
--- =========================================================
-SELECT 'FINAL' AS phase, ic.* FROM information_schema.innodb_cmp ic ORDER BY page_size;
+DELETE FROM enrollments
+WHERE student_id = (SELECT student_id FROM students WHERE first_name = 'Alice' AND last_name = 'Smith');
 
-SELECT 'FINAL_FOCUSED' AS phase,
-       ic.page_size,
-       ic.compress_ops,
-       ic.compress_time,
-       ic.uncompress_ops,
-       ic.uncompress_time
-FROM information_schema.innodb_cmp ic
-ORDER BY page_size;
-
--- Table size overview
-SELECT table_name,
-       engine,
-       row_format,
-       DATA_LENGTH/1024/1024 AS data_mb,
-       INDEX_LENGTH/1024/1024 AS index_mb,
-       (DATA_LENGTH+INDEX_LENGTH)/1024/1024 AS total_mb
-FROM information_schema.tables
-WHERE table_schema='innodb_compress_lab'
-ORDER BY total_mb DESC;
-
--- Cleanup option (leave commented if you want to inspect)
--- DROP DATABASE innodb_compress_lab;
+DELETE FROM students
+WHERE first_name = 'Alice' AND last_name = 'Smith';
