@@ -89,7 +89,6 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
 
     # Gather Version details
     ms_version = os.getenv('MS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
-    ms_version_int = int(ms_version.replace(".", ""))
 
     # Check Setup Types
     setup_type = ''
@@ -107,6 +106,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'GROUP_REPLICATION': setup_type,
         'MS_NODES': no_of_nodes,
         'MS_VERSION': ms_version,
+        'SETUP_TYPE': setup_type_value,
         'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
         'MS_CONTAINER': 'mysql_pmm_' + str(ms_version),
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
@@ -116,11 +116,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
     }
 
-    # Ansible playbook filename
-    playbook_filename = 'ms_pmm_setup.yml'
-
-    # Call the function to run the Ansible playbook
-    run_ansible_playbook(playbook_filename, env_vars, args)
+    run_ansible_playbook('mysql/mysql-setup.yml', env_vars, args)
 
 def setup_ssl_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running
