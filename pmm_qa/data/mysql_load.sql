@@ -69,16 +69,16 @@ FROM (
     LIMIT 1000
 ) numbers;
 
--- ========================================
--- CREATE A TEMPORARY HELPER TABLE FOR 100k ROWS
--- ========================================
 DROP TEMPORARY TABLE IF EXISTS counter;
-CREATE TEMPORARY TABLE counter (n INT PRIMARY KEY AUTO_INCREMENT) ENGINE=Memory;
-INSERT INTO counter VALUES (NULL),(NULL),(NULL),(NULL),(NULL),(NULL),(NULL),(NULL),(NULL),(NULL);
-INSERT INTO counter(n) SELECT NULL FROM counter;   -- 10*10 = 100
-INSERT INTO counter(n) SELECT NULL FROM counter;   -- 100*10 = 1,000
-INSERT INTO counter(n) SELECT NULL FROM counter;   -- 1,000*10 = 10,000
-INSERT INTO counter(n) SELECT NULL FROM counter;   -- 10,000*10 = 100,000
+CREATE TEMPORARY TABLE counter (n INT PRIMARY KEY);
+
+WITH RECURSIVE seq AS (
+  SELECT 1 AS n
+  UNION ALL
+  SELECT n + 1 FROM seq WHERE n < 100000
+)
+INSERT INTO counter (n)
+SELECT n FROM seq;
 
 -- ========================================
 -- BULK INSERT ENROLLMENTS (100,000 rows, all valid FKs)
