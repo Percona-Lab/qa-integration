@@ -78,7 +78,6 @@ WITH RECURSIVE seq AS (
   SELECT n + 1 FROM seq WHERE n < 100000
 )
 INSERT INTO counter (n)
-SELECT n FROM seq;
 
 -- ========================================
 -- BULK INSERT ENROLLMENTS (100,000 rows, all valid FKs)
