@@ -66,43 +66,19 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
-    if ps_version_int >= 84:
-        # Define environment variables for playbook
-        env_vars = {
-            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'SETUP_TYPE': setup_type_value,
-            'NODES_COUNT': get_value('NODES_COUNT', db_type, args, db_config),
-            'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-            'PS_VERSION': ps_version,
-            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-            'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
-        }
+    # Define environment variables for playbook
+    env_vars = {
+        'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
+        'SETUP_TYPE': setup_type_value,
+        'NODES_COUNT': get_value('NODES_COUNT', db_type, args, db_config),
+        'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
+        'PS_VERSION': ps_version,
+        'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
+        'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
+        'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
+    }
 
-        run_ansible_playbook('percona_server/percona-server-setup.yml', env_vars, args)
-    else:
-        # Define environment variables for playbook
-        env_vars = {
-            'GROUP_REPLICATION': setup_type,
-            'PS_NODES': no_of_nodes,
-            'PS_VERSION': ps_version,
-            'PMM_SERVER_IP': args.pmm_server_ip or container_name or '127.0.0.1',
-            'PS_CONTAINER': 'ps_pmm_' + str(ps_version) + (
-                '_replica' if setup_type_value in ("replication", "replica") else ''),
-            'PS_PORT': 3318 if setup_type_value in ("replication", "replica") else 3317,
-            'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
-            'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
-            'PS_TARBALL': get_value('TARBALL', db_type, args, db_config),
-            'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-            'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
-        }
-
-        # Ansible playbook filename
-        playbook_filename = 'ps_pmm_setup.yml'
-
-        # Call the function to run the Ansible playbook
-        run_ansible_playbook(playbook_filename, env_vars, args)
-
+    run_ansible_playbook('percona_server_for_mysql/percona-server-setup.yml', env_vars, args)
 
 def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     # Check if PMM server is running

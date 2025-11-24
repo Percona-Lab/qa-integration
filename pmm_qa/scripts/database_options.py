@@ -23,7 +23,7 @@ database_options = {
                            "TARBALL": ""}
     },
     "MYSQL": {
-        "versions": ["8.0", "8.4"],
+        "versions": ["5.7", "8.0", "8.4"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
                            "TARBALL": ""}
     },
