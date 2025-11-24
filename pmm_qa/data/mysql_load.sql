@@ -5,7 +5,7 @@
 CREATE TABLE students (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(250),
-    last_name VARCHAR(1000),
+    last_name VARCHAR(2000),
     birth_date DATE
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
