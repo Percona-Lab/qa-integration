@@ -82,6 +82,7 @@
     docker exec {{ container_prefix }}{{ index }} chmod +x /etc/init.d/mysql
     docker exec {{ container_prefix }}{{ index }} sh -c "echo 'export PATH=/usr/local/mysql/bin:\$PATH' >> /etc/profile"
     docker exec {{ container_prefix }}{{ index }} ln -s /usr/local/mysql/bin/mysql /usr/bin/mysql
+    docker exec {{ container_prefix }}{{ index }} ln -s /usr/local/mysql/bin/mysqldump /usr/bin/mysqldump
     docker exec {{ container_prefix }}{{ index }} bash -c 'source ~/.bashrc'
   register: mysql_57_root_password
   when: mysql_version | replace('_', '') | int == 57
