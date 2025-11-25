@@ -94,10 +94,10 @@ DELETE FROM students
 WHERE first_name = 'Alice' AND last_name = 'Smith';
 
 -- ========================================
--- AGGRESSIVE COMPRESSION METRIC CHURN (Chunked)
+-- AGGRESSIVE COMPRESSION METRIC CHURN (Chunked, Non-CTE)
 -- ========================================
 
--- Inspect buffer pool (bytes)
+-- Inspect buffer pool
 SHOW VARIABLES LIKE 'innodb_buffer_pool_size';
 
 DROP TABLE IF EXISTS big_students;
@@ -116,51 +116,37 @@ CREATE TABLE evict_buffer (
   blobdata TEXT
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
--- How many total rows you want (adjust upward if buffer pool is large)
-SET @rows_big   := 800000;  -- compressed table target
-SET @rows_evict := 600000;  -- eviction table target
+-- Target row counts (increase if buffer pool is large)
+SET @rows_big   := 800000;   -- compressed table
+SET @rows_evict := 600000;   -- eviction table
+SET @chunk_size := 50000;    -- rows per batch insert
 
--- We will insert in CHUNKS of 50,000 rows to avoid huge single INSERT
-SET @chunk_size := 50000;
+-- Build helper numbers tables WITHOUT ambiguous column names
+DROP TEMPORARY TABLE IF EXISTS nums10;
+CREATE TEMPORARY TABLE nums10 (d TINYINT UNSIGNED PRIMARY KEY);
+INSERT INTO nums10(d) VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 
--- Helper: make small number tables (0..99) and (0..499) for expansion
+-- nums100: 0..99
 DROP TEMPORARY TABLE IF EXISTS nums100;
 CREATE TEMPORARY TABLE nums100 (n INT PRIMARY KEY);
 INSERT INTO nums100(n)
-SELECT seq FROM (
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d1,
-(
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d2;  -- 10 x 10 = 100
+SELECT t1.d*10 + t2.d
+FROM nums10 t1
+CROSS JOIN nums10 t2
+ORDER BY 1;
 
+-- nums500: 0..499  (use three digits: a*100 + b*10 + c)
 DROP TEMPORARY TABLE IF EXISTS nums500;
 CREATE TEMPORARY TABLE nums500 (n INT PRIMARY KEY);
 INSERT INTO nums500(n)
-SELECT seq FROM (
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d1,
-(
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d2,
-(
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d3,
-(
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d4,
-(
-  SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
-  UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9
-) d5; -- 10^5 = 100000 (we will LIMIT to 500 per 100 => 50000 rows per chunk)
+SELECT a.d*100 + b.d*10 + c.d
+FROM nums10 a
+CROSS JOIN nums10 b
+CROSS JOIN nums10 c
+WHERE a.d*100 + b.d*10 + c.d < 500
+ORDER BY 1;
 
--- Procedure to load big_students in chunks
+-- Procedure: fill compressed table in chunks
 DELIMITER $$
 CREATE PROCEDURE fill_big_students(IN total INT, IN chunk INT)
 BEGIN
@@ -168,22 +154,19 @@ BEGIN
   WHILE inserted < total DO
     INSERT INTO big_students (pad1, pad2, notes, filler)
     SELECT
-      CONCAT('P1_', seq + inserted) AS pad1,
-      CONCAT('P2_', seq + inserted) AS pad2,
+      CONCAT('P1_', inserted + (a.n*500) + b.n) AS pad1,
+      CONCAT('P2_', inserted + (a.n*500) + b.n) AS pad2,
       RPAD('COMPRESSIBLE_', 1200, 'COMPRESSIBLE_') AS notes,
       RPAD('FILL', 800, 'FILL') AS filler
-    FROM (
-      SELECT (a.n * 500) + b.n AS seq
-      FROM nums100 a
-      JOIN nums500 b ON b.n < 500   -- ensures 100 * 500 = 50,000 rows
-    ) gen
+    FROM nums100 a
+    JOIN nums500 b   -- 100 * 500 = 50,000 rows per batch
     LIMIT chunk;
     SET inserted = inserted + chunk;
   END WHILE;
 END$$
 DELIMITER ;
 
--- Procedure to load evict_buffer in chunks (less compressible data)
+-- Procedure: fill eviction table in chunks (less compressible)
 DELIMITER $$
 CREATE PROCEDURE fill_evict_buffer(IN total INT, IN chunk INT)
 BEGIN
@@ -191,13 +174,10 @@ BEGIN
   WHILE inserted < total DO
     INSERT INTO evict_buffer (junk, blobdata)
     SELECT
-      CONCAT('J', seq + inserted),
+      CONCAT('J', inserted + (a.n*500) + b.n),
       CONCAT(MD5(RAND()), '_', MD5(RAND()), '_', RPAD(MD5(RAND()), 300, 'Z'))
-    FROM (
-      SELECT (a.n * 500) + b.n AS seq
-      FROM nums100 a
-      JOIN nums500 b ON b.n < 500
-    ) gen
+    FROM nums100 a
+    JOIN nums500 b
     LIMIT chunk;
     SET inserted = inserted + chunk;
   END WHILE;
@@ -208,15 +188,15 @@ DELIMITER ;
 CALL fill_big_students(@rows_big, @chunk_size);
 CALL fill_evict_buffer(@rows_evict, @chunk_size);
 
--- Verify formats
+-- Verify compressed row format
 SHOW TABLE STATUS LIKE 'big_students'\G
 SHOW TABLE STATUS LIKE 'evict_buffer'\G
 
--- Initial compression counters
+-- Baseline counters
 SELECT PAGE_SIZE, COMPRESS_OPS, COMPRESS_TIME, UNCOMPRESS_OPS, UNCOMPRESS_TIME
 FROM information_schema.INNODB_CMP;
 
--- Churn procedure (interleaved access)
+-- Churn procedure
 DELIMITER $$
 CREATE PROCEDURE churn(IN loops INT)
 BEGIN
@@ -224,22 +204,26 @@ BEGIN
   DECLARE rstart INT;
   DECLARE dummy BIGINT;
   WHILE i < loops DO
+    -- Random range read on compressed table
     SET rstart = FLOOR(RAND() * @rows_big) + 1;
     SELECT SQL_NO_CACHE SUM(id) INTO dummy
     FROM big_students
     WHERE id BETWEEN rstart AND rstart + 150;
 
+    -- Eviction range read on dynamic table
     SET rstart = FLOOR(RAND() * @rows_evict) + 1;
     SELECT SQL_NO_CACHE COUNT(*) INTO dummy
     FROM evict_buffer
     WHERE id BETWEEN rstart AND rstart + 3000;
 
+    -- Occasional larger slice
     IF (i % 40 = 0) THEN
       SELECT SQL_NO_CACHE AVG(id) INTO dummy
       FROM evict_buffer
       WHERE id BETWEEN rstart AND rstart + 30000;
     END IF;
 
+    -- Update chunk on compressed table (forces page access/rewrite)
     IF (i % 25 = 0) THEN
       UPDATE big_students
       SET filler = CONCAT(filler, 'X')
@@ -251,7 +235,7 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Run multiple passes (increase loops if needed)
+-- Run churn passes (increase loops if needed)
 CALL churn(3000);
 CALL churn(3000);
 CALL churn(4000);
@@ -260,7 +244,7 @@ CALL churn(4000);
 SELECT PAGE_SIZE, COMPRESS_OPS, COMPRESS_TIME, UNCOMPRESS_OPS, UNCOMPRESS_TIME
 FROM information_schema.INNODB_CMP;
 
--- Optional: FORCE rebuild to create fresh compressed pages and churn again
+-- Optional rebuild & extra churn
 -- ALTER TABLE big_students FORCE;
 -- CALL churn(4000);
 -- SELECT UNCOMPRESS_OPS, UNCOMPRESS_TIME FROM information_schema.INNODB_CMP;
