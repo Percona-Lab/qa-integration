@@ -119,11 +119,9 @@ CREATE TABLE evict_buffer (
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
 -- 3. Bulk insert rows into big_students (compressible data)
---    Adjust @rows_big upward (e.g. 2_000_000) if buffer pool is large.
 SET @rows_big := 800000;
 
 -- Insert in chunks using a numbers generator (10 x 10 x 10 x 8,000 expansion)
--- We construct ~@rows_big rows of highly compressible text.
 INSERT INTO big_students (pad1, pad2, notes, filler)
 SELECT
   CONCAT('P1_', n.seq),
