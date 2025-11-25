@@ -83,30 +83,6 @@ UPDATE classes
 SET teacher = 'Ms. Carter'
 WHERE name = 'History';
 
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-INSERT INTO students SELECT * FROM students;
-
 -- ========================================
 -- DELETE DATA
 -- ========================================
@@ -116,3 +92,93 @@ WHERE student_id = (SELECT student_id FROM students WHERE first_name = 'Alice' A
 
 DELETE FROM students
 WHERE first_name = 'Alice' AND last_name = 'Smith';
+
+-- A compressed table with ~1KB rows
+CREATE TABLE students_big (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name  VARCHAR(50),
+  birth_date DATE,
+  bio TEXT,                     -- larger field to fill pages
+  notes TEXT,
+  filler VARBINARY(256),        -- binary helps mixed page content
+  INDEX (last_name),
+  INDEX (birth_date)
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+
+-- A second table to diversify compression across indexes
+CREATE TABLE students_big2 LIKE students_big;
+ALTER TABLE students_big2 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;
+
+-- Optional: smaller row table to vary page shapes
+CREATE TABLE students_small (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name  VARCHAR(50),
+  birth_date DATE,
+  INDEX (last_name)
+) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+
+-- Seed 200k rows quickly (repeat the INSERT SELECT pattern to reach ~1M if desired)
+INSERT INTO students_big (first_name, last_name, birth_date, bio, notes, filler)
+SELECT
+  CONCAT('FN', LPAD(i, 6, '0')),
+  CONCAT('LN', LPAD(i*13 % 1000000, 6, '0')),
+  DATE_ADD('1970-01-01', INTERVAL (i*37 % 18628) DAY),
+  REPEAT('BIO_', 50),
+  REPEAT('NOTE_', 30),
+  RANDOM_BYTES(256)
+FROM (
+  SELECT @row := @row + 1 AS i
+  FROM (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t0,
+       (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
+       (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
+       (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t3,
+       (SELECT @row:=0) init
+) gen
+LIMIT 200000;
+
+INSERT INTO students_big2 SELECT * FROM students_big;
+INSERT INTO students_small (first_name, last_name, birth_date)
+SELECT first_name, last_name, birth_date FROM students_big LIMIT 200000;
+
+-- Enable events
+SET GLOBAL event_scheduler = ON;
+
+-- Create an event that runs every 5 seconds
+DROP EVENT IF EXISTS ev_compress_load;
+CREATE EVENT ev_compress_load
+ON SCHEDULE EVERY 5 SECOND
+DO
+BEGIN
+  -- Inserts: add ~2k rows
+  INSERT INTO students_big (first_name, last_name, birth_date, bio, notes, filler)
+  SELECT
+    CONCAT('FNX', UUID()),
+    CONCAT('LNX', UUID()),
+    DATE_ADD('1970-01-01', INTERVAL FLOOR(RAND()*18628) DAY),
+    REPEAT('BIO_', FLOOR(20+RAND()*60)),
+    REPEAT('NOTE_', FLOOR(10+RAND()*40)),
+    RANDOM_BYTES(256)
+  FROM information_schema.columns LIMIT 2000; -- cheap row generator
+
+  -- Updates: touch rows across pages, triggers page rewrites
+  UPDATE students_big
+  SET bio = CONCAT(bio, 'U'), notes = CONCAT(notes, 'U')
+  WHERE id % 37 = 0
+  LIMIT 2000;
+
+  -- Deletes: free space and cause merges under compression
+  DELETE FROM students_big WHERE id % 101 = 0 LIMIT 1000;
+
+  -- Periodically force re-compression (lightweight, but adds activity)
+  IF (UNIX_TIMESTAMP() % 60) < 5 THEN
+    OPTIMIZE TABLE students_big;
+    OPTIMIZE TABLE students_big2;
+  END IF;
+END;
+
