@@ -181,4 +181,3 @@ BEGIN
     OPTIMIZE TABLE students_big2;
   END IF;
 END;
-
