@@ -93,25 +93,26 @@ WHERE student_id = (SELECT student_id FROM students WHERE first_name = 'Alice' A
 DELETE FROM students
 WHERE first_name = 'Alice' AND last_name = 'Smith';
 
--- A compressed table with ~1KB rows
-CREATE TABLE students_big (
+-- ========================================
+-- BIG COMPRESSED TABLES FOR LOAD GENERATION
+-- ========================================
+
+CREATE TABLE IF NOT EXISTS students_big (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(50),
   last_name  VARCHAR(50),
   birth_date DATE,
-  bio TEXT,                     -- larger field to fill pages
+  bio TEXT,
   notes TEXT,
-  filler VARBINARY(256),        -- binary helps mixed page content
+  filler VARBINARY(256),
   INDEX (last_name),
   INDEX (birth_date)
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
--- A second table to diversify compression across indexes
-CREATE TABLE students_big2 LIKE students_big;
+CREATE TABLE IF NOT EXISTS students_big2 LIKE students_big;
 ALTER TABLE students_big2 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=4;
 
--- Optional: smaller row table to vary page shapes
-CREATE TABLE students_small (
+CREATE TABLE IF NOT EXISTS students_small (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(50),
   last_name  VARCHAR(50),
@@ -119,7 +120,7 @@ CREATE TABLE students_small (
   INDEX (last_name)
 ) ENGINE=InnoDB ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
--- Seed 200k rows quickly (repeat the INSERT SELECT pattern to reach ~1M if desired)
+-- Seed 200k rows (run once). If already done, skip.
 INSERT INTO students_big (first_name, last_name, birth_date, bio, notes, filler)
 SELECT
   CONCAT('FN', LPAD(i, 6, '0')),
@@ -142,42 +143,67 @@ FROM (
 ) gen
 LIMIT 200000;
 
-INSERT INTO students_big2 SELECT * FROM students_big;
+INSERT INTO students_big2
+SELECT * FROM students_big;
+
 INSERT INTO students_small (first_name, last_name, birth_date)
 SELECT first_name, last_name, birth_date FROM students_big LIMIT 200000;
 
--- Enable events
+-- ========================================
+-- EVENT TO GENERATE CONTINUOUS COMPRESSION WORK
+-- ========================================
+
+-- Make sure the event scheduler is on:
 SET GLOBAL event_scheduler = ON;
 
--- Create an event that runs every 5 seconds
-DROP EVENT IF EXISTS ev_compress_load;
+-- Change delimiter to allow compound statement
+DELIMITER //
+
+DROP EVENT IF EXISTS ev_compress_load//
+
 CREATE EVENT ev_compress_load
 ON SCHEDULE EVERY 5 SECOND
+ON COMPLETION PRESERVE
 DO
 BEGIN
-  -- Inserts: add ~2k rows
+  -- Inserts (~2k rows per run)
   INSERT INTO students_big (first_name, last_name, birth_date, bio, notes, filler)
   SELECT
     CONCAT('FNX', UUID()),
     CONCAT('LNX', UUID()),
     DATE_ADD('1970-01-01', INTERVAL FLOOR(RAND()*18628) DAY),
-    REPEAT('BIO_', FLOOR(20+RAND()*60)),
-    REPEAT('NOTE_', FLOOR(10+RAND()*40)),
+    REPEAT('BIO_', FLOOR(20 + RAND()*60)),
+    REPEAT('NOTE_', FLOOR(10 + RAND()*40)),
     RANDOM_BYTES(256)
-  FROM information_schema.columns LIMIT 2000; -- cheap row generator
+  FROM information_schema.columns
+  LIMIT 2000;
 
-  -- Updates: touch rows across pages, triggers page rewrites
+  -- Updates (touch pages)
   UPDATE students_big
-  SET bio = CONCAT(bio, 'U'), notes = CONCAT(notes, 'U')
+  SET bio   = CONCAT(bio, 'U'),
+      notes = CONCAT(notes, 'U')
   WHERE id % 37 = 0
   LIMIT 2000;
 
-  -- Deletes: free space and cause merges under compression
-  DELETE FROM students_big WHERE id % 101 = 0 LIMIT 1000;
+  -- Deletes (free space for merges)
+  DELETE FROM students_big
+  WHERE id % 101 = 0
+  LIMIT 1000;
 
-  -- Periodically force re-compression (lightweight, but adds activity)
+  -- Periodic re-compression
   IF (UNIX_TIMESTAMP() % 60) < 5 THEN
     OPTIMIZE TABLE students_big;
     OPTIMIZE TABLE students_big2;
   END IF;
-END;
+END//
+
+DELIMITER ;
+
+-- ========================================
+-- VERIFICATION QUERIES
+-- ========================================
+-- Check that event is created and enabled
+SHOW EVENTS LIKE 'ev_compress_load';
+
+-- Check a few rows
+SELECT COUNT(*) FROM students_big;
