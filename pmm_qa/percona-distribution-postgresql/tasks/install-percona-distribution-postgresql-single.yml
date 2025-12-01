@@ -10,4 +10,9 @@
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
   vars:
-    container_name: "{{ container_prefix }}{{ pg_version }}"
+    container_name: "{{ container_prefix }}{{ item }}"
+
+- name: Add service to pmm server
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
