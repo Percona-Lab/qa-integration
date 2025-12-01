@@ -9,8 +9,6 @@
 
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
-  vars:
-    container_name: "{{ container_prefix }}"
 
 - name: Add service to pmm server
   shell: |
