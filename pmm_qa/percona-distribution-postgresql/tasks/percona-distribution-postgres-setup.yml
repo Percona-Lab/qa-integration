@@ -1,0 +1,3 @@
+- name: Install Percona Distribution for Postgres
+  include_tasks: tasks/install-percona-distribution-postgresql.yml
+  when: setup_type != "replication" and setup_type != "patroni"

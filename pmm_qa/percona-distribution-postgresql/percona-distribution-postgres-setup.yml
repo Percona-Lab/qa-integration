@@ -23,9 +23,13 @@
     docker_repo: "percona/percona-distribution-postgresql"
 
   tasks:
-    - name: Display binary log status for primary
+    - name: Display setup type selected
       debug:
         msg: "{{ setup_type }}"
+
+    - name: Install Percona Distribution for Postgres with Replication
+      include_tasks: tasks/percona-distribution-postgres-setup.yml
+      when: setup_type != "replication" and setup_type != "patroni"
 
     - name: Install Percona Distribution for Postgres with Replication
       include_tasks: tasks/percona-distribution-postgres-replication-setup.yml
