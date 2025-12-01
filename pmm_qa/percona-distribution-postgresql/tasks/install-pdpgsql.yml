@@ -1,5 +1,5 @@
 - name: Install Percona Distribution for Postgres
-  include_tasks: tasks/install-percona-distribution-postgresql.yml
+  include_tasks: tasks/install-pdpgsql.yml
 
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml

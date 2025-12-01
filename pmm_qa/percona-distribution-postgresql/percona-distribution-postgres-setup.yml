@@ -29,7 +29,7 @@
         msg: "{{ setup_type }}"
 
     - name: Install Percona Distribution for Postgres
-      include_tasks: tasks/percona-distribution-postgres-setup.yml
+      include_tasks: tasks/install-percona-distribution-postgresql-single.yml
       when: setup_type != "replication" and setup_type != "patroni"
 
     - name: Install Percona Distribution for Postgres with Replication
