@@ -20,11 +20,11 @@
     docker exec {{ container_prefix }}{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Enable Percona Server for MySQL repository
+- name: Enable Percona Distribution for PostgreSQL repository
   shell: docker exec {{ container_prefix }}{{ item }} percona-release enable ppg-{{ pg_version }} release
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Install Percona Server for MySQL
+- name: Install Percona Distribution for PostgreSQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt install -y \
       percona-postgresql-{{ pg_version }} \
