@@ -35,6 +35,10 @@
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Start postgres service in container
+  shell: docker exec -u root {{ container_prefix }}{{ item }} service postgresql start
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Start etcd service
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
