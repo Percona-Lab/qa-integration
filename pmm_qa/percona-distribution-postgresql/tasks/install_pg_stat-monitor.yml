@@ -27,8 +27,10 @@
 
 - name: Create pg_stat_statements extension
   shell: |
-    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -d 'postgres' -c "
-      CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
-      SELECT pg_stat_monitor_version();
-    "
+    docker exec -u postgres {{ container_prefix }}1 \
+      env PGPASSWORD=postgres \
+      psql -U postgres -d 'postgres' -c "
+        CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
+        SELECT pg_stat_monitor_version();
+      "
 
