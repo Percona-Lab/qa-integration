@@ -29,7 +29,7 @@
   shell: |
     docker exec -u postgres {{ container_prefix }}1 \
       env PGPASSWORD=postgres \
-      psql -U postgres -d 'postgres' -c "
+      psql -h localhost -U postgres -d 'postgres' -c "
         CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
         SELECT pg_stat_monitor_version();
       "
