@@ -71,7 +71,7 @@
 
 - name: Start patroni service
   shell: |
-    docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
+    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c '
       nohup patroni /patroni.yml > /patroni.log 2>&1 &
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
