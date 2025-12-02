@@ -65,6 +65,11 @@
       psql -U postgres -d {{ db_name | default("postgres") }} -c "GRANT pg_monitor TO postgres;"
     '
 
+- name: Change postgres user password
+  shell: |
+    docker exec -u postgres {{ container_prefix }}{{ item }} psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
