@@ -49,11 +49,11 @@
 
 - name: Start etcd service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
-        rm -rf /var/lib/pgsql/{{ pg_version }}/data/*
+        rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
         ps aux | grep postgres
         rm -f /data/db/postmaster.pid
         mkdir -p /data/db/logs
