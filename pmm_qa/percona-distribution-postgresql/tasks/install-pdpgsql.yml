@@ -29,3 +29,11 @@
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql-{{ pdpgsql_version }} percona-pgbackrest
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start Percona distribution for Postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait 5 seconds for Percona Distribution for postgresql to start
+  pause:
+    seconds: 5
