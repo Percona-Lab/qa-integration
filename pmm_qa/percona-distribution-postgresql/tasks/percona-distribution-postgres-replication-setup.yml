@@ -25,7 +25,7 @@
 
 - name: Generate postgres.conf for replica nodes
   template:
-    src: data/postgres-replica.conf.j2.j2
+    src: data/postgres-replica.conf.j2
     dest: "{{ data_dir }}/node1/postgres.conf"
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
