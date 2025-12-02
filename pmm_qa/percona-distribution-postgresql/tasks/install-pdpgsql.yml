@@ -15,7 +15,7 @@
 
 - name: Install required packages in Oracle Linux container
   shell: |
-    docker exec -u root pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }} /bin/sh -c '
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
       dnf config-manager --set-enabled ol9_codeready_builder
       dnf install perl-IPC-Run -y
       dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
@@ -26,7 +26,7 @@
 
 - name: Install Percona Distribution for PostgreSQL
   shell: |
-    docker exec -u root pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }} /bin/sh -c '
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
       dnf module disable -y postgresql
       dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
       percona-release enable ppg-{{ pdpgsql_version }}
@@ -37,7 +37,7 @@
 
 - name: Start etcd service
   shell: |
-    docker exec -u root pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }} /bin/sh -c '
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
       rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
       ps aux | grep postgres
       rm -f /data/db/postmaster.pid
