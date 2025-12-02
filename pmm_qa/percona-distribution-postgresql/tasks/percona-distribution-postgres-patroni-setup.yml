@@ -74,54 +74,54 @@
     docker exec -u postgres {{ container_prefix }}{{ pdpgsql_version }}_{{ item }} /bin/sh -c "nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Install pg stat monitor.
-  include_tasks: ./tasks/install_pg_stat-monitor.yml
-  vars:
-    container_name: "{{ container_prefix }}"
-
-- name: Grant pg_monitor to postgres user
-  shell: |
-    docker exec -u postgres {{ container_prefix }}1 bash -c '
-      psql -d {{ db_name | default("postgres") }} -c "GRANT pg_monitor TO postgres;"
-    '
-
-- name: Change postgres user password
-  shell: |
-    docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Install and add pmm client.
-  include_tasks: ../tasks/install_pmm_client.yml
-  vars:
-    container_name: "{{ container_prefix }}{{ item }}"
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Get already connected services to pmm server
-  shell: docker exec {{ container_prefix }}1 sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ "80" if pmm_server_ip is match('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$') else "8080" }}/v1/management/services" | jq -r ".services[].service_name"'
-  register: pmm_server_services
-
-- name: Display already connected services to pmm server
-  debug:
-    msg: "{{ pmm_server_services.stdout | split('\n') }}"
-
-- name: Find out if service is already connected to pmm server
-  block:
-    - name: Loop through percona servers
-      set_fact:
-        random_service_name_value: "_{{ 9999 | random + 1 }}"
-      loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: "('pdpgsql_pmm_patroni_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
-
-- name: Add service to pmm server
-  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Add patroni service to pmm server
-  shell: docker exec {{ container_prefix }}1 pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
-
-- name: Add patroni service to pmm server via shell
-  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
-  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
-- name: Log Patroni cluster
-  shell: docker exec {{ container_prefix }}1 patronictl -c /patroni.yml list
+#- name: Install pg stat monitor.
+#  include_tasks: ./tasks/install_pg_stat-monitor.yml
+#  vars:
+#    container_name: "{{ container_prefix }}"
+#
+#- name: Grant pg_monitor to postgres user
+#  shell: |
+#    docker exec -u postgres {{ container_prefix }}1 bash -c '
+#      psql -d {{ db_name | default("postgres") }} -c "GRANT pg_monitor TO postgres;"
+#    '
+#
+#- name: Change postgres user password
+#  shell: |
+#    docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#- name: Install and add pmm client.
+#  include_tasks: ../tasks/install_pmm_client.yml
+#  vars:
+#    container_name: "{{ container_prefix }}{{ item }}"
+#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#- name: Get already connected services to pmm server
+#  shell: docker exec {{ container_prefix }}1 sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ "80" if pmm_server_ip is match('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$') else "8080" }}/v1/management/services" | jq -r ".services[].service_name"'
+#  register: pmm_server_services
+#
+#- name: Display already connected services to pmm server
+#  debug:
+#    msg: "{{ pmm_server_services.stdout | split('\n') }}"
+#
+#- name: Find out if service is already connected to pmm server
+#  block:
+#    - name: Loop through percona servers
+#      set_fact:
+#        random_service_name_value: "_{{ 9999 | random + 1 }}"
+#      loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#      when: "('pdpgsql_pmm_patroni_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
+#
+#- name: Add service to pmm server
+#  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#
+#- name: Add patroni service to pmm server
+#  shell: docker exec {{ container_prefix }}1 pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
+#
+#- name: Add patroni service to pmm server via shell
+#  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
+#  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+#
+#- name: Log Patroni cluster
+#  shell: docker exec {{ container_prefix }}1 patronictl -c /patroni.yml list
