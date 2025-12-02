@@ -2,6 +2,7 @@
   set_fact:
     nodes_count: 3
   when: nodes_count | int < 3
+
 - name: Set external facing port in patroni setup
   set_fact:
     pdpgsql_port: 6432
@@ -38,9 +39,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create Docker network
-  community.docker.docker_network:
-    name: "{{ network_name }}"
-    state: present
+  shell: docker network create {{ network_name }}
   ignore_errors: yes
 
 - name: Start PostgreSQL containers

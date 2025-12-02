@@ -49,3 +49,10 @@
       postgresql-client-common \
       postgresql-common
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+
+- name: Change default password for postgres user.
+  shell: |
+        sudo -u postgres 
+    docker exec -u postgres {{ container_prefix }}{{ item }} psql -c "ALTER USER postgres WITH PASSWORD 'newpassword';"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
