@@ -90,40 +90,40 @@
 - name: Wipe replica data directory before basebackup
   shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/16/data
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
-#
-#- name: Create PostgreSQL user 'pmm' with password
-#  shell: |
-#    docker exec -u postgres {{ container_prefix }}1 bash -c '
-#      psql -U postgres -d {{ db_name | default("postgres") }} -c "
-#        CREATE USER pmm WITH PASSWORD '\''pmm'\'';
-#        GRANT pg_monitor TO pmm;
-#      "
-#    '
-#
-#- name: Create custom database
-#  shell: |
-#    docker exec -u postgres {{ container_prefix }}1 bash -c "
-#      echo \"
-#      CREATE DATABASE test_database;
-#      \\c test_database
-#      GRANT CONNECT ON DATABASE test_database TO pmm;
-#      GRANT USAGE ON SCHEMA public TO pmm;
-#      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
-#      ALTER DEFAULT PRIVILEGES IN SCHEMA public
-#        GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
-#      \" | psql -U postgres -v ON_ERROR_STOP=1
-#    "
-#
-#- name: Run pg_basebackup from primary to replica
-#  shell: |
-#    docker exec -u root {{ container_prefix }}{{ item }} bash -c "
-#      export PGPASSWORD='{{ replication_password }}' && \
-#      timeout 120s \
-#      pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
-#      --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
-#    "
-#  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-#
+
+- name: Create PostgreSQL user 'pmm' with password
+  shell: |
+    docker exec -u postgres {{ container_prefix }}1 bash -c '
+      psql -U postgres -d {{ db_name | default("postgres") }} -c "
+        CREATE USER pmm WITH PASSWORD '\''pmm'\'';
+        GRANT pg_monitor TO pmm;
+      "
+    '
+
+- name: Create custom database
+  shell: |
+    docker exec -u postgres {{ container_prefix }}1 bash -c "
+      echo \"
+      CREATE DATABASE test_database;
+      \\c test_database
+      GRANT CONNECT ON DATABASE test_database TO pmm;
+      GRANT USAGE ON SCHEMA public TO pmm;
+      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO pmm;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public
+        GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO pmm;
+      \" | psql -U postgres -v ON_ERROR_STOP=1
+    "
+
+- name: Run pg_basebackup from primary to replica
+  shell: |
+    docker exec -u root {{ container_prefix }}{{ item }} bash -c "
+      export PGPASSWORD='{{ replication_password }}' && \
+      timeout 120s \
+      pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
+      --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
+    "
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
 #- name: Remove temporary backup container via shell
 #  shell: docker rm -f {{ container_prefix }}{{ item }}
 #  loop: "{{ range(2, nodes_count | int + 1) | list }}"
