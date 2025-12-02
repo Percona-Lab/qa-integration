@@ -5,7 +5,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      antmelekhin/docker-systemd:rockylinux-10
+      antmelekhin/docker-systemd:rockylinux-9
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
