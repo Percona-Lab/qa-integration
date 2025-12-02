@@ -43,8 +43,8 @@
       --privileged --cgroupns=host \
       -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
-      -p {{ pdpgsql_port }}:5432 \
-      antmelekhin/docker-systemd:ubuntu-24.04 \
+      -p {{ pdpgsql_port + (item - 1) }}:5432 \
+      antmelekhin/docker-systemd:ubuntu-24.04
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
@@ -87,9 +87,9 @@
 - name: Create replication user
   shell: docker exec -u postgres {{ container_prefix }}1 psql -c "CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';"
 
-#- name: Wipe replica data directory before basebackup
-#  shell: docker exec -u root {{ container_prefix }}{{ item }} rm -rf /data/db/*
-#  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+- name: Wipe replica data directory before basebackup
+  shell: docker exec -u root {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/16/data
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 #
 #- name: Create PostgreSQL user 'pmm' with password
 #  shell: |
