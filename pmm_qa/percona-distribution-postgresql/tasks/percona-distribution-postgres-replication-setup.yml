@@ -38,9 +38,6 @@
       --privileged --cgroupns=host \
       -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
-      -v {{ data_dir }}/node1/data:/var/lib/pgsql/16/data/ \
-      -v ./data/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro \
-      -v {{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro \
       -p {{ pdpgsql_port }}:5432 \
       antmelekhin/docker-systemd:ubuntu-24.04 \
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
