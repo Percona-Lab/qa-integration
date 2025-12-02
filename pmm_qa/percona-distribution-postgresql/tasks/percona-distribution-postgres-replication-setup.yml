@@ -31,7 +31,7 @@
 - name: Start PostgreSQL primary container
   shell: |
     docker run -d \
-      --name={{ container_prefix}}1 \
+      --name={{ container_prefix }}{{ item }} \
       --restart=always \
       --network {{ network_name }} \
       -e POSTGRES_PASSWORD={{ root_password }} \
@@ -56,6 +56,13 @@
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} dnf install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql{{ pdpgsql_version }}-server etcd python3-python-etcd percona-pgbackrest
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Copy config file to primary node
+  shell: docker cp  ./data/postgresql-primary.conf {{ container_prefix }}1:/etc/postgresql/postgresql.conf
+
+- name: Copy config file to replica nodes
+  shell: docker cp  ./data/postgresql-replica.conf {{ container_prefix }}1:/etc/postgresql/postgresql.conf
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 #- name: Start Percona distribution for Postgresql
 #  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql-{{ pdpgsql_version }}
