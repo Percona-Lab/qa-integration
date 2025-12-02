@@ -1,3 +1,8 @@
+- name: Chance to correct nodes count for replication
+  set_fact:
+    nodes_count: 2
+  when: nodes_count | int < 2 and setup_type == "replication"
+
 - name: Remove old data folders
   shell: 'rm -fr {{ data_dir }}'
 
@@ -71,9 +76,9 @@
   shell: docker cp  ./data/postgresql-replica.conf {{ container_prefix }}1:/etc/postgresql/postgresql.conf
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-#- name: Start Percona distribution for Postgresql
-#  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql-{{ pdpgsql_version }}
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+- name: Start Percona distribution for Postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Wait 5 seconds for Percona Distribution for postgresql to start
   pause:
