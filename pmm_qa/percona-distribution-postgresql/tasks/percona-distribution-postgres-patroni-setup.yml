@@ -49,8 +49,8 @@
 
 - name: Install dependencies for Percona Distribution for PostgresSQL
   shell: |
-    docker exec {{ container_prefix }}{{ item }} apt-get install -y percona-patroni etcd python3-etcd percona-pgbackrest
-    docker exec {{ container_prefix }}{{ item }} patroni --version
+    docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-patroni etcd python3-etcd percona-pgbackrest
+    docker exec -u root {{ container_prefix }}{{ item }} patroni --version
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start etcd service
@@ -69,11 +69,9 @@
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start patroni service
-  shell: |
-    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c '
-      nohup patroni /patroni.yml > /patroni.log 2>&1 &
-    '
+- name: Start patroni service in all nodes
+  shell: >
+    docker exec -u postgres {{ container_prefix }}{{ pdpgsql_version }}_{{ item }} /bin/sh -c "nohup patroni /etc/patroni/patroni.yml > /data/db/logs/patroni.log 2>&1 &"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install pg stat monitor.
