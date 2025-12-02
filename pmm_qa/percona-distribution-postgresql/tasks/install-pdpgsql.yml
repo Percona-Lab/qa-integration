@@ -31,11 +31,11 @@
       percona-pgaudit{{ pg_version }}
       percona-pgbackrest \
       percona-patroni \
-      percona-pgbouncer \
-      percona-pgaudit{{ pg_version }}_set_user \
-      percona-pgbadger \
-      percona-wal2json{{ pg_version }} \
-      percona-postgresql{{ pg_version }}-contrib \
-      percona-haproxy \ 
-      percona-pg_gather
+#      percona-pgbouncer \
+#      percona-pgaudit{{ pg_version }}_set_user \
+#      percona-pgbadger \
+#      percona-wal2json{{ pg_version }} \
+#      percona-postgresql{{ pg_version }}-contrib \
+#      percona-haproxy \
+#      percona-pg_gather
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
