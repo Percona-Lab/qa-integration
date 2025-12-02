@@ -30,9 +30,9 @@
 
 - name: Start PostgreSQL primary container
   shell: |
-    docker rm -f pdpgsql_pmm_replication_{{ pg_version }}_1 || true
+    docker rm -f pdpgsql_pmm_replication_{{ pdpgsql_version }}_1 || true
     docker run -d \
-      --name=pdpgsql_pmm_replication_{{ pg_version }}_1 \
+      --name=pdpgsql_pmm_replication_{{ pdpgsql_version }}_1 \
       --restart=always \
       --network {{ network_name }} \
       -e POSTGRES_PASSWORD={{ root_password }} \
@@ -46,8 +46,37 @@
       antmelekhin/docker-systemd:rockylinux-9 \
       -c config_file=/etc/postgresql/postgresql.conf
 
-- name: Install Percona distribution for Postgresql
-  include_tasks: tasks/install-pdpgsql.yml
+- name: Install Percona Distribution for PostgreSQL
+  shell: |
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
+      dnf module disable -y postgresql
+      dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+      percona-release enable ppg-{{ pdpgsql_version }}
+      dnf install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql{{ pdpgsql_version }}-server etcd python3-python-etcd percona-pgbackrest
+      patroni --version
+    '
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Start etcd service
+  shell: |
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
+      rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
+      ps aux | grep postgres
+      rm -f /data/db/postmaster.pid
+      mkdir -p /data/db/logs
+      mkdir -p /pg_wal
+      touch /dev/watchdog
+      nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
+      chown -R postgres:postgres /data/db/logs
+      chown -R postgres:postgres /dev/watchdog
+      chown -R postgres:postgres /pg_wal
+      systemctl start postgresql-{{ pdpgsql_version }}
+    '
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Wait 5 seconds to etcd to start
+  pause:
+    seconds: 5
 
 - name: Create replication user
   shell: docker exec -u postgres {{ container_prefix }}1 psql -c "CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';"
@@ -85,7 +114,7 @@
       export PGPASSWORD='{{ replication_password }}' && \
       timeout 120s \
       pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
-      --host=pdpgsql_pmm_replication_{{ pg_version }}_1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
+      --host=pdpgsql_pmm_replication_{{ pdpgsql_version }}_1 --port=5432 -U {{ replication_user }} > /tmp/pg_basebackup.log 2>&1
     "
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
@@ -100,20 +129,6 @@
     owner: 1001
     group: 1001
     recurse: yes
-  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
-- name: Restart Percona Distribution PostgreSQL container with custom command via shell
-  shell: |
-    docker run -d \
-      --name={{ container_prefix }}{{ item }} \
-      --network {{ network_name }} \
-      -e POSTGRES_PASSWORD={{ root_password }} \
-      -v {{ data_dir }}/node{{ item }}/data:/data/db \
-      -v ./data/postgres-replica.conf:/etc/postgresql/postgresql.conf:ro \
-      -v {{ data_dir }}/node1/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro \
-      -p $(({{ pdpgsql_port }} + {{ item }} - 1)):5432 \
-      {{ docker_repo }}:{{ pg_version }} \
-      -c config_file=/etc/postgresql/postgresql.conf
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Install pg stat monitor.
@@ -141,10 +156,10 @@
       set_fact:
         random_service_name_value: "_{{ 9999 | random + 1 }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: "('pdpgsql_pmm_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
+      when: "('pdpgsql_pmm_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
 
 - name: Add service to pmm server via shell
-  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pdpgsql_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create pg_custom_publication view using psql via shell
