@@ -106,14 +106,18 @@
   shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/16/data
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-- name: Create PostgreSQL user 'pmm' with password
+- name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
   shell: |
-    docker exec -u postgres {{ container_prefix }}1 bash -c '
-      psql -U postgres -d {{ db_name | default("postgres") }} -c "
-        CREATE USER pmm WITH PASSWORD '\''pmm'\'';
+    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -d {{ db_name | default('postgres') }} -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pmm') THEN
+          CREATE ROLE pmm LOGIN PASSWORD 'pmm';
+        END IF;
         GRANT pg_monitor TO pmm;
-      "
-    '
+      END
+      \$\$;
+    "
 
 - name: Create custom database
   shell: |
