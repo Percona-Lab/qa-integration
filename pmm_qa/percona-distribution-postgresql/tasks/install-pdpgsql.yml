@@ -5,7 +5,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      antmelekhin/docker-systemd:ubuntu-24.04
+      antmelekhin/docker-systemd:rockylinux-10
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
@@ -16,8 +16,8 @@
 
 - name: Install Percona Release
   shell: |
-    docker exec {{ container_prefix }}{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-    docker exec {{ container_prefix }}{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
+    docker exec {{ container_prefix }}{{ item }} wget https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    docker exec {{ container_prefix }}{{ item }} dnf -i ./percona-release-latest.noarch.rpm
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Enable Percona Distribution for PostgreSQL repository
@@ -26,7 +26,7 @@
 
 - name: Install Percona Distribution for PostgreSQL
   shell: |
-    docker exec {{ container_prefix }}{{ item }} apt install -y \
+    docker exec {{ container_prefix }}{{ item }} dnf install -y \
       percona-postgresql-{{ pg_version }} \
       percona-postgresql-{{ pg_version }}-repack \
       percona-postgresql-{{ pg_version }}-pgaudit \
