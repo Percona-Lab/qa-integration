@@ -32,6 +32,12 @@
     dest: "{{ data_dir }}/node{{ item }}/etcd.conf.yaml"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Generate patroni configuration
+  template:
+    src: data/patroni.yml.j2
+    dest: "{{ data_dir }}/node{{ item }}/patroni.yml"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Copy config files to all nodes
   shell: |
     docker cp {{ data_dir }}/node{{ item }}/patroni.yml {{ container_prefix }}{{ item }}:/etc/patroni/patroni.yml
@@ -55,12 +61,6 @@
         chown -R postgres:postgres /dev/watchdog
         chown -R postgres:postgres /pg_wal
       '
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Generate patroni configuration
-  template:
-    src: data/patroni.yml.j2
-    dest: "{{ data_dir }}/node{{ item }}/patroni.yml"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona distribution for Postgresql
