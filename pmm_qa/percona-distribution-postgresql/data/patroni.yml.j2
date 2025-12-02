@@ -52,7 +52,7 @@ bootstrap:
 postgresql:
   listen: 0.0.0.0:5432
   connect_address: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}:5432"
-  data_dir: /var/lib/pgsql/{{ pdpgsql_version}}/data
+  data_dir: /var/lib/postgresql/{{ pdpgsql_version }}/main
   bin_dir: /usr/lib/postgresql/{{ pdpgsql_version }}/bin
   pgpass: /tmp/pgpass
 
