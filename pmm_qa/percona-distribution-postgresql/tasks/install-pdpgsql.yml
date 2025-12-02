@@ -10,7 +10,7 @@
 
 - name: Install Perl (IPC::RUN) on Rocky linux 9
   shell: |
-    docker exec {{ container_prefix }}{{ item }} dnf install dnf-plugins-core
+    docker exec {{ container_prefix }}{{ item }} dnf install -y dnf-plugins-core
     docker exec {{ container_prefix }}{{ item }} dnf module enable llvm-toolset
     docker exec {{ container_prefix }}{{ item }} dnf config-manager --set-enabled crb
     docker exec {{ container_prefix }}{{ item }} dnf install perl-IPC-Run -y
