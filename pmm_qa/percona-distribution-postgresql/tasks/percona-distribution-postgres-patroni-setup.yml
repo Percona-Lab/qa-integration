@@ -42,21 +42,19 @@
   shell: docker network create {{ network_name }}
   ignore_errors: yes
 
-- name: Start PostgreSQL containers
-  community.docker.docker_container:
-    name: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
-    image: oraclelinux:9
-    state: started
-    restart_policy: always
-    command: sleep infinity
-    networks:
-      - name: "{{ network_name }}"
-    volumes:
-      - "{{ data_dir }}/node{{ item }}/data:/data/db"
-      - "{{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etcd.conf.yaml:ro"
-      - "{{ data_dir }}/node{{ item }}/patroni.yml:/etc/patroni/patroni.yml:ro"
-    ports:
-      - "{{ pdpgsql_port + item - 1 }}:5432"
+- name: Start PostgreSQL containers via shell
+  shell: |
+    docker run -d --name={{ container_prefix }}{{ item }} \
+      --restart=always \
+      --network {{ network_name }} \
+      --privileged --cgroupns=host \
+      -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v {{ data_dir }}/node{{ item }}/data:/data/db \
+      -v {{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etcd.conf.yaml:ro \
+      -v {{ data_dir }}/node{{ item }}/patroni.yml:/etc/patroni/patroni.yml:ro \
+      -p $(({{ pdpgsql_port }} + {{ item }} - 1)):5432 \
+      oraclelinux:9 sleep infinity
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install required packages in Oracle Linux container
