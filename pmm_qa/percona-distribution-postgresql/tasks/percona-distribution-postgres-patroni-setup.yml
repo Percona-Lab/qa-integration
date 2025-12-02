@@ -71,7 +71,7 @@
 
 - name: Start patroni service in all nodes
   shell: >
-    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c "nohup patroni /patroni.yml > /patroni.log 2>&1 &"
+    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c "nohup patroni /patroni.yml > /data/db/logs/patroni.log 2>&1 &"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 #- name: Install pg stat monitor.
