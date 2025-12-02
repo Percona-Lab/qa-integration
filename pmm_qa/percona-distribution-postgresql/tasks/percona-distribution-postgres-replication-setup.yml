@@ -64,7 +64,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Stop Percona distribution for Postgresql
-  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql-{{ pdpgsql_version }}
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Copy config file to primary node
