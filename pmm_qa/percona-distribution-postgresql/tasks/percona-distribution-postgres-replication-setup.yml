@@ -154,4 +154,5 @@
   shell: docker cp ../data/load_pgsql.sql {{ container_prefix }}1:/load_pgsql.sql
 
 - name: Start permanent SQL load in background via shell
-  shell: docker exec {{ container_prefix }}1 sh -c "nohup bash -c 'while true; do echo Starting insert at \$(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d test_database -f /load_pgsql.sql; sleep 30; done' > /tmp/sql_loop.log
+  shell: |
+    docker exec {{ container_prefix }}1 sh -c 'nohup bash -c "while true; do echo Starting insert at \$(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d test_database -f /load_pgsql.sql; sleep 30; done" > /tmp/sql_loop.log 2>&1 &'
