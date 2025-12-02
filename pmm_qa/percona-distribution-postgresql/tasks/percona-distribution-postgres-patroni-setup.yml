@@ -44,7 +44,7 @@
 
 - name: Start PostgreSQL containers
   community.docker.docker_container:
-    name: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    name: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     image: oraclelinux:9
     state: started
     restart_policy: always
@@ -61,7 +61,7 @@
 
 - name: Install required packages in Oracle Linux container
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
@@ -75,25 +75,25 @@
 
 - name: Install Percona Distribution for PostgresSQL
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
         dnf module disable postgresql
         dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
-        percona-release enable ppg-{{ pg_version }}
-        dnf install -y percona-pg-stat-monitor{{ pg_version }} percona-postgresql{{ pg_version }}-server percona-patroni etcd python3-python-etcd percona-pgbackrest
+        percona-release enable ppg-{{ pdpgsql_version }}
+        dnf install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql{{ pdpgsql_version }}-server percona-patroni etcd python3-python-etcd percona-pgbackrest
         patroni --version
       '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start etcd service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
-        rm -rf /var/lib/pgsql/{{ pg_version }}/data/*
+        rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
         ps aux | grep postgres
         rm -f /data/db/postmaster.pid
         mkdir -p /data/db/logs
@@ -113,7 +113,7 @@
 
 - name: Start patroni service
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: postgres
     command: >
       /bin/sh -c '
@@ -123,7 +123,7 @@
 
 - name: Install microdnf
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     user: root
     command: >
       /bin/sh -c '
@@ -134,11 +134,11 @@
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
   vars:
-    container_name: "pdpgsql_pmm_patroni_{{ pg_version }}"
+    container_name: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}"
 
 - name: Grant pg_monitor to postgres user
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1"
     user: postgres
     command: >
       bash -c '
@@ -150,12 +150,12 @@
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
-    container_name: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container_name: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Get already connected services to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1"
     command: >
       sh -c 'curl --location --insecure -u"admin:{{ admin_password }}" -s --request GET "http://{{ pmm_server_ip }}:{{ '80' if pmm_server_ip is match('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$') else '8080' }}/v1/management/services" | jq -r ".services[].service_name"'
   register: pmm_server_services
@@ -170,28 +170,28 @@
       set_fact:
         random_service_name_value: "_{{ 9999 | random + 1 }}"
       loop: "{{ range(1, nodes_count | int + 1) | list }}"
-      when: "('pdpgsql_pmm_patroni_' ~ pg_version ~ '_' ~ item) in pmm_server_services.stdout"
+      when: "('pdpgsql_pmm_patroni_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
 
 - name: Add service to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
-    command: pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
+    command: pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Add patroni service to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1"
     command: pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
 
 - name: Add patroni service to pmm server
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}"
     command: pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Log Patroni cluster
   community.docker.docker_container_exec:
-    container: "pdpgsql_pmm_patroni_{{ pg_version }}_1"
+    container: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1"
     command: >
       /bin/sh -c '
         patronictl -c /etc/patroni/patroni.yml list
