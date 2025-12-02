@@ -27,10 +27,25 @@
 - name: Install Percona Distribution for PostgreSQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt install -y \
+      percona-postgresql \
       percona-postgresql-{{ pdpgsql_version }} \
-      percona-postgresql-{{ pdpgsql_version }}-repack \
-      percona-postgresql-{{ pdpgsql_version }}-pgaudit \
-      percona-pgbackrest \
-      percona-patroni \
-      percona-postgresql-contrib
+      percona-postgresql-all \
+      percona-postgresql-client \
+      percona-postgresql-client-{{ pdpgsql_version }} \
+      percona-postgresql-common \
+      percona-postgresql-contrib \
+      percona-postgresql-doc \
+      percona-postgresql-doc-{{ pdpgsql_version }} \
+      percona-postgresql-plperl-{{ pdpgsql_version }} \
+      percona-postgresql-plpython3-{{ pdpgsql_version }} \
+      percona-postgresql-pltcl-{{ pdpgsql_version }} \
+      percona-postgresql-server-dev-{{ pdpgsql_version }} \
+      percona-postgresql-server-dev-all \
+      percona-postgresql-{{ pdpgsql_version }}-dbgsym \
+      percona-postgresql-client-{{ pdpgsql_version }}-dbgsym \
+      percona-postgresql-plperl-{{ pdpgsql_version }}-dbgsym \
+      percona-postgresql-plpython3-{{ pdpgsql_version }}-dbgsym \
+      percona-postgresql-pltcl-{{ pdpgsql_version }}-dbgsym \
+      postgresql-client-common \
+      postgresql-common
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
