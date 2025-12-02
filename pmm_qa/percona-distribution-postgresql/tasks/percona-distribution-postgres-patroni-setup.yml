@@ -156,6 +156,5 @@
   shell: docker exec pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }} pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-- name: Log Patroni cluster via shell
-  shell: |
-    docker exec pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1 /bin/sh -c patronictl -c /etc/patroni/patroni.yml list
+- name: Log Patroni cluster
+  shell: docker exec pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1 patronictl -c /etc/patroni/patroni.yml list
