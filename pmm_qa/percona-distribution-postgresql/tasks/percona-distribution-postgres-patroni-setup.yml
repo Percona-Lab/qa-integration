@@ -86,13 +86,13 @@
 
 - name: Grant pg_monitor to postgres user
   shell: |
-    docker exec -u {{ container_prefix }}1 bash -c '
+    docker exec {{ container_prefix }}1 bash -c '
       psql -U postgres -d {{ db_name | default("postgres") }} -c "GRANT pg_monitor TO postgres;"
     '
 
 - name: Change postgres user password
   shell: |
-    docker exec -u postgres {{ container_prefix }}{{ item }} psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+    docker exec {{ container_prefix }}{{ item }} psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install and add pmm client.
