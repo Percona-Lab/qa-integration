@@ -56,7 +56,7 @@
 - name: Start etcd service
   shell: |
     docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
-      rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
+      rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/*
       ps aux | grep postgres
       rm -f /data/db/postmaster.pid
       mkdir -p /data/db/logs
@@ -66,7 +66,7 @@
       chown -R postgres:postgres /data/db/logs
       chown -R postgres:postgres /dev/watchdog
       chown -R postgres:postgres /pg_wal
-      chown -R postgres:postgres /var/lib/pgsql/{{ pdpgsql_version}}/data
+      chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main/
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
