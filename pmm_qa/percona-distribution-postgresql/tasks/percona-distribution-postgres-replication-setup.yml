@@ -58,7 +58,7 @@
 
 - name: Copy config files to replica nodes
   shell: |
-    docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
     docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
