@@ -71,13 +71,13 @@
 
 - name: Copy config files to primary node
   shell: |
-    docker cp ./data/postgresql-primary.conf {{ container_prefix }}1:/etc/postgresql/postgresql.conf
-    docker cp {{ data_dir }}/node1/pg_hba.conf {{ container_prefix }}1:/etc/postgresql/pg_hba.conf
+    docker cp ./data/postgresql-primary.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node1/pg_hba.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
 
 - name: Copy config files to replica nodes
   shell: |
-    docker cp ./data/postgres-replica.conf {{ container_prefix }}1:/etc/postgresql/postgresql.conf
-    docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/pg_hba.conf
+    docker cp ./data/postgres-replica.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Start Percona distribution for Postgresql
