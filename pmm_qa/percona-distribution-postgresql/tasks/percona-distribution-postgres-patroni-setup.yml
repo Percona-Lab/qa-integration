@@ -43,7 +43,7 @@
 
 - name: Copy config files to all nodes
   shell: |
-    docker cp {{ data_dir }}/node{{ item }}/patroni.yml {{ container_prefix }}{{ item }}:/etc/patroni/patroni.yml
+    docker cp {{ data_dir }}/node{{ item }}/patroni.yml {{ container_prefix }}{{ item }}:/patroni.yml
     docker cp {{ data_dir }}/node{{ item }}/etcd.conf.yaml {{ container_prefix }}{{ item }}:/etcd.conf.yaml
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -75,7 +75,7 @@
 - name: Start patroni service
   shell: |
     docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
-      nohup patroni /etc/patroni/patroni.yml 
+      nohup patroni /patroni.yml 
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
@@ -129,4 +129,4 @@
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Log Patroni cluster
-  shell: docker exec {{ container_prefix }}1 patronictl -c /etc/patroni/patroni.yml list
+  shell: docker exec {{ container_prefix }}1 patronictl -c /patroni.yml list
