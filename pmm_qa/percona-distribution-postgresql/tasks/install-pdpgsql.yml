@@ -26,16 +26,27 @@
 - name: Install Percona Distribution for PostgreSQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} dnf install -y \
-      percona-postgresql{{ pg_version }}-server
-      percona-pg_repack{{ pg_version }}
-      percona-pgaudit{{ pg_version }}
-      percona-pgbackrest \
-      percona-patroni \
-#      percona-pgbouncer \
-#      percona-pgaudit{{ pg_version }}_set_user \
-#      percona-pgbadger \
-#      percona-wal2json{{ pg_version }} \
-#      percona-postgresql{{ pg_version }}-contrib \
-#      percona-haproxy \
-#      percona-pg_gather
+      percona-postgresql-client-common \
+      percona-postgresql-common \
+      percona-postgresql{{ pg_version }} \
+      percona-postgresql{{ pg_version }}-contrib \
+      percona-postgresql{{ pg_version }}-debuginfo \
+      percona-postgresql{{ pg_version }}-devel \
+      percona-postgresql{{ pg_version }}-docs \
+      percona-postgresql{{ pg_version }}-libs \
+      percona-postgresql{{ pg_version }}-llvmjit \
+      percona-postgresql{{ pg_version }}-plpython3 \
+      percona-postgresql{{ pg_version }}-plperl \
+      percona-postgresql{{ pg_version }}-pltcl \
+      percona-postgresql{{ pg_version }}-server \
+      percona-postgresql{{ pg_version }}-test \
+      percona-postgresql{{ pg_version }}-contrib-debuginfo \
+      percona-postgresql{{ pg_version }}-debuginfo \
+      percona-postgresql{{ pg_version }}-debugsource \
+      percona-postgresql{{ pg_version }}-devel-debuginfo \
+      percona-postgresql{{ pg_version }}-libs-debuginfo \
+      percona-postgresql{{ pg_version }}-plperl-debuginfo \
+      percona-postgresql{{ pg_version }}-pltcl-debuginfo \
+      percona-postgresql{{ pg_version }}-plpython3-debuginfo \
+      percona-postgresql{{ pg_version }}-server-debuginfo
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
