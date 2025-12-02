@@ -38,11 +38,14 @@
     dest: "{{ data_dir }}/node{{ item }}/patroni.yml"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Prepare containers for Percona distribution for Postgresql
-  include_tasks: tasks/prepare-pdpgsql-container.yml
-
 - name: Install Percona distribution for Postgresql
   include_tasks: tasks/install-pdpgsql.yml
+
+- name: Install Percona Distribution for PostgresSQL
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} dnf install -y percona-patroni etcd python3-python-etcd percona-pgbackrest
+    docker exec {{ container_prefix }}{{ item }} patroni --version
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start patroni service
   shell: |

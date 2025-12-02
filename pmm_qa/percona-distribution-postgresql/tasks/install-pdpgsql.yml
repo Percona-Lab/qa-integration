@@ -1,31 +1,31 @@
+- name: Start containers for Percona Distribution for Postgresql
+  shell: |
+    docker run -d \
+      --name={{ container_prefix }}{{ item }} \
+      --restart=always \
+      --network {{ network_name }} \
+      -e POSTGRES_PASSWORD={{ root_password }} \
+      --privileged --cgroupns=host \
+      -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -p {{ pdpgsql_port + (item - 1) }}:5432 \
+      antmelekhin/docker-systemd:ubuntu-24.04
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install dependencies
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install Percona Release
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+    docker exec {{ container_prefix }}{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
+    docker exec {{ container_prefix }}{{ item }} percona-release enable ppg-{{ pdpgsql_version }}
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Install Percona Distribution for PostgreSQL
   shell: |
-    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
-      dnf module disable -y postgresql
-      dnf install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
-      percona-release enable ppg-{{ pdpgsql_version }}
-      dnf install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql{{ pdpgsql_version }}-server percona-patroni etcd python3-python-etcd percona-pgbackrest
-      patroni --version
-    '
+    docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-pg-stat-monitor{{ pdpgsql_version }} percona-postgresql-{{ pdpgsql_version }} percona-pgbackrest
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Start etcd service
-  shell: |
-    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
-      rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data/*
-      ps aux | grep postgres
-      rm -f /data/db/postmaster.pid
-      mkdir -p /data/db/logs
-      mkdir -p /pg_wal
-      touch /dev/watchdog
-      nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
-      chown -R postgres:postgres /data/db/logs
-      chown -R postgres:postgres /dev/watchdog
-      chown -R postgres:postgres /pg_wal
-      systemctl start postgresql-{{ pdpgsql_version }}
-    '
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Wait 5 seconds to etcd to start
-  pause:
-    seconds: 5
