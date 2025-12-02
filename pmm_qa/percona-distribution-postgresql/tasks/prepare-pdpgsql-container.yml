@@ -1,0 +1,25 @@
+- name: Start PostgreSQL containers
+  shell: |
+    docker run -d --name={{ container_prefix }}{{ item }} \
+      --restart=always \
+      --network {{ network_name }} \
+      --privileged --cgroupns=host \
+      -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+      -v /var/lib/containerd \
+      -v {{ data_dir }}/node{{ item }}/data:/data/db \
+      -v {{ data_dir }}/node{{ item }}/etcd.conf.yaml:/etcd.conf.yaml:ro \
+      -v {{ data_dir }}/node{{ item }}/patroni.yml:/etc/patroni/patroni.yml:ro \
+      -p $(({{ pdpgsql_port }} + {{ item }} - 1)):5432 \
+      antmelekhin/docker-systemd:rockylinux-9
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Install required packages in Oracle Linux container
+  shell: |
+    docker exec -u root {{ container_prefix }}{{ item }} /bin/sh -c '
+      dnf config-manager --set-enabled ol9_codeready_builder
+      dnf install perl-IPC-Run -y
+      dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+      dnf config-manager --set-enabled crb
+      dnf install -y python3-pip python3-devel binutils python3-click
+    '
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
