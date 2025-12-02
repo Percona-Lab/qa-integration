@@ -66,7 +66,7 @@
         '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Install Percona Distribution for PostgresSQL
+- name: Install dependencies for Percona Distribution for PostgresSQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt-get install -y percona-patroni etcd python3-etcd percona-pgbackrest
     docker exec {{ container_prefix }}{{ item }} patroni --version
@@ -74,7 +74,7 @@
 
 - name: Start patroni service
   shell: |
-    docker exec -u {{ container_prefix }}{{ item }} /bin/sh -c '
+    docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
       nohup patroni /etc/patroni/patroni.yml 
     '
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
