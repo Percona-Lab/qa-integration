@@ -21,15 +21,15 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Enable Percona Distribution for PostgreSQL repository
-  shell: docker exec {{ container_prefix }}{{ item }} percona-release setup ppg-{{ pg_version }}
+  shell: docker exec {{ container_prefix }}{{ item }} percona-release setup ppg-{{ pdpgsql_version }}
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Distribution for PostgreSQL
   shell: |
     docker exec {{ container_prefix }}{{ item }} apt install -y \
-      percona-postgresql-{{ pg_version }} \
-      percona-postgresql-{{ pg_version }}-repack \
-      percona-postgresql-{{ pg_version }}-pgaudit \
+      percona-postgresql-{{ pdpgsql_version }} \
+      percona-postgresql-{{ pdpgsql_version }}-repack \
+      percona-postgresql-{{ pdpgsql_version }}-pgaudit \
       percona-pgbackrest \
       percona-patroni \
       percona-postgresql-contrib

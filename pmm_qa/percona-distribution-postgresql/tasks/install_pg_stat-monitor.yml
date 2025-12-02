@@ -14,12 +14,12 @@
       }}
 
 - name: Install dependencies inside Debian-family container
-  shell: docker exec {{ container_prefix }}{{ item }} apt install -y percona-pg-stat-monitor{{ pg_version }}
+  shell: docker exec {{ container_prefix }}{{ item }} apt install -y percona-pg-stat-monitor{{ pdpgsql_version }}
   when: distro_family == "debian"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies inside RHEL-family container
-  shell: docker exec {{ container_prefix }}{{ item }} microdnf install percona-pg-stat-monitor{{ pg_version }}
+  shell: docker exec {{ container_prefix }}{{ item }} microdnf install percona-pg-stat-monitor{{ pdpgsql_version }}
   when: distro_family == "rhel"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 

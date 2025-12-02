@@ -4,10 +4,10 @@ name: pg_node_{{ item }}
 
 restapi:
   listen: 0.0.0.0:8008
-  connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:8008"
+  connect_address: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}:8008"
 
 etcd3:
-  host: "pdpgsql_pmm_patroni_{{ pg_version }}_1:2379"
+  host: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1:2379"
 
 bootstrap:
   dcs:
@@ -51,9 +51,9 @@ bootstrap:
 
 postgresql:
   listen: 0.0.0.0:5432
-  connect_address: "pdpgsql_pmm_patroni_{{ pg_version }}_{{ item }}:5432"
-  data_dir: /var/lib/pgsql/{{ pg_version}}/data
-  bin_dir: /usr/pgsql-{{ pg_version }}/bin
+  connect_address: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}:5432"
+  data_dir: /var/lib/pgsql/{{ pdpgsql_version}}/data
+  bin_dir: /usr/pgsql-{{ pdpgsql_version }}/bin
   pgpass: /tmp/pgpass
 
   authentication:

@@ -5,7 +5,7 @@
   connection: local
   gather_facts: yes
   vars:
-    pg_version: "{{ lookup('env', 'PGSQL_VERSION') | default('17', true) }}"
+    pdpgsql_version: "{{ lookup('env', 'PDPGSQL_VERSION') | default('17', true) }}"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
     root_password: "GRgrO9301RuF"
