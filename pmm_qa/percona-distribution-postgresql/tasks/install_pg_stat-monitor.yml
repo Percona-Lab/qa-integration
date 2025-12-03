@@ -26,10 +26,11 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create pg_stat_statements extension
-  shell: |
-    docker exec -u postgres {{ container_prefix }}1 \
-      env PGPASSWORD=postgres \
-      psql -h localhost -U postgres -d 'postgres' -c "
+  community.docker.docker_container_exec:
+    container: "{{ container_name }}_1"
+    user: postgres
+    command: >
+      psql -U postgres -d 'postgres' -c "
         CREATE EXTENSION IF NOT EXISTS pg_stat_monitor;
         SELECT pg_stat_monitor_version();
       "
