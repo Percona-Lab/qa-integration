@@ -90,7 +90,7 @@
 
 - name: Change postgres user password
   shell: |
-    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'pass+this';"
 
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
