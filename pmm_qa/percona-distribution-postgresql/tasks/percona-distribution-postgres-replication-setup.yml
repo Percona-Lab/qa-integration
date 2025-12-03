@@ -142,7 +142,7 @@
       when: "('pdpgsql_pmm_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
 
 - name: Add service to pmm server
-  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor {{ container_prefix}}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=postgres --password=postgres --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor {{ container_prefix}}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create pg_custom_publication view using psql
