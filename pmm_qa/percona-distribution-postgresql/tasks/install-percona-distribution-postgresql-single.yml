@@ -50,10 +50,10 @@
     seconds: 30
 
 - name: Status of Percona distribution for Postgresql
-  shell: sudo docker exec-u root {{ container_prefix }}1 systemctl status postgresql
+  shell: sudo docker exec -u root {{ container_prefix }}1 systemctl status postgresql
 
 - name: Status of Percona distribution for Postgresql
-  shell: sudo docker exec-u root {{ container_prefix }}1 ps -ef
+  shell: sudo docker exec -u root {{ container_prefix }}1 ps -ef
 
 - name: List all running processes
   shell: ps aux | grep postgresql
@@ -63,7 +63,7 @@
 
 - name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
   shell: |
-    sudo docker exec-u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
+    sudo docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
       DO \$\$
       BEGIN
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pmm') THEN
