@@ -86,6 +86,7 @@
 - name: Add service to pmm server
   shell: |
     docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --query-source=pgstatmonitor --socket=/var/run/postgresql socket_{{ container_prefix }}{{ item }}{{ random_service_name_value }}
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
