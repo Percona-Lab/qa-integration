@@ -38,11 +38,11 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Restart Percona distribution for Postgresql
-  shell: sudo docker exec-u root {{ container_prefix }}{{ item }} systemctl restart postgresql
+  shell: sudo docker exec -u root {{ container_prefix }}{{ item }} systemctl restart postgresql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Restart Percona distribution for Postgresql
-  shell: sudo docker exec-u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  shell: sudo docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Wait 30 seconds for Percona Distribution for postgresql to restart
