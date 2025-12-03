@@ -1,6 +1,6 @@
 - name: Start containers for Percona Distribution for Postgresql
   shell: |
-    sudo docker run -d \
+    docker run -d \
       --name={{ container_prefix }}{{ item }} \
       --restart=always \
       --network {{ network_name }} \
@@ -10,28 +10,33 @@
       -v /var/lib/containerd \
       -p {{ pdpgsql_port + (item - 1) }}:5432 \
       antmelekhin/docker-systemd:ubuntu-24.04
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install dependencies
   shell: |
-    sudo docker exec {{ container_prefix }}{{ item }} apt-get update
-    sudo docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl
+    docker exec {{ container_prefix }}{{ item }} apt-get update
+    docker exec {{ container_prefix }}{{ item }} apt-get -y install wget gnupg2 lsb-release curl
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Release
   shell: |
-    sudo docker exec {{ container_prefix }}{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-    sudo docker exec {{ container_prefix }}{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
-    sudo docker exec {{ container_prefix }}{{ item }} percona-release enable ppg-{{ pdpgsql_version }}
+    docker exec {{ container_prefix }}{{ item }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+    docker exec {{ container_prefix }}{{ item }} dpkg -i ./percona-release_latest.generic_all.deb
+    docker exec {{ container_prefix }}{{ item }} percona-release enable ppg-{{ pdpgsql_version }}
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Install Percona Distribution for PostgreSQL
   shell: |
-    sudo docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-postgresql-{{ pdpgsql_version }} percona-pgbackrest percona-pg-stat-monitor{{ pdpgsql_version }}
+    docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-postgresql-{{ pdpgsql_version }} percona-pgbackrest percona-pg-stat-monitor{{ pdpgsql_version }}
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start Percona distribution for Postgresql
-  shell: sudo docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Wait 5 seconds for Percona Distribution for postgresql to start

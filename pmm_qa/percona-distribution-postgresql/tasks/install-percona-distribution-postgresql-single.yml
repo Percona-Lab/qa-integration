@@ -1,23 +1,27 @@
 - name: Remove old data folders
   shell: 'rm -fr {{ data_dir }}'
+  become: true
 
 - name: Create data directories
   file:
     path: "{{ data_dir }}/node{{ item }}/data"
     state: directory
     mode: '0755'
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Generate pg_hba.conf for primary node
   template:
     src: data/pg_hba.conf.j2
     dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Generate postgres.conf for primary node
   template:
     src: data/postgresql-single.conf.j2
     dest: "{{ data_dir }}/node1/postgresql.conf"
+  become: true
 
 - name: Install Percona Distribution for Postgres
   include_tasks: tasks/install-pdpgsql.yml
@@ -29,41 +33,45 @@
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
     container_name: "{{ container_prefix }}{{ item }}"
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Copy config files
   shell: |
     docker cp {{ data_dir }}/node{{ item }}/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
     docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Restart Percona distribution for Postgresql
-  shell: sudo docker exec -u root {{ container_prefix }}{{ item }} systemctl restart postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl restart postgresql
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Restart Percona distribution for Postgresql
-  shell: sudo docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Wait 30 seconds for Percona Distribution for postgresql to restart
-  pause:
-    seconds: 30
+- name: Status of Percona distribution for Postgresql
+  shell: docker exec -u root {{ container_prefix }}1 systemctl status postgresql
+  become: true
 
 - name: Status of Percona distribution for Postgresql
-  shell: sudo docker exec -u root {{ container_prefix }}1 systemctl status postgresql
-
-- name: Status of Percona distribution for Postgresql
-  shell: sudo docker exec -u root {{ container_prefix }}1 ps -ef
+  shell: docker exec -u root {{ container_prefix }}1 ps -ef
+  become: true
 
 - name: List all running processes
   shell: ps aux | grep postgresql
+  become: true
 
 - name: Read Percona distribution for Postgresql logs
-  shell: sudo docker exec {{ container_prefix }}1 cat /var/log/postgresql/postgresql-{{ pdpgsql_version }}-main.log
+  shell: docker exec {{ container_prefix }}1 cat /var/log/postgresql/postgresql-{{ pdpgsql_version }}-main.log
+  become: true
 
 - name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
   shell: |
-    sudo docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
+    docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
       DO \$\$
       BEGIN
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pmm') THEN
@@ -73,25 +81,31 @@
       END
       \$\$;
     "
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Add service to pmm server
   shell: |
-    sudo docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+    docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Run queries for generating data
-  shell: sudo docker exec {{ container_prefix }}{{ item }} bash ./data/pgsm_run_queries.sh &
+  shell: docker exec {{ container_prefix }}{{ item }} bash ./data/pgsm_run_queries.sh &
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Copy a file into the container
   shell: docker cp ./data/pgsql_load.sql {{ container_prefix }}{{ item }}:/pgsql_load.sql
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create database if it doesn't exist
-  shell: sudo docker exec {{ container_prefix }}{{ item }} psql -U postgres -c "CREATE DATABASE school;"
+  shell: docker exec {{ container_prefix }}{{ item }} psql -U postgres -c "CREATE DATABASE school;"
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Run SQL script using docker exec
-  shell: sudo docker exec {{ container_prefix }}{{ item }} psql -U postgres -d school -f /pgsql_load.sql > /dev/null
+  shell: docker exec {{ container_prefix }}{{ item }} psql -U postgres -d school -f /pgsql_load.sql > /dev/null
+  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
