@@ -1,14 +1,14 @@
 - name: Install Percona Distribution for Postgres
   include_tasks: tasks/install-pdpgsql.yml
 
+- name: Install pg stat monitor.
+  include_tasks: ./tasks/install_pg_stat-monitor.yml
+
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
     container_name: "{{ container_prefix }}{{ item }}"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Install pg stat monitor.
-  include_tasks: ./tasks/install_pg_stat-monitor.yml
 
 - name: Add service to pmm server
   shell: |
