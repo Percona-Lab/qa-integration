@@ -168,3 +168,12 @@
 - name: Start permanent SQL load in background
   shell: |
     docker exec {{ container_prefix }}1 sh -c 'nohup bash -c "while true; do echo Starting insert at \$(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d test_database -f /load_pgsql.sql; sleep 30; done" > /tmp/sql_loop.log 2>&1 &'
+
+- name: Copy a file into the container
+  shell: docker cp ./data/pgsql_load.sql {{ container_prefix }}1:/pgsql_load.sql
+
+- name: Create database if it doesn't exist
+  shell: docker exec {{ container_prefix }}1 psql -U postgres -c "CREATE DATABASE school;"
+
+- name: Run SQL script using docker exec
+  shell: docker exec {{ container_prefix }}1 psql -U postgres -d school -f /pgsql_load.sql > /dev/null
