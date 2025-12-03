@@ -14,6 +14,11 @@
     dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Generate postgres.conf for primary node
+  template:
+    src: data/postgresql-single.conf.j2
+    dest: "{{ data_dir }}/node1/postgresql.conf"
+
 - name: Install Percona Distribution for Postgres
   include_tasks: tasks/install-pdpgsql.yml
 
@@ -27,7 +32,13 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Copy config files
-  shell: docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
+  shell: |
+    docker cp {{ data_dir }}/node{{ item }}/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Restart Percona distribution for Postgresql
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl restart postgresql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
