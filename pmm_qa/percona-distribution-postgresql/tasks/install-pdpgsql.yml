@@ -1,6 +1,6 @@
 - name: Start containers for Percona Distribution for Postgresql
   shell: |
-    docker run -d \
+    sudo docker run -d \
       --name={{ container_prefix }}{{ item }} \
       --restart=always \
       --network {{ network_name }} \
