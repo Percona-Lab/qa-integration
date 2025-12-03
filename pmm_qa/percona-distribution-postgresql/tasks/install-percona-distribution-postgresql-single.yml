@@ -52,7 +52,6 @@
 - name: Status of Percona distribution for Postgresql
   shell: docker exec -u root {{ container_prefix }}1 systemctl status postgresql
 
-
 - name: Status of Percona distribution for Postgresql
   shell: docker exec -u root {{ container_prefix }}1 ps -ef
 
@@ -61,9 +60,6 @@
 
 - name: Read Percona distribution for Postgresql logs
   shell: docker exec {{ container_prefix }}1 cat /var/log/postgresql/postgresql-{{ pdpgsql_version }}-main.log
-
-- name: Start Postgresql without systemd
-  shell: docker exec {{ container_prefix }}1 postgres -D /var/lib/postgresql/{{ pdpgsql_version }}/main > /postgresql.log 2>&1
 
 - name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
   shell: |
