@@ -45,6 +45,9 @@
   pause:
     seconds: 10
 
+- name: List all running processes
+  shell: ps aux
+
 - name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
   shell: |
     docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
