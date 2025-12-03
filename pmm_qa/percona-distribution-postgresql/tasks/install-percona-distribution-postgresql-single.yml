@@ -1,3 +1,19 @@
+- name: Remove old data folders
+  shell: 'rm -fr {{ data_dir }}'
+
+- name: Create data directories
+  file:
+    path: "{{ data_dir }}/node{{ item }}/data"
+    state: directory
+    mode: '0755'
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Generate pg_hba.conf for primary node
+  template:
+    src: data/pg_hba.conf.j2
+    dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
 - name: Install Percona Distribution for Postgres
   include_tasks: tasks/install-pdpgsql.yml
 
@@ -8,12 +24,6 @@
   include_tasks: ../tasks/install_pmm_client.yml
   vars:
     container_name: "{{ container_prefix }}{{ item }}"
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
-- name: Generate pg_hba.conf for primary node
-  template:
-    src: data/pg_hba.conf.j2
-    dest: "{{ data_dir }}/node{{ item }}/pg_hba.conf"
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Copy config files
