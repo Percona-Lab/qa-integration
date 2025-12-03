@@ -71,7 +71,7 @@
     seconds: 5
 
 - name: Create replication user
-  shell: docker exec -u postgres {{ container_prefix }}1 psql -c "CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';"
+  shell: docker exec {{ container_prefix }}1 psql -U postgres -c "CREATE ROLE {{ replication_user }} WITH REPLICATION LOGIN ENCRYPTED PASSWORD '{{ replication_password }}';"
 
 - name: Wipe replica data directory before basebackup
   shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/16/data
