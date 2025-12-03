@@ -28,3 +28,10 @@
   shell: |
     docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=pmm --password=pmm --cluster=pdpgsql_replication_cluster --environment=pdpgsql_replication_environment --query-source=pgstatmonitor pdpgsql_pmm_replication_{{ pdpgsql_version }}_{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Copy sample load into container
+  shell: docker cp ../data/load_pgsql.sql {{ container_prefix }}1:/load_pgsql.sql
+
+- name: Start permanent SQL load in background
+  shell: |
+    docker exec {{ container_prefix }}1 sh -c 'nohup bash -c "while true; do echo Starting insert at \$(date +\"%Y-%m-%d %H:%M:%S\"); psql -U postgres -d test_database -f /load_pgsql.sql; sleep 30; done" > /tmp/sql_loop.log 2>&1 &'
