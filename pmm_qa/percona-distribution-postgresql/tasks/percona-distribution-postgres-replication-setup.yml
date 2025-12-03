@@ -61,6 +61,11 @@
     "
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Install pg stat monitor.
+  include_tasks: ./tasks/install_pg_stat-monitor.yml
+  vars:
+    container_name: "{{ container_prefix }}"
+
 - name: Stop Percona distribution for Postgresql
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
@@ -92,8 +97,6 @@
   shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/16/data
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
-
-
 - name: Create custom database
   shell: |
     docker exec -u postgres {{ container_prefix }}1 bash -c "
@@ -117,10 +120,7 @@
       --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }}
     "
 
-#- name: Install pg stat monitor.
-#  include_tasks: ./tasks/install_pg_stat-monitor.yml
-#  vars:
-#    container_name: "{{ container_prefix }}"
+
 
 - name: Install and add pmm client.
   include_tasks: ../tasks/install_pmm_client.yml
