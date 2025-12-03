@@ -27,7 +27,7 @@
 
 - name: Create pg_stat_statements extension
   community.docker.docker_container_exec:
-    container: "{{ container_name }}_1"
+    container: "{{ container_name }}1"
     user: postgres
     command: >
       psql -U postgres -d 'postgres' -c "
