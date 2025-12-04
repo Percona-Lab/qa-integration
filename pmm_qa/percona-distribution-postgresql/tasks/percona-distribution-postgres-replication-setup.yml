@@ -106,7 +106,7 @@
   become: true
 
 - name: Wipe replica data directory before basebackup
-  shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/pgsql/{{ pdpgsql_version }}/data
+  shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
