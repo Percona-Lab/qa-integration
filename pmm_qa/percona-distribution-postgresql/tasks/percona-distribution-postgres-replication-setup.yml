@@ -30,7 +30,7 @@
 - name: Generate postgres.conf for replica nodes
   template:
     src: data/postgresql-replica.conf.j2
-    dest: "{{ data_dir }}/node1/postgresql.conf"
+    dest: "{{ data_dir }}/node{{ item }}/postgresql.conf"
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
