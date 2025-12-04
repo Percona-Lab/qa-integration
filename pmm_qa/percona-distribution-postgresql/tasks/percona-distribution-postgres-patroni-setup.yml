@@ -127,15 +127,15 @@
       when: "('pdpgsql_pmm_patroni_' ~ pdpgsql_version ~ '_' ~ item) in pmm_server_services.stdout"
 
 - name: Add service to pmm server
-  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=postgres --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
+  shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add postgresql --username=postgres --cluster=pdpgsql_patroni_cluster --environment=pdpgsql_patroni_environment --password=pass+this --query-source=pgstatmonitor {{ container_prefix }}{{ item }}{{ random_service_name_value }} --debug 127.0.0.1:5432
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Add patroni service to pmm server
+- name: Add patroni primary service to pmm server
   shell: docker exec {{ container_prefix }}1 pmm-admin add external --listen-port=8008 --service-name=patroni_service_1{{ random_service_name_value }}
   become: true
 
-- name: Add patroni service to pmm server via shell
+- name: Add patroni replication service to pmm server
   shell: docker exec {{ container_prefix }}{{ item }} pmm-admin add external --listen-port=8008 --cluster=pdpgsql_patroni_service_cluster --environment=pdpgsql_patroni_service_environment --service-name=patroni_service_{{ item }}{{ random_service_name_value }}
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
