@@ -130,7 +130,7 @@
     docker exec -u root {{ container_prefix }}1 bash -c "
       export PGPASSWORD='{{ replication_password }}' && \
       timeout 120s \
-      pg_basebackup --pgdata=/data/db -R -v -Fp -Xs -P \
+      pg_basebackup --pgdata=/var/lib/postgresql/{{ pdpgsql_version }}/main -R -v -Fp -Xs -P \
       --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }}
     "
   become: true
