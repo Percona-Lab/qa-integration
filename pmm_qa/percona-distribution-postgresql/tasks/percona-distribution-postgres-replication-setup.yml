@@ -105,7 +105,7 @@
   become: true
 
 - name: Wipe replica data directory before basebackup
-  shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main
+  shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/*
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
@@ -126,13 +126,14 @@
 
 - name: Run pg_basebackup from primary to replica
   shell: |
-    docker exec -u root {{ container_prefix }}1 bash -c "
+    docker exec -u root {{ container_prefix }}{{ item }} bash -c "
       export PGPASSWORD='{{ replication_password }}' && \
       timeout 120s \
       pg_basebackup --pgdata=/var/lib/postgresql/{{ pdpgsql_version }}/main -R -v -Fp -Xs -P \
       --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }}
     "
   become: true
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Start Percona distribution for Postgresql
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
