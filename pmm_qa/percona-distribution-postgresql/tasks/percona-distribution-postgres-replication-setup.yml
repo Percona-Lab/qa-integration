@@ -53,21 +53,6 @@
 - name: Prepare and install Percona Distribution for Postgresql
   include_tasks: tasks/install-pdpgsql.yml
 
-- name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
-  shell: |
-    docker exec -u postgres {{ container_prefix }}{{ item }} psql -U postgres -d {{ db_name | default('postgres') }} -c "
-      DO \$\$
-      BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pmm') THEN
-          CREATE ROLE pmm LOGIN PASSWORD 'pmm';
-        END IF;
-        GRANT pg_monitor TO pmm;
-      END
-      \$\$;
-    "
-  become: true
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
-
 - name: Install pg stat monitor.
   include_tasks: ./tasks/install_pg_stat-monitor.yml
   vars:
@@ -108,6 +93,20 @@
   shell: docker exec {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+- name: Create PostgreSQL user 'pmm' with password and grant pg_monitor
+  shell: |
+    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -d {{ db_name | default('postgres') }} -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pmm') THEN
+          CREATE ROLE pmm LOGIN PASSWORD 'pmm';
+        END IF;
+        GRANT pg_monitor TO pmm;
+      END
+      \$\$;
+    "
+  become: true
 
 - name: Create custom database
   shell: |
