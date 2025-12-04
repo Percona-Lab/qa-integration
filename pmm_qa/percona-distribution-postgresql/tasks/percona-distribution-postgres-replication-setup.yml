@@ -202,3 +202,8 @@
 - name: Run SQL script using docker exec
   shell: docker exec {{ container_prefix }}1 psql -U postgres -d school -f /pgsql_load.sql > /dev/null
   become: true
+
+- name: Change postgres user password
+  shell: |
+    docker exec -u postgres {{ container_prefix }}1 psql -U postgres -c "ALTER USER postgres WITH PASSWORD 'pass+this';"
+  become: true
