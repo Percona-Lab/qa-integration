@@ -131,6 +131,7 @@
     docker exec {{ container_prefix}}{{ item }} touch /var/lib/postgresql/{{ pdpgsql_version }}/main/standby.signal
     docker cp {{ data_dir }}/node{{ item }}/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
     docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
+    docker exec {{ container_prefix}}{{ item }} chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
