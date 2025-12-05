@@ -69,14 +69,6 @@
     docker cp {{ data_dir }}/node1/pg_hba.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
   become: true
 
-- name: Copy config files to replica nodes
-  shell: |
-    docker exec {{ container_prefix}}{{ item }} touch /var/lib/postgresql/{{ pdpgsql_version }}/main/standby.signal
-    docker cp {{ data_dir }}/node{{ item }}/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
-    docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
-  become: true
-  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-
 - name: Start Percona distribution for Postgresql primary node
   shell: docker exec -u root {{ container_prefix }}1 systemctl start postgresql
   become: true
@@ -131,6 +123,14 @@
       pg_basebackup --pgdata=/var/lib/postgresql/{{ pdpgsql_version }}/main -R -v -Fp -Xs -P \
       --host={{ container_prefix}}1 --port=5432 -U {{ replication_user }}
     "
+  become: true
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+- name: Copy config files to replica nodes
+  shell: |
+    docker exec {{ container_prefix}}{{ item }} touch /var/lib/postgresql/{{ pdpgsql_version }}/main/standby.signal
+    docker cp {{ data_dir }}/node{{ item }}/postgresql.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node{{ item }}/pg_hba.conf {{ container_prefix }}{{ item }}:/etc/postgresql/{{ pdpgsql_version }}/main/pg_hba.conf
   become: true
   loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
