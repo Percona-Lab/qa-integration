@@ -91,6 +91,12 @@
     docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/var/lib/postgresql/{{ pdpgsql_version }}/main
   become: true
 
+- name: Remove data folder on replica nodes.
+  shell: |
+    docker exec {{ container_prefix }}{{ item }} rm -fr /var/lib/postgresql/{{ pdpgsql_version }}/main
+  become: true
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
   become: true
