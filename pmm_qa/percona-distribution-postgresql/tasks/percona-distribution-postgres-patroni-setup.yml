@@ -19,6 +19,12 @@
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
+- name: Generate postgres.conf for primary node
+  template:
+    src: data/postgresql-primary.conf.j2
+    dest: "{{ data_dir }}/node1/postgresql.conf"
+  become: true
+
 - name: Generate etcd configuration
   template:
     src: data/etcd.conf.yaml.j2
@@ -79,6 +85,11 @@
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+- name: Stop Percona distribution for Postgresql, due to being managed by patroni
+  shell: |
+    docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+  become: true
 
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
