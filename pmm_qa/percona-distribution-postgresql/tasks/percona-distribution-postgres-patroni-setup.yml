@@ -62,15 +62,14 @@
 - name: Start etcd service
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/
-    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /data/db/logs
-    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /dev/watchdog
-    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /pg_wal
-    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main/
-    docker exec -u root {{ container_prefix }}{{ item }} ps aux | grep postgres 
     docker exec -u root {{ container_prefix }}{{ item }} rm -f /data/db/postmaster.pid 
     docker exec -u root {{ container_prefix }}{{ item }} mkdir -p /data/db/logs
     docker exec -u root {{ container_prefix }}{{ item }} mkdir /pg_wal 
     docker exec -u root {{ container_prefix }}{{ item }} touch /dev/watchdog 
+    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /data/db/logs
+    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /dev/watchdog
+    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /pg_wal
+    docker exec -u root {{ container_prefix }}{{ item }} chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main/
     docker exec {{ container_prefix }}{{ item }} nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 & 
     docker exec -u root {{ container_prefix }}{{ item }} cat /data/db/logs/etcd.log
   become: true
