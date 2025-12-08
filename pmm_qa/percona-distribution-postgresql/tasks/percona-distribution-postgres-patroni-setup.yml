@@ -61,7 +61,7 @@
 
 - name: Start etcd service
   shell: |
-    docker exec -u root {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/
+#    docker exec -u root {{ container_prefix }}{{ item }} rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/
     docker exec -u root {{ container_prefix }}{{ item }} rm -f /data/db/postmaster.pid 
     docker exec -u root {{ container_prefix }}{{ item }} mkdir -p /data/db/logs
     docker exec -u root {{ container_prefix }}{{ item }} mkdir /pg_wal 
