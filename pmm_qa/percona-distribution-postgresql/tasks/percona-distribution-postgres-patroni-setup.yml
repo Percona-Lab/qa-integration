@@ -81,7 +81,7 @@
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
   become: true
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 
 - name: Create PgBackRest backup
   shell: |
