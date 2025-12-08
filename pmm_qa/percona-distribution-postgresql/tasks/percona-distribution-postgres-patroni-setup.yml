@@ -83,20 +83,20 @@
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-#- name: Start patroni service in all nodes
-#  shell: >
-#    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c "nohup patroni /patroni.yml > /data/db/logs/patroni.log 2>&1 &"
-#  become: true
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+- name: Start patroni service in all nodes
+  shell: >
+    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c "nohup patroni /patroni.yml > /data/db/logs/patroni.log 2>&1 &"
+  become: true
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-#- name: Wait 5 seconds for Percona Distribution for postgresql to start
-#  pause:
-#    seconds: 10
+- name: Wait 5 seconds for Percona Distribution for postgresql to start
+  pause:
+    seconds: 10
 
-#- name: Start patroni service in all nodes
-#  shell: docker exec -u postgres {{ container_prefix }}{{ item }} cat /data/db/logs/patroni.log
-#  become: true
-#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+- name: Start patroni service in all nodes
+  shell: docker exec -u postgres {{ container_prefix }}{{ item }} cat /data/db/logs/patroni.log
+  become: true
+  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 #- name: Start patroni service in all nodes
 #  shell: docker exec -u postgres {{ container_prefix }}{{ item }} pgbackrest --stanza=patroni_backup restore --type=none --log-level-console=detail
