@@ -83,7 +83,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
-  shell: docker exec -u root {{ container_prefix }}{{ item }} pg_ctl -D /var/lib/postgresql/{{ pdpgsql_version }}/main -w start
+  shell: docker exec -u postgres {{ container_prefix }}{{ item }} pg_ctl -D /var/lib/postgresql/{{ pdpgsql_version }}/main -w start
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
