@@ -86,9 +86,10 @@
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Stop Percona distribution for Postgresql, due to being managed by patroni
+- name: Prepare replication user and config file for primary node
   shell: |
     docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/var/lib/postgresql/{{ pdpgsql_version }}/main
+    docker exec -u postgres {{ container_prefix }}1 psql -c "CREATE ROLE replicator WITH LOGIN REPLICATION PASSWORD 'replPasswd';"
   become: true
 
 - name: Remove data folder on replica nodes.
