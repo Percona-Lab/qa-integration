@@ -84,7 +84,7 @@
 
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
   shell: docker exec -u postgres {{ container_prefix }}{{ item }} pg_ctl -D /var/lib/postgresql/{{ pdpgsql_version }}/main -w start
-  become: true
+#  become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Start patroni service in all nodes
