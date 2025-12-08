@@ -84,7 +84,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 - name: Create PgBackRest backup
-  shell: >
+  shell: |
     docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create
     docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup
   become: true
