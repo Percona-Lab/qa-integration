@@ -1,13 +1,13 @@
 scope: patroni_cls
 namespace: /var/lib/pgsql/config/
-name: pg_node_{{ item }}
+name: {{ container_prefix }}{{ item }}
 
 restapi:
   listen: 0.0.0.0:8008
-  connect_address: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}:8008"
+  connect_address: "{{ container_prefix }}{{ item }}:8008"
 
 etcd3:
-  host: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_1:2379"
+  host: "{{ container_prefix }}1:2379"
 
 bootstrap:
   dcs:
@@ -51,7 +51,7 @@ bootstrap:
 
 postgresql:
   listen: 0.0.0.0:5432
-  connect_address: "pdpgsql_pmm_patroni_{{ pdpgsql_version }}_{{ item }}:5432"
+  connect_address: "{{ container_prefix }}{{ item }}:5432"
   data_dir: /var/lib/postgresql/{{ pdpgsql_version }}/main
   bin_dir: /usr/lib/postgresql/{{ pdpgsql_version }}/bin
   pgpass: /tmp/pgpass
@@ -69,7 +69,7 @@ postgresql:
     - basebackup
 
   pgbackrest:
-    command: pgbackrest --stanza=patroni_backup restore --type=none
+    command: pgbackrest --stanza=patroni_backup restore --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main --type=none
     keep_data: true
     no_params: true
 
