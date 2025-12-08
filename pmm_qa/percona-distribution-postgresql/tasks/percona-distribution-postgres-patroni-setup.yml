@@ -79,20 +79,18 @@
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-#
-#
-#- name: Stop Percona distribution for Postgresql, due to being managed by patroni
-#  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
-#  become: true
-#  loop: "{{ range(2, nodes_count | int + 1) | list }}"
-#
-#- name: Create PgBackRest backup
-#  shell: |
-#    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
-#    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
-#  become: true
-#
-#
+
+- name: Stop Percona distribution for Postgresql, due to being managed by patroni
+  shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl stop postgresql
+  become: true
+  loop: "{{ range(2, nodes_count | int + 1) | list }}"
+
+- name: Create PgBackRest backup
+  shell: |
+    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
+    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
+  become: true
+
 #- name: Start patroni service in all nodes
 #  shell: >
 #    docker exec -u postgres {{ container_prefix }}{{ item }} /bin/sh -c "nohup patroni /patroni.yml > /data/db/logs/patroni.log 2>&1 &"
