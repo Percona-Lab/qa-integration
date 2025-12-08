@@ -90,6 +90,9 @@
   shell: |
     docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/var/lib/postgresql/{{ pdpgsql_version }}/main
     docker exec -u postgres {{ container_prefix }}1 psql -c "CREATE ROLE replicator WITH LOGIN REPLICATION PASSWORD 'replPasswd';"
+    docker exec -u postgres {{ container_prefix }}1 mkdir -p /var/lib/pgbackrest/archive/patroni_backup
+    docker exec -u postgres {{ container_prefix }}1 chown -R postgres:postgres /var/lib/pgbackrest
+    docker exec -u postgres {{ container_prefix }}1 pgbackrest --stanza=patroni_backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main stanza-create
   become: true
 
 - name: Remove data folder on replica nodes.
