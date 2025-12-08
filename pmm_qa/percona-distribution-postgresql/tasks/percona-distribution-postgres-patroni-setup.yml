@@ -86,7 +86,7 @@
 - name: Create PgBackRest backup
   shell: |
     docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
-    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup
+    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
   become: true
 
 
