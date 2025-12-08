@@ -88,7 +88,7 @@
 
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
   shell: |
-    docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/etc/postgresql/{{ pdpgsql_version }}/main/postgresql.conf
+    docker cp {{ data_dir }}/node1/postgresql.conf {{ container_prefix }}1:/var/lib/postgresql/{{ pdpgsql_version }}/main
   become: true
 
 - name: Stop Percona distribution for Postgresql, due to being managed by patroni
