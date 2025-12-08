@@ -85,10 +85,9 @@
 
 - name: Create PgBackRest backup
   shell: >
-    docker exec -u root {{ container_prefix }}{{ item }} postgres pgbackrest --stanza={{ container_prefix }}1 stanza-create
-    docker exec -u root {{ container_prefix }}{{ item }} postgres pgbackrest --stanza={{ container_prefix }}1 --type=full backup
+    docker exec -u root {{ container_prefix }}1 postgres pgbackrest --stanza={{ container_prefix }}1 stanza-create
+    docker exec -u root {{ container_prefix }}1 postgres pgbackrest --stanza={{ container_prefix }}1 --type=full backup
   become: true
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
 
 - name: Start patroni service in all nodes
