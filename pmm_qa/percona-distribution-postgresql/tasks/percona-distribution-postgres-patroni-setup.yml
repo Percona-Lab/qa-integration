@@ -63,23 +63,23 @@
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
 
-- name: Start etcd service
-  shell: |
-    docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
-      rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/*
-      ps aux | grep postgres
-      rm -f /data/db/postmaster.pid
-      mkdir -p /data/db/logs
-      mkdir /pg_wal
-      touch /dev/watchdog
-      nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
-      chown -R postgres:postgres /data/db/logs
-      chown -R postgres:postgres /dev/watchdog
-      chown -R postgres:postgres /pg_wal
-      chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main/
-    '
-  become: true
-  loop: "{{ range(1, nodes_count | int + 1) | list }}"
+#- name: Start etcd service
+#  shell: |
+#    docker exec {{ container_prefix }}{{ item }} /bin/sh -c '
+#      rm -rf /var/lib/postgresql/{{ pdpgsql_version }}/main/*
+#      ps aux | grep postgres
+#      rm -f /data/db/postmaster.pid
+#      mkdir -p /data/db/logs
+#      mkdir /pg_wal
+#      touch /dev/watchdog
+#      nohup etcd --config-file /etcd.conf.yaml > /data/db/logs/etcd.log 2>&1 &
+#      chown -R postgres:postgres /data/db/logs
+#      chown -R postgres:postgres /dev/watchdog
+#      chown -R postgres:postgres /pg_wal
+#      chown -R postgres:postgres /var/lib/postgresql/{{ pdpgsql_version }}/main/
+#    '
+#  become: true
+#  loop: "{{ range(1, nodes_count | int + 1) | list }}"
 #
 #
 #- name: Stop Percona distribution for Postgresql, due to being managed by patroni
@@ -87,11 +87,11 @@
 #  become: true
 #  loop: "{{ range(2, nodes_count | int + 1) | list }}"
 #
-- name: Create PgBackRest backup
-  shell: |
-    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
-    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
-  become: true
+#- name: Create PgBackRest backup
+#  shell: |
+#    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 stanza-create --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
+#    docker exec -u root {{ container_prefix }}1 pgbackrest --stanza={{ container_prefix }}1 --type=full backup --pg1-path=/var/lib/postgresql/{{ pdpgsql_version }}/main
+#  become: true
 #
 #
 #- name: Start patroni service in all nodes
