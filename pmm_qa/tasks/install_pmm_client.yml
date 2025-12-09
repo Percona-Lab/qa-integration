@@ -16,7 +16,7 @@
 - name: Set correct pmm server port
   set_fact:
     pmm_server_port: 443
-  when: pmm_server_ip | default('') | regex_search('\.')
+  when: pmm_server_ip | default('') | regex_search('\.') | bool
 
 - name: Set correct pmm server port
   set_fact:
