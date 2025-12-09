@@ -49,8 +49,8 @@ do
     echo "configuring pmm agent on $node"
     docker compose -f docker-compose-rs.yaml exec -T -e PMM_AGENT_SETUP_NODE_NAME=${node}._${random_number} $node pmm-agent setup
     if [[ $mongo_setup_type == "psa" && $node == "rs203"  ]]; then
-      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
+      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --replication-set=rs1 --agent-env-vars="KRB5_CLIENT_KTNAME" --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     else
-      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset ${client_credentials_flags[*]} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
+      docker compose -f docker-compose-rs.yaml exec -T $node pmm-admin add mongodb --enable-all-collectors --agent-password=mypass --cluster=replicaset --agent-env-vars="KRB5_CLIENT_KTNAME" ${client_credentials_flags[*]} --host=${node} --port=27017 ${node}${gssapi_service_name_part}_${random_number}
     fi
 done
