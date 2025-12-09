@@ -38,12 +38,12 @@ database_options = {
                            "TARBALL": ""}
     },
     "PGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16", "17"],
+        "versions": ["11", "12", "13", "14", "15", "16", "18", "17"],
         "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "",
                            "SETUP_TYPE": ""}
     },
     "PDPGSQL": {
-        "versions": ["11", "12", "13", "14", "15", "16", "17"],
+        "versions": ["11", "12", "13", "14", "15", "16",  "17"],
         "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": ""}
     },
     "SSL_PDPGSQL": {
