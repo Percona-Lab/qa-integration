@@ -16,12 +16,12 @@
 - name: Set correct pmm server port
   set_fact:
     pmm_server_port: 443
-  when: pmm_server_ip | default('') | regex_search('\.') | bool
+  when: pmm_server_ip is defined and ((pmm_server_ip | length) - (pmm_server_ip | replace('.', '') | length) == 3)
 
 - name: Set correct pmm server port
   set_fact:
     pmm_server_port: 8443
-  when: not (pmm_server_ip | default('') | regex_search('\.'))
+  when: pmm_server_ip is defined and ((pmm_server_ip | length) - (pmm_server_ip | replace('.', '') | length) < 3)
 
 - name: Detect OS inside the container
   shell: docker exec {{ container_name }} cat /etc/os-release
@@ -178,8 +178,7 @@
 
 - name: Start pmm client
   shell: |
-    docker exec --user root {{ container_name }} \
-      sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
+    docker exec --user root {{ container_name }} sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
 
 - name: Wait 5 seconds for start to complete
   pause:
