@@ -178,7 +178,7 @@
 
 - name: Start pmm client
   shell: |
-    docker exec --user root pdpgsql_pmm_patroni_18_1 sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
+    docker exec --user root {{ container_name }} sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
 
 - name: Wait 5 seconds for start to complete
   pause:
