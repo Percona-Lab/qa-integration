@@ -14,6 +14,9 @@ export COMPOSE_PROFILES=${profile}
 
 docker compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml down -v --remove-orphans
 docker compose -f docker-compose-rs.yaml -f docker-compose-pmm.yaml build
+sed -E 's/.+fork.+//' -i conf/mongod-rs/mongod.conf 
+sed -E 's/.+pidFilePath.+//' -i conf/mongod-rs/mongod.conf 
+sed -E 's/.+processManagement.+//' -i conf/mongod-rs/mongod.conf
 docker compose -f docker-compose-pmm.yaml -f docker-compose-rs.yaml up -d
 echo
 echo "waiting 30 seconds for pmm-server to start"
