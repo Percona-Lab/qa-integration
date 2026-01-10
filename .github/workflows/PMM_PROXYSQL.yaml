@@ -21,7 +21,7 @@ on:
 
 jobs:
   PMM_PXC_TEST:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       PXC_GLIBC: ${{ github.event.inputs.pxc_glibc || '2.35' }}
