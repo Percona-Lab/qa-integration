@@ -1,20 +1,32 @@
-- name: Find first free port starting at {{ port_start }}
-  vars:
-    port_range_end: "{{ port_start | int + 100 }}"
-  block:
-    - name: Probe ports until first free one is found
-      ansible.builtin.include_tasks: probe_one_port.yml
-      loop: "{{ range(port_start | int, port_range_end | int) | list }}"
-      loop_control:
-        label: "Checking port {{ item }}"
-      vars:
-        candidate_port: "{{ item }}"
+- name: Find first bindable TCP port starting at {{ port_start }}
+  ansible.builtin.shell: |
+    python3 - <<'PY'
+    import socket
+    start = int("{{ port_start }}")
+    end = start + 100
+    for p in range(start, end):
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      try:
+        s.bind(("0.0.0.0", p))
+      except OSError:
+        pass
+      else:
+        print(p)
+        break
+      finally:
+        s.close()
+    PY
+  args:
+    executable: /bin/bash
+  register: port_out
+  changed_when: false
 
-    - name: Verify a port was found
-      ansible.builtin.fail:
-        msg: "No free port found in range {{ port_start }} to {{ port_range_end - 1 }}"
-      when: docker_port is none
+- name: Set docker_port
+  ansible.builtin.set_fact:
+    docker_port: "{{ port_out.stdout | trim | int }}"
 
-    - name: Display result
-      ansible.builtin.debug:
-        msg: "First free port found: {{ docker_port }}"
+- name: Verify a port was found
+  ansible.builtin.fail:
+    msg: "No free port found in range {{ port_start }}..{{ port_start | int + 99 }}"
+  when: port_out.stdout | trim == ""
