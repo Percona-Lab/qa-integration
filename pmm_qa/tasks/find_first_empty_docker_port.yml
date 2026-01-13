@@ -1,0 +1,38 @@
+- hosts: docker_host
+  gather_facts: false
+  vars:
+    port_end: 65535
+
+  tasks:
+    - name: Probe ports and select first free starting at 3306
+      vars:
+        candidate_ports: "{{ range(port_start, port_end + 1) | list }}"
+      block:
+        - name: Check if port is listening (open)
+          ansible.builtin.wait_for:
+            host: "127.0.0.1"
+            port: "{{ item }}"
+            timeout: 1
+            state: started      # succeeds if something is listening
+          loop: "{{ candidate_ports }}"
+          register: port_probe
+          failed_when: false    # closed ports will "fail" (that's OK)
+          changed_when: false
+
+        - name: Set docker_port to first port that is NOT listening
+          ansible.builtin.set_fact:
+            docker_port: >-
+              {{
+                (port_probe.results
+                 | selectattr('failed', 'equalto', true)
+                 | map(attribute='item')
+                 | first)
+              }}
+
+        - name: Fail if none found in range
+          ansible.builtin.fail:
+            msg: "No free port found in {{ port_start }}..{{ port_end }}"
+          when: docker_port is not defined or docker_port is none
+
+    - debug:
+        msg: "First free port from {{ port_start }} is {{ docker_port }}"
