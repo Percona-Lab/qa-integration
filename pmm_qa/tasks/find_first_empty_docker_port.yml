@@ -1,32 +1,33 @@
-- name: Probe ports and select first free starting at {{ port_start }}
+- name: Find first free port
   vars:
-    candidate_ports: "{{ range(port_start, port_start + 100) | list }}"
+    port_range_end: "{{ port_start | int + 100 }}"
   block:
-    - name: Check if port is listening (open)
+    - name: Probe ports starting at {{ port_start }}
       ansible.builtin.wait_for:
         host: "127.0.0.1"
         port: "{{ item }}"
         timeout: 1
-        state: stopped
-      loop: "{{ candidate_ports }}"
+        state: stopped  # Succeeds if the port is NOT in use
+      loop: "{{ range(port_start | int, port_range_end | int) | list }}"
       register: port_probe
-      failed_when: false    # closed ports will "fail" (that's OK)
-      changed_when: false
+      # We ignore errors so the loop continues even if a port is busy
+      ignore_errors: true
 
-    - name: Set docker_port to first port that is NOT listening
+    - name: Set docker_port to first free port
       ansible.builtin.set_fact:
         docker_port: >-
           {{
-            (port_probe.results
-            | selectattr('failed', 'equalto', true)
-            | map(attribute='item')
-            | first)
+            port_probe.results 
+            | selectattr('failed', 'equalto', false) 
+            | map(attribute='item') 
+            | first | default(none)
           }}
 
-    - name: Fail if none found in range
+    - name: Verify a port was found
       ansible.builtin.fail:
-        msg: "No free port found in {{ port_start }}..{{ port_start + 100 }}"
-      when: docker_port is not defined or docker_port is none
+        msg: "No free port found in range {{ port_start }} to {{ port_range_end }}"
+      when: docker_port is none
 
-    - debug:
-        msg: "First free port from {{ port_start }} is {{ docker_port }}"
+    - name: Display result
+      ansible.builtin.debug:
+        msg: "First free port found: {{ docker_port }}"
