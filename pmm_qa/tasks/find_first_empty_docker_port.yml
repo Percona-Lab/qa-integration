@@ -10,6 +10,10 @@
         state: stopped  # Succeeds if the port is NOT in use
       loop: "{{ range(port_start | int, port_range_end | int) | list }}"
       register: port_probe
+      until: port_probe is success
+        # This ensures we don't spam the logs with 100 entries
+      loop_control:
+        label: "Checking port {{ port_start | int + item | int }}"
       # We ignore errors so the loop continues even if a port is busy
       ignore_errors: true
 
