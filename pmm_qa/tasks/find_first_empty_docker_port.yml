@@ -6,8 +6,8 @@
       ansible.builtin.wait_for:
         host: "127.0.0.1"
         port: "{{ item }}"
-        timeout: 5
-        state: stopped      # succeeds if something is listening
+        timeout: 1
+        state: stopped
       loop: "{{ candidate_ports }}"
       register: port_probe
       failed_when: false    # closed ports will "fail" (that's OK)
