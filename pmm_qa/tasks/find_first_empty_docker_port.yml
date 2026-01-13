@@ -25,6 +25,7 @@
             | selectattr('failed', 'equalto', false) 
             | map(attribute='item') 
             | first | default(none)
+            | int
           }}
 
     - name: Verify a port was found
