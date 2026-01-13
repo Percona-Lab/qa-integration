@@ -1,0 +1,16 @@
+- name: Check if port {{ candidate_port }} is free (not listening)
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ candidate_port }}"
+    timeout: 1
+    state: stopped
+  register: port_check
+  failed_when: false
+  changed_when: false
+
+- name: Set docker_port and stop looping if free
+  when: port_check is succeeded
+  block:
+    - ansible.builtin.set_fact:
+        docker_port: "{{ candidate_port | int }}"
+    - ansible.builtin.meta: end_loop
