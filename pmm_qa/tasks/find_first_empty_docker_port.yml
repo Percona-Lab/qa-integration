@@ -1,10 +1,6 @@
-- name: Set docker_port to first port that is NOT listening
+- name: Probe ports and select first free starting at {{ port_start }}
   vars:
-    port_end: 65535
-
-- name: Probe ports and select first free starting at 3306
-  vars:
-    candidate_ports: "{{ range(port_start, port_end + 1) | list }}"
+    candidate_ports: "{{ range(port_start, 65535 + 1) | list }}"
   block:
     - name: Check if port is listening (open)
       ansible.builtin.wait_for:
@@ -29,7 +25,7 @@
 
     - name: Fail if none found in range
       ansible.builtin.fail:
-        msg: "No free port found in {{ port_start }}..{{ port_end }}"
+        msg: "No free port found in {{ port_start }}..{{ 65535 }}"
       when: docker_port is not defined or docker_port is none
 
     - debug:
