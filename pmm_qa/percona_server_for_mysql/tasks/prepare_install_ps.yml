@@ -5,7 +5,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -p {{ 3306 + nodes_count|int - 1 }}:3306 \
+      -p {{ 3305 + nodes_count|int }}:3306 \
       antmelekhin/docker-systemd:ubuntu-24.04
   when: ps_version | replace('_', '') | int >= 80
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
