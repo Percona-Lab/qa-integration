@@ -7,7 +7,7 @@
         host: "127.0.0.1"
         port: "{{ item }}"
         timeout: 5
-        state: started      # succeeds if something is listening
+        state: stopped      # succeeds if something is listening
       loop: "{{ candidate_ports }}"
       register: port_probe
       failed_when: false    # closed ports will "fail" (that's OK)
