@@ -1,6 +1,6 @@
 - name: Set docker_port to first port that is NOT listening
-  ansible.builtin.set_fact:
-  port_end: 65535
+  vars:
+    port_end: 65535
 
 - name: Probe ports and select first free starting at 3306
   vars:
