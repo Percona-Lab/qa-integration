@@ -1,36 +1,32 @@
-- name: Find first free port
+- name: Find first free port starting at {{ port_start }}
   vars:
     port_range_end: "{{ port_start | int + 100 }}"
   block:
-    - name: Probe ports starting at {{ port_start }}
-      ansible.builtin.wait_for:
-        host: "127.0.0.1"
-        port: "{{ item }}"
-        timeout: 1
-        state: stopped  # Succeeds if the port is NOT in use
-      loop: "{{ range(port_start | int, port_range_end | int) | list }}"
-      register: port_probe
-      until: port_probe is success
-        # This ensures we don't spam the logs with 100 entries
-      loop_control:
-        label: "Checking port {{ port_start | int + item | int }}"
-      # We ignore errors so the loop continues even if a port is busy
-      ignore_errors: true
+    - name: Probe ports and stop after first free one
+      block:
+        - name: Check port {{ item }} is not listening
+          ansible.builtin.wait_for:
+            host: "127.0.0.1"
+            port: "{{ item }}"
+            timeout: 1
+            state: stopped
+          register: port_check
+          failed_when: false
+          changed_when: false
 
-    - name: Set docker_port to first free port
-      ansible.builtin.set_fact:
-        docker_port: >-
-          {{
-            port_probe.results 
-            | selectattr('failed', 'equalto', false) 
-            | map(attribute='item') 
-            | first | default(none)
-            | int
-          }}
+        - name: Save port and stop looping if free
+          when: port_check is succeeded
+          block:
+            - ansible.builtin.set_fact:
+                docker_port: "{{ item | int }}"
+            - ansible.builtin.meta: end_loop
+      loop: "{{ range(port_start | int, port_range_end | int) | list }}"
+      loop_control:
+        label: "Checking port {{ item }}"
 
     - name: Verify a port was found
       ansible.builtin.fail:
-        msg: "No free port found in range {{ port_start }} to {{ port_range_end }}"
+        msg: "No free port found in range {{ port_start }} to {{ port_range_end - 1 }}"
       when: docker_port is none
 
     - name: Display result
