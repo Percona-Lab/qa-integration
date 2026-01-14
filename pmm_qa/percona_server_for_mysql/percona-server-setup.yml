@@ -144,7 +144,7 @@
 
     - name: Run load for sysbench inside of primary percona server node
       shell: docker exec {{ container_prefix }}1 sysbench /usr/share/sysbench/oltp_read_write.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=sbtest --mysql-password=password --mysql-db=sbtest --tables=10 --table-size=100000 --threads=16 --time=60 run
-      when: setup_type == "gr" and setup_type == "replication"
+      when: setup_type == "gr" or setup_type == "replication"
 
     - name: Copy a load file into the container
       shell: docker cp ../data/mysql_load.sql {{ container_prefix }}{{ item }}:/ps_load.sql
