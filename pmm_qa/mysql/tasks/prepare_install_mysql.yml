@@ -3,6 +3,11 @@
   vars:
     port_start: 3306
 
+- name: Prepare socket folders
+  shell: |
+    sudo mkdir -p /tmp/mysql-sockets/{{ item }}
+    sudo chmod 0777 /tmp/mysql-sockets/{{ item }}
+
 - name: Prepare Container for MySQL 8.0+
   shell: |
     docker run --rm -d --name="{{ container_prefix }}{{ item }}" \
@@ -10,7 +15,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -v /var/run/mysqld/:/var/run/mysqld/ \
+      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld
       -p {{ docker_port|int + item - 1 }}:3306 \
       antmelekhin/docker-systemd:ubuntu-24.04
   when: mysql_version | replace('_', '') | int >= 80
@@ -22,7 +27,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -v /var/run/mysqld/:/var/run/mysqld/ \
+      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld
       -p {{ docker_port|int + item - 1 }}:3306 \
       antmelekhin/docker-systemd:ubuntu-22.04
   when: mysql_version | replace('_', '') | int < 80
