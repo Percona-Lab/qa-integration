@@ -122,6 +122,7 @@
 - name: Copy config file to docker container
   shell: |
     docker exec {{ container_prefix }}{{ item }} mkdir -p /etc/mysql
+    eocker exec {{ container_prefix }}{{ item }} mkdir -p /var/run/mysqld
     docker cp {{ data_dir }}/node{{ index }}/my.cnf {{ container_prefix }}{{ item }}:/etc/mysql/my.cnf
 
 - name: Restart MySQL
