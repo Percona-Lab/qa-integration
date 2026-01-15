@@ -27,11 +27,6 @@
     container_prefix: "mysql_pmm{{ (setup_type|default('')) and '_' ~ setup_type }}_{{ mysql_version }}_"
 
   tasks:
-#    - name: Fail if setup_type is gr or replication and version is less than 80
-#      fail:
-#        msg: "This setup_type ({{ setup_type }}) with version {{ mysql_version | replace('_', '.') }} is not supported!"
-#      when: (setup_type == 'gr' or setup_type == 'replication') and (mysql_version | replace('_', '') | int < 80)
-
     - name: Modify the node count for group replication
       set_fact:
         nodes_count: 3
