@@ -15,7 +15,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld
+      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld \
       -p {{ docker_port|int + item - 1 }}:3306 \
       antmelekhin/docker-systemd:ubuntu-24.04
   when: mysql_version | replace('_', '') | int >= 80
@@ -27,7 +27,7 @@
       --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
       -v /var/lib/containerd \
       -v ./ssl:/ssl \
-      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld
+      -v /tmp/mysql-sockets/{{ item }}:/var/run/mysqld \
       -p {{ docker_port|int + item - 1 }}:3306 \
       antmelekhin/docker-systemd:ubuntu-22.04
   when: mysql_version | replace('_', '') | int < 80
