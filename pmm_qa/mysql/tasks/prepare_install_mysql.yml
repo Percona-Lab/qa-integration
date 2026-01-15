@@ -5,6 +5,7 @@
 
 - name: Prepare socket folders
   shell: |
+    sudo rm -fr /tmp/mysql-sockets/{{ item }}
     sudo mkdir -p /tmp/mysql-sockets/{{ item }}
     sudo chmod 0777 /tmp/mysql-sockets/{{ item }}
 
