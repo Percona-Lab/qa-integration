@@ -54,15 +54,15 @@
 
 - name: Show pgsm_branch
   ansible.builtin.debug:
-    msg: {{ pgsm_branch }}
+    msg: pgsm_branch
 
 - name: Show pgsm_branch
   ansible.builtin.debug:
-    msg: {{ pgsm_branch | length }}
+    msg: pgsm_branch | length
 
 - name: Show pgsm_branch
   ansible.builtin.debug:
-    msg: {{ pgsm_branch is defined }}
+    msg: pgsm_branch is defined
 
 - name: Install PG Stat Monitor from tarball
   shell: |
