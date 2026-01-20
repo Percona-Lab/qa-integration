@@ -38,7 +38,7 @@
   shell: docker exec -u root {{ container_prefix }}{{ item }} apt-get install -y percona-pg-stat-monitor{{ pdpgsql_version }}
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: pgsm_branch is not defined or pgsm_branch | length == 0
+  when: pgsm_branch | length == 0
 
 - name: Prepare installation of PG Stat Monitor from tarball
   shell: |
@@ -50,19 +50,7 @@
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: pgsm_branch is defined or pgsm_branch | length > 0
-
-- name: Show pgsm_branch
-  ansible.builtin.debug:
-    msg: "pgsm_branch={{ pgsm_branch }}"
-
-- name: Show pgsm_branch
-  ansible.builtin.debug:
-    msg: "pgsm_branch={{ pgsm_branch | length }}"
-
-- name: Show pgsm_branch
-  ansible.builtin.debug:
-    msg: "pgsm_branch={{ pgsm_branch is defined }}"
+  when: pgsm_branch | length > 0
 
 - name: Install PG Stat Monitor from tarball
   shell: |
@@ -74,7 +62,7 @@
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
-  when: pgsm_branch is defined or pgsm_branch | length > 0
+  when: pgsm_branch | length > 0
 
 - name: Start Percona distribution for Postgresql
   shell: docker exec -u root {{ container_prefix }}{{ item }} systemctl start postgresql
