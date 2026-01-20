@@ -48,7 +48,7 @@
       git clone --branch {{ pgsm_branch }} https://github.com/percona/pg_stat_monitor.git &&
       cd pg_stat_monitor &&
       make USE_PGXS=1 &&
-      make USE_PGXS=1 install &&
+      make USE_PGXS=1 install
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
