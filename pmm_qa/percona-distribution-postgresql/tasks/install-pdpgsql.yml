@@ -46,7 +46,7 @@
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - &&
       echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list &&
       apt-get update &&
-      apt-get -y install git build-essential postgresql-server-dev-{{ pdpgsql_version }}
+      apt-get -y install git clang-18 llvm-18 build-essential postgresql-server-dev-{{ pdpgsql_version }}
     '
   become: true
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
