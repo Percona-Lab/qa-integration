@@ -44,7 +44,7 @@
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} sh -c '
       apt-get -y install git
-      git clone --branch ${pgsm_branch} https://github.com/percona/pg_stat_monitor.git
+      git clone --branch {{ pgsm_branch }} https://github.com/percona/pg_stat_monitor.git
       cd pg_stat_monitor
       make USE_PGXS=1
       make USE_PGXS=1 install
