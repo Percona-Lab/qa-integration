@@ -22,6 +22,7 @@
     random_service_name_value: ""
     docker_repo: "percona/percona-distribution-postgresql"
     container_prefix: "pdpgsql_pmm{{ (setup_type|default('')) and '_' ~ setup_type }}_{{ pdpgsql_version }}_"
+    pgsm_branch: "{{ lookup('env', 'PGSM_BRANCH') }}"
 
   tasks:
     - name: Display setup type selected

@@ -44,7 +44,7 @@ database_options = {
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "18", "17"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": "", "PGSM_BRANCH": ""}
     },
     "SSL_PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
