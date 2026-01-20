@@ -52,6 +52,18 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: pgsm_branch is defined or pgsm_branch | length > 0
 
+- name: Show pgsm_branch
+  ansible.builtin.debug:
+    msg: {{ pgsm_branch }}
+
+- name: Show pgsm_branch
+  ansible.builtin.debug:
+    msg: {{ pgsm_branch | length }}
+
+- name: Show pgsm_branch
+  ansible.builtin.debug:
+    msg: {{ pgsm_branch is defined }}
+
 - name: Install PG Stat Monitor from tarball
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} sh -c '
