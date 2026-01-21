@@ -40,7 +40,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: pgsm_branch | length == 0
 
-- name: Prepare installation of PG Stat Monitor from tarball
+- name: Prepare installation of PG Stat Monitor from sources
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} sh -c '
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - &&
@@ -52,7 +52,7 @@
   loop: "{{ range(1, nodes_count | int + 1) | list }}"
   when: pgsm_branch | length > 0
 
-- name: Install PG Stat Monitor from tarball
+- name: Install PG Stat Monitor from sources
   shell: |
     docker exec -u root {{ container_prefix }}{{ item }} sh -c '
       git clone --branch {{ pgsm_branch }} https://github.com/percona/pg_stat_monitor.git &&
