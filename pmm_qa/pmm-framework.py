@@ -159,6 +159,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
     # Gather Version details
     pdpgsql_version = os.getenv('PDPGSQL_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
+    pgsm_branch = get_value('PGSM_BRANCH', db_type, args, db_config).lower()
 
     # Define environment variables for playbook
     env_vars = {
@@ -172,7 +173,8 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'PDPGSQL_PGSM_PORT': 5447,
         'DISTRIBUTION': '',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-        'SETUP_TYPE': setup_type_value
+        'SETUP_TYPE': setup_type_value,
+        'PGSM_BRANCH': pgsm_branch
     }
 
     # Ansible playbook filename
