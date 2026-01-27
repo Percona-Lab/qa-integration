@@ -56,10 +56,10 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
-    if setup_type_value in ("group_replication", "gr"):
+    if setup_type_value == "gr":
         setup_type = 1
         no_of_nodes = 1
-    elif setup_type_value in ("replication", "replica"):
+    elif setup_type_value =="replication":
         setup_type = ''
         no_of_nodes = 2
 
@@ -94,10 +94,10 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
     setup_type = ''
     no_of_nodes = 1
     setup_type_value = get_value('SETUP_TYPE', db_type, args, db_config).lower()
-    if setup_type_value in ("group_replication", "gr"):
+    if setup_type_value == "gr":
         setup_type = 1
         no_of_nodes = 1
-    elif setup_type_value in ("replication", "replica"):
+    elif setup_type_value == "replication":
         setup_type = ''
         no_of_nodes = 2
 
@@ -226,7 +226,7 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
 
     print(f"Setup type is {setup_type_value}")
 
-    if setup_type_value in ("replication", "replica"):
+    if setup_type_value == "replication":
         # Define environment variables for playbook
         env_vars = {
             'PGSQL_VERSION': pgsql_version,
