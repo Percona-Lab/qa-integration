@@ -32,7 +32,9 @@
         -p 43100:43100 \
         --name={{ external_container }} \
         --network=pmm-qa \
-        phusion/baseimage:noble-1.0.2
+        --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+        -v /var/lib/containerd \
+        antmelekhin/docker-systemd:ubuntu-24.04
 
   - name: Copy all required Artifacts to the docker external_container
     shell: "{{ item }}"
