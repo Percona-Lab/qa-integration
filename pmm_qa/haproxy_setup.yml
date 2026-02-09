@@ -24,8 +24,13 @@
 
   - name: Prepare Container for HAPROXY
     shell: >
-      sudo docker run -d -p 42100:42100 --name={{ haproxy_container }}
-      phusion/baseimage:jammy-1.0.1
+      docker run -d \
+        -p 42100:42100 \
+        --name={{ haproxy_container }} \
+        --network=pmm-qa \
+        --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+        -v /var/lib/containerd \
+        antmelekhin/docker-systemd:ubuntu-24.04
   
   - name: Copy all required Artifacts to the docker haproxy_container
     shell: "{{ item }}"
@@ -41,10 +46,9 @@
     with_items:
       - docker exec {{ haproxy_container }} bash -x ./haproxy_setup.sh > setup_haproxy.log
 
-  - name: Install pmm2-client on the haproxy_container
+  - name: Install pmm3-client on the haproxy_container
     shell: "{{ item }}"
     with_items:
-      - docker network connect pmm-qa {{ haproxy_container }}
       - docker exec {{ haproxy_container }} bash -x ./pmm3-client-setup.sh --pmm_server_ip {{ pmm_server_ip }} --client_version {{ client_version }} --admin_password {{ admin_password }} --use_metrics_mode no
 
   - name: Wait for Haproxy building to be finished and binary available
