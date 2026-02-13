@@ -32,7 +32,7 @@
 
   - name: Prepare Container for PXC and Proxysql
     shell: >
-      docker run -d --name={{ pxc_container }}
+      docker run -d --platform linux/amd64 --name={{ pxc_container }}
       -p 6033:6033
       phusion/baseimage:jammy-1.0.1
   
@@ -116,6 +116,9 @@
       - docker exec {{ pxc_container }} bash -c 'sed -i s#3306#'"\$(grep 'port' /home/pxc/PXC/node1.cnf | cut -d= -f2)"'# /etc/proxysql-admin.cnf'
       - docker exec {{ pxc_container }} proxysql-admin --config-file=/etc/proxysql-admin.cnf --enable
       - docker exec {{ pxc_container }} sleep 20
+      - docker exec {{ pxc_container }} mysql -h 127.0.0.1 -P 6032 -u admin -padmin -e "SET admin-stats_credentials='read_user:read_user';"
+      - docker exec {{ pxc_container }} mysql -h 127.0.0.1 -P 6032 -u admin -padmin -e "LOAD ADMIN VARIABLES TO RUNTIME;"
+      - docker exec {{ pxc_container }} mysql -h 127.0.0.1 -P 6032 -u admin -padmin -e "SAVE ADMIN VARIABLES TO DISK;"
       - docker exec {{ pxc_container }} pmm-admin add proxysql --username=admin --password=admin --service-name=my-new-proxysql_{{ pxc_container }}_{{ random_number }} --host=127.0.0.1 --port=6032
       
   - name: Execute Service, Sysbench Script inside the PXC pxc_container

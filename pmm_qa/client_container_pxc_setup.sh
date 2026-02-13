@@ -75,7 +75,9 @@ if [ "$query_source" == "slowlog" ]; then
 fi
 
 bin/mysql -A -uroot -S/home/pxc/PXC/node1/socket.sock -e "create user 'admin'@'%' identified with mysql_native_password by 'admin';"
+bin/mysql -A -uroot -S/home/pxc/PXC/node1/socket.sock -e "create user 'read_user'@'%' identified with mysql_native_password by 'read_user';"
 bin/mysql -A -uroot -S/home/pxc/PXC/node1/socket.sock -e "grant all on *.* to 'admin'@'%';"
+bin/mysql -A -uroot -S/home/pxc/PXC/node1/socket.sock -e "grant select on *.* to 'read_user'@'%';"
 
 export SERVICE_RANDOM_NUMBER=$((1 + $RANDOM % 9999))
 for j in `seq 1  ${number_of_nodes}`;do
