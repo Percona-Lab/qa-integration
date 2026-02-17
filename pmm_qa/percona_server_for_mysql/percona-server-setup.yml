@@ -8,7 +8,7 @@
     ps_version: "{{ (lookup('env', 'PS_VERSION') | default('8.0', true)) | replace('.', '_') }}"
     replication_user: "repl_user"
     replication_password: "GRgrO9301RuF"
-    root_password: "GRgrO9301RuF"
+    root_password: "UfY9s73Gx~!?@#$%^&*(){}[]<>|/:;,.-_+="
     mysql_port: 33066
     mysql_listen_port: 3306
     group_seeds_port: 34061
