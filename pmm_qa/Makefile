@@ -7,8 +7,8 @@ help:                       ## Display this help message.
 
 init:                 ## Create venv and install dependencies
 	python3 -m venv pmm_framework
-	. pmm_framework/bin/activate
-	python3 -m pip install -r requirements.txt
+	pmm_framework/bin/pip install --upgrade pip
+	pmm_framework/bin/pip install --no-cache-dir -r requirements.txt
 
 init-ubuntu:                 ## Create venv and install dependencies for ubuntu
 	sudo chown $(whoami) -R .
