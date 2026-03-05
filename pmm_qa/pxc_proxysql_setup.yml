@@ -50,7 +50,7 @@
       docker exec {{ pxc_container }} dpkg -i ./percona-release_latest.generic_all.deb
 
   - name: Enable PXC repository
-    shell: docker exec {{ pxc_container }} percona-release enable {{ 'pxc-84-lts' if pxc_version == '8_4' else 'pxc-' + ps_version | replace('_', '') }} release
+    shell: docker exec {{ pxc_container }} percona-release enable {{ 'pxc-84-lts' if pxc_version == '8_4' else 'pxc-' + pxc_version | replace('_', '') }} release
 
   - name: Set PXC Product URL if environment or paramater are not defined
     set_fact:
