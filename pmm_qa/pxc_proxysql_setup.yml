@@ -32,22 +32,27 @@
 
   - name: Prepare Container for PXC and Proxysql
     shell: >
-      docker run -d --platform linux/amd64 --name={{ pxc_container }}
-      -p 6033:6033
-      phusion/baseimage:jammy-1.0.1
-  
-  - name: Copy all required Artifacts to the docker pxc_container
-    shell: "{{ item }}"
-    with_items:
-      - docker exec {{ pxc_container }} mkdir -p artifacts
-      - docker cp ./client_container_pxc_setup.sh {{ pxc_container }}:/
-      - docker cp ./client_container_proxysql_setup.sh {{ pxc_container }}:/
-      - docker cp ./pmm3-client-setup.sh {{ pxc_container }}:/
+      docker run --rm -d --name={{ pxc_container }} \
+        --network="pmm-qa" \
+        --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+        -v /var/lib/containerd \
+        -p 6033:6033 \
+        antmelekhin/docker-systemd:ubuntu-24.04
 
-  - name: Get PXC Product tarball URL based on the version
-    shell: cat product_version_download_helper | grep pxc | grep "\-{{ pxc_version }}" | head -1 | awk -F'# ' '{print $3}'
-    register: tarball
-    when: lookup('env', 'PXC_TARBALL') == ''
+  - name: Install dependencies
+    shell: |
+      docker exec {{ pxc_container }} apt-get update
+      docker exec {{ pxc_container }} apt-get -y install wget gnupg2 lsb-release curl
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+  - name: Install Percona Release
+    shell: |
+      docker exec {{ pxc_container }} wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+      docker exec {{ pxc_container }} dpkg -i ./percona-release_latest.generic_all.deb
+    loop: "{{ range(1, nodes_count | int + 1) | list }}"
+
+  - name: Enable Percona Server for MySQL repository
+    shell: docker exec {{ pxc_container }} percona-release enable {{ 'pxc-84-lts' if pxc_version == '8_4' else 'pxc-' + ps_version | replace('_', '') }} release
 
   - name: Set PXC Product URL if environment or paramater are not defined
     set_fact:
