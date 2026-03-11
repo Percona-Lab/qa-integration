@@ -125,5 +125,8 @@ else
        sleep 10
    fi
 fi
+echo "pmm-admin version"
+pmm-admin version
+
 echo "pmm-admin status"
 pmm-admin status
