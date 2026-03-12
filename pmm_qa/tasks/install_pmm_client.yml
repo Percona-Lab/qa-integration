@@ -181,27 +181,6 @@
     - metrics_mode | length == 0
     - not (encrypted_client_config | default(false) | bool)
 
-- name: debug Print metrics mode and encrypted client config values
-  debug:
-    msg: "Metrics mode: {{ metrics_mode }}, Encrypted client config: {{ encrypted_client_config | default(false) | bool }}"
-
-- name: debug Print encrypted client config values
-  debug:
-    msg: "Encrypted client config: {{ encrypted_client_config }}"
-
-- name: Connect pmm client to pmm server using metrics mode without encrypted client config
-  shell: |
-    docker exec --user root {{ container_name }} \
-      pmm-agent setup \
-        --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml \
-        --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} \
-        --server-insecure-tls \
-        --metrics-mode={{ metrics_mode }} \
-        --server-username=admin \
-        --server-password={{ admin_password }} \
-        {{ container_name }}
-  when: metrics_mode | length > 0 and not (encrypted_client_config | default(false) | bool)
-
 - name: Connect pmm client to pmm server using default metrics mode with encrypted client config
   shell: |
     docker exec --user root {{ container_name }} \
