@@ -147,6 +147,10 @@
   when:
     - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
 
+- name: Debug encrypted_client_config value
+  debug:
+    msg: "encrypted_client_config is set to {{ encrypted_client_config }}"
+
 - name: Connect pmm client to pmm server using metrics mode
   shell: |
     docker exec --user root {{ container_name }} \
