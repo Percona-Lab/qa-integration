@@ -181,6 +181,14 @@
     - metrics_mode | length == 0
     - not (encrypted_client_config | default(false) | bool)
 
+- name: debug Print metrics mode and encrypted client config values
+  debug:
+    msg: "Metrics mode: {{ metrics_mode }}, Encrypted client config: {{ encrypted_client_config | default(false) | bool }}"
+
+- name: debug Print encrypted client config values
+  debug:
+    msg: "Encrypted client config: {{ encrypted_client_config }}"
+
 - name: Connect pmm client to pmm server using metrics mode without encrypted client config
   shell: |
     docker exec --user root {{ container_name }} \
