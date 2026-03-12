@@ -19,6 +19,7 @@
     valkey_primary_prefix: "valkey-primary-"
     valkey_replica_prefix: "valkey-replica-"
     pmm_server_name: "pmm-server"
+    encrypted_client_config: "{{ lookup('env', 'ENCRYPTED_CLIENT_CONFIG') | default(false, true) | bool }}"
 
   tasks:
     - name: Set Random Number Fact

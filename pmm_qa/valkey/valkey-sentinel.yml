@@ -19,7 +19,7 @@
     sentinel_count: 3
     sentinel_start_port: 26379
     sentinel_quorum: 2
-
+    encrypted_client_config: "{{ lookup('env', 'ENCRYPTED_CLIENT_CONFIG') | default(false, true) | bool }}"
     pmm_server_name: "pmm-server"
 
   tasks:
