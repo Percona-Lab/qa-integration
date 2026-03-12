@@ -163,7 +163,9 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         {{ container_name }}
-  when: metrics_mode | length > 0 and not (encrypted_client_config | default(false) | bool)
+  when:
+    - metrics_mode | length > 0
+    - not (encrypted_client_config | default(false) | bool)
 
 - name: Connect pmm client to pmm server using default metrics mode without encrypted client config
   shell: |
@@ -175,7 +177,9 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         {{ container_name }}
-  when: metrics_mode | length == 0 and not (encrypted_client_config | default(false) | bool)
+  when:
+    - metrics_mode | length == 0
+    - not (encrypted_client_config | default(false) | bool)
 
 - name: Connect pmm client to pmm server using metrics mode without encrypted client config
   shell: |
@@ -203,7 +207,9 @@
         --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
         --config-file-key-password="testpass" \
         {{ container_name }}
-  when: metrics_mode | length == 0 and encrypted_client_config | default(false) | bool
+  when:
+    - metrics_mode | length == 0
+    - encrypted_client_config | default(false) | bool
 
 - name: Connect pmm client to pmm server using metrics mode with encrypted client config
   shell: |
@@ -219,7 +225,9 @@
         --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
         --config-file-key-password="testpass" \
         {{ container_name }}
-  when: metrics_mode | length > 0 and encrypted_client_config | default(false) | bool
+  when:
+    - metrics_mode | length > 0
+    - encrypted_client_config | default(false) | bool
 
 - name: Wait 5 seconds for connection to complete
   pause:
