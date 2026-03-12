@@ -205,7 +205,7 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
-        --config-file-key-password="testpass"
+        --config-file-key-password="testpass" \
         {{ container_name }}
   when: metrics_mode | length == 0 and encrypted_client_config | default(false) | bool
 
@@ -221,7 +221,7 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
-        --config-file-key-password="testpass"
+        --config-file-key-password="testpass" \
         {{ container_name }}
   when: metrics_mode | length > 0 and encrypted_client_config | default(false) | bool
 
