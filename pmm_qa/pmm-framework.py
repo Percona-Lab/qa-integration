@@ -62,7 +62,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     elif setup_type_value =="replication":
         setup_type = ''
         no_of_nodes = 2
-    printf(args)
+    print(args)
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
