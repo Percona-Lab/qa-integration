@@ -244,7 +244,3 @@
 - name: Wait 5 seconds for start to complete
   pause:
     seconds: 5
-
-- name: Always fail
-  fail:
-    msg: "Intentional failure for testing"
