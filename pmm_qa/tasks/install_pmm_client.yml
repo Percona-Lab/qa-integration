@@ -151,6 +151,10 @@
   debug:
     msg: "encrypted_client_config is set to {{ encrypted_client_config }}"
 
+- name: Always fail
+  fail:
+    msg: "Intentional failure for testing"
+
 - name: Connect pmm client to pmm server using metrics mode
   shell: |
     docker exec --user root {{ container_name }} \
