@@ -76,7 +76,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted-client-config
+        'ENCRYPTED_CLIENT_CONFIG': args.encrypted_client_config
     }
 
     run_ansible_playbook('percona_server_for_mysql/percona-server-setup.yml', env_vars, args)
@@ -115,7 +115,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted-client-config
+        'ENCRYPTED_CLIENT_CONFIG': args.encrypted_client_config
     }
 
     run_ansible_playbook('mysql/mysql-setup.yml', env_vars, args)
