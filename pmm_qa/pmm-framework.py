@@ -62,7 +62,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
     elif setup_type_value =="replication":
         setup_type = ''
         no_of_nodes = 2
-
+    printf(args)
     # Gather Version details
     ps_version = os.getenv('PS_VERSION') or db_version or database_configs[db_type]["versions"][-1]
     ps_version_int = int(ps_version.replace(".", ""))
@@ -76,7 +76,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted - client - config
+        'ENCRYPTED_CLIENT_CONFIG': args.encrypted-client-config
     }
 
     run_ansible_playbook('percona_server_for_mysql/percona-server-setup.yml', env_vars, args)
