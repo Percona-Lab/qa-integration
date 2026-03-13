@@ -115,7 +115,7 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted_client_config
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     run_ansible_playbook('mysql/mysql-setup.yml', env_vars, args)
@@ -177,7 +177,7 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
         'SETUP_TYPE': setup_type_value,
         'PGSM_BRANCH': pgsm_branch,
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted_client_config
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     # Ansible playbook filename
@@ -240,7 +240,8 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
             'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
             'PGSQL_PGSS_PORT': 5448,
             'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-            'SETUP_TYPE': setup_type_value
+            'SETUP_TYPE': setup_type_value,
+            'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
         }
 
         # Ansible playbook filename
@@ -768,7 +769,7 @@ def setup_valkey(db_type, db_version=None, db_config=None, args=None):
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
         'SETUP_TYPE': setup_type_value,
-        'ENCRYPTED_CLIENT_CONFIG': args.encrypted_client_config
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     # Choose playbook based on SETUP_TYPE (cluster is default; sentinel only when explicitly requested)
@@ -863,7 +864,6 @@ if __name__ == "__main__":
     parser.add_argument("--pmm-server-password", nargs='?', help='PMM Server password')
     parser.add_argument("--client-version", nargs='?', help='PMM Client version/tarball')
     parser.add_argument("--verbose", "--v", action='store_true', help='Display verbose information')
-    parser.add_argument("--encrypted-client-config", action='store_true', help='Encrypt client config')
     parser.add_argument("--verbosity-level", nargs='?', help='Display verbose information level')
     args = parser.parse_args()
 
