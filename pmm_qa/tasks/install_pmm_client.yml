@@ -147,7 +147,12 @@
   when:
     - client_version | regex_search('^https?://.*\\.tar\\.gz$') is not none
 
-- name: Connect pmm client to pmm server using metrics mode
+- name: Generate keys for encrypted client config
+  shell: |
+    docker exec --user root {{ container_name }} openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -aes256 -pass pass:testpass -out "/usr/local/percona/pmm/config/pmm-key.pem"
+  when: encrypted_client_config | default(false) | bool
+
+- name: Connect pmm client to pmm server using metrics mode without encrypted client config
   shell: |
     docker exec --user root {{ container_name }} \
       pmm-agent setup \
@@ -158,9 +163,11 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         {{ container_name }}
-  when: metrics_mode | length > 0
+  when:
+    - metrics_mode | length > 0
+    - not (encrypted_client_config | default(false) | bool)
 
-- name: Connect pmm client to pmm server using default metrics mode
+- name: Connect pmm client to pmm server using default metrics mode without encrypted client config
   shell: |
     docker exec --user root {{ container_name }} \
       pmm-agent setup \
@@ -170,16 +177,60 @@
         --server-username=admin \
         --server-password={{ admin_password }} \
         {{ container_name }}
-  when: metrics_mode | length == 0
+  when:
+    - metrics_mode | length == 0
+    - not (encrypted_client_config | default(false) | bool)
+
+- name: Connect pmm client to pmm server using default metrics mode with encrypted client config
+  shell: |
+    docker exec --user root {{ container_name }} \
+      pmm-agent setup \
+        --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml \
+        --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} \
+        --custom-labels="role=pmm-client, encrypted=true, password=true" \
+        --server-insecure-tls \
+        --server-username=admin \
+        --server-password={{ admin_password }} \
+        --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
+        --config-file-key-password="testpass" \
+        {{ container_name }}
+  when:
+    - metrics_mode | length == 0
+    - encrypted_client_config | default(false) | bool
+
+- name: Connect pmm client to pmm server using metrics mode with encrypted client config
+  shell: |
+    docker exec --user root {{ container_name }} \
+      pmm-agent setup \
+        --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml \
+        --server-address={{ pmm_server_ip }}:{{ pmm_server_port }} \
+        --custom-labels="role=pmm-client, encrypted=true, password=true" \
+        --server-insecure-tls \
+        --metrics-mode={{ metrics_mode }} \
+        --server-username=admin \
+        --server-password={{ admin_password }} \
+        --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" \
+        --config-file-key-password="testpass" \
+        {{ container_name }}
+  when:
+    - metrics_mode | length > 0
+    - encrypted_client_config | default(false) | bool
 
 - name: Wait 5 seconds for connection to complete
   pause:
     seconds: 5
 
-- name: Start pmm client
+- name: Start pmm client without encrypted client config
   shell: |
     docker exec --user root {{ container_name }} \
       sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml > /var/log/pmm-agent.log 2>&1 &'
+  when: not (encrypted_client_config | default(false) | bool)
+
+- name: Start pmm client with encrypted client config
+  shell: |
+    docker exec --user root {{ container_name }} \
+      sh -c 'nohup pmm-agent --config-file=/usr/local/percona/pmm/config/pmm-agent.yaml --config-file-key-file="/usr/local/percona/pmm/config/pmm-key.pem" --config-file-key-password="testpass" > /var/log/pmm-agent.log 2>&1 &'
+  when: encrypted_client_config | default(false) | bool
 
 - name: Wait 5 seconds for start to complete
   pause:

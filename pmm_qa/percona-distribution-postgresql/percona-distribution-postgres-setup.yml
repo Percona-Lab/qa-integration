@@ -23,6 +23,7 @@
     docker_repo: "percona/percona-distribution-postgresql"
     container_prefix: "pdpgsql_pmm{{ (setup_type|default('')) and '_' ~ setup_type }}_{{ pdpgsql_version }}_"
     pgsm_branch: "{{ lookup('env', 'PGSM_BRANCH') }}"
+    encrypted_client_config: "{{ lookup('env', 'ENCRYPTED_CLIENT_CONFIG') | default(false, true) | bool }}"
 
   tasks:
     - name: Display setup type selected
