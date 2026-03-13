@@ -235,15 +235,3 @@
 - name: Wait 5 seconds for start to complete
   pause:
     seconds: 5
-
-- name: debug Print metrics mode and encrypted client config values
-  debug:
-    msg: "Metrics mode: {{ metrics_mode }}, Encrypted client config: {{ encrypted_client_config | default(false) | bool }}"
-
-- name: debug Print encrypted client config values
-  debug:
-    msg: "Encrypted client config: {{ encrypted_client_config }}"
-
-- name: Force failure for debugging
-  ansible.builtin.fail:
-    msg: "Intentional failure for debugging"
