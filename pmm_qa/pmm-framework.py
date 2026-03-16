@@ -76,6 +76,7 @@ def setup_ps(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'MY_ROCKS': get_value('MY_ROCKS', db_type, args, db_config),
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     run_ansible_playbook('percona_server_for_mysql/percona-server-setup.yml', env_vars, args)
@@ -113,7 +114,8 @@ def setup_mysql(db_type, db_version=None, db_config=None, args=None):
         'QUERY_SOURCE': get_value('QUERY_SOURCE', db_type, args, db_config),
         'MS_TARBALL': get_value('TARBALL', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
-        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3'
+        'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     run_ansible_playbook('mysql/mysql-setup.yml', env_vars, args)
@@ -174,7 +176,8 @@ def setup_pdpgsql(db_type, db_version=None, db_config=None, args=None):
         'DISTRIBUTION': '',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
         'SETUP_TYPE': setup_type_value,
-        'PGSM_BRANCH': pgsm_branch
+        'PGSM_BRANCH': pgsm_branch,
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     # Ansible playbook filename
@@ -237,7 +240,8 @@ def setup_pgsql(db_type, db_version=None, db_config=None, args=None):
             'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
             'PGSQL_PGSS_PORT': 5448,
             'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-            'SETUP_TYPE': setup_type_value
+            'SETUP_TYPE': setup_type_value,
+            'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
         }
 
         # Ansible playbook filename
@@ -764,7 +768,8 @@ def setup_valkey(db_type, db_version=None, db_config=None, args=None):
         'CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'ADMIN_PASSWORD': os.getenv('ADMIN_PASSWORD') or args.pmm_server_password or 'admin',
         'PMM_QA_GIT_BRANCH': os.getenv('PMM_QA_GIT_BRANCH') or 'v3',
-        'SETUP_TYPE': setup_type_value
+        'SETUP_TYPE': setup_type_value,
+        'ENCRYPTED_CLIENT_CONFIG': get_value('ENCRYPTED_CLIENT_CONFIG', db_type, args, db_config),
     }
 
     # Choose playbook based on SETUP_TYPE (cluster is default; sentinel only when explicitly requested)

@@ -25,12 +25,12 @@ database_options = {
     "MYSQL": {
         "versions": ["5.7", "8.0", "8.4"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": ""}
+                           "TARBALL": "", "ENCRYPTED_CLIENT_CONFIG": "false"}
     },
     "PS": {
         "versions": ["5.7", "8.4", "8.0"],
         "configurations": {"QUERY_SOURCE": "perfschema", "SETUP_TYPE": "", "CLIENT_VERSION": "3-dev-latest",
-                           "TARBALL": "", "NODES_COUNT": 1, "MY_ROCKS": "false"}
+                           "TARBALL": "", "NODES_COUNT": 1, "MY_ROCKS": "false", "ENCRYPTED_CLIENT_CONFIG": "false"}
     },
     "SSL_MYSQL": {
         "versions": ["5.7", "8.4", "8.0"],
@@ -40,11 +40,12 @@ database_options = {
     "PGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "18", "17"],
         "configurations": {"QUERY_SOURCE": "pgstatements", "CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "",
-                           "SETUP_TYPE": ""}
+                           "SETUP_TYPE": "", "ENCRYPTED_CLIENT_CONFIG": "false"}
     },
     "PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "18", "17"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": "", "PGSM_BRANCH": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "USE_SOCKET": "", "SETUP_TYPE": "", "PGSM_BRANCH": "",
+                           "ENCRYPTED_CLIENT_CONFIG": "false"}
     },
     "SSL_PDPGSQL": {
         "versions": ["11", "12", "13", "14", "15", "16", "17"],
@@ -79,6 +80,6 @@ database_options = {
     },
     "VALKEY": {
         "versions": ["7", "8"],
-        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "", "TARBALL": ""}
+        "configurations": {"CLIENT_VERSION": "3-dev-latest", "SETUP_TYPE": "", "TARBALL": "", "ENCRYPTED_CLIENT_CONFIG": "false"}
     }
 }

@@ -20,6 +20,7 @@
     metrics_mode: "auto"
     setup_type: "{{ lookup('env', 'SETUP_TYPE') }}"
     random_service_name_value: ""
+    encrypted_client_config: "{{ lookup('env', 'ENCRYPTED_CLIENT_CONFIG') | default(false, true) | bool }}"
 
   tasks:
     - name: Create Docker network
