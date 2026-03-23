@@ -66,7 +66,7 @@ RUN if [[ "$PMM_CLIENT_VERSION" == http* ]]; then \
     elif [[ "$PMM_CLIENT_VERSION" =~ 3-dev-latest|latest ]]; then \
         dnf -y install pmm-client ; \
     elif [[ "$PMM_CLIENT_VERSION" = "pmm3-rc" ]]; then \
-        percona-release enable pmm3-client testing  && \
+        percona-release enable-only pmm3-client testing  && \
         dnf update --refresh -y && \
         dnf -y install pmm-client ; \
     else \
