@@ -10,16 +10,18 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# If postgres server version is not provided then it will default to version 14.
+# If postgres server version is not provided then it will default to version 17.
 if [ -z "$pgsql_version" ]
 then
-      export pgsql_version=14
+      export pgsql_major_version=17
+else
+      export pgsql_major_version="$pgsql_version"
 fi
 
 # If branch/tag is not provided then it will default to main branch
 if [ -z "$pgstat_monitor_branch" ]
 then
-      export pgstat_monitor_branch="2.1.0"
+      export pgstat_monitor_branch="2.1.1"
 fi
 
 # If repo is not provided then it will default to percona PGSM repository
@@ -54,34 +56,42 @@ then
       wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
       sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
       apt update
-      apt -y install postgresql-${pgsql_version} postgresql-server-dev-${pgsql_version}
+      apt -y install postgresql-${pgsql_major_version} postgresql-server-dev-${pgsql_major_version}
 else
       wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
       dpkg -i percona-release_latest.generic_all.deb
-      percona-release setup ppg-${pgsql_version}
+      if [ -n "$ppg_repo_version" ] && [ -n "$ppg_repo_type" ];
+      then
+            export ppg_repo_version="$ppg_repo_version"
+            export ppg_repo_type="$ppg_repo_type"
+            percona-release enable-only ppg-${ppg_repo_version} $ppg_repo_type
+      else
+            percona-release setup ppg-${pgsql_major_version}
+      fi
+
       apt-get -y update
-      apt-get -y install percona-postgresql-${pgsql_version} percona-postgresql-contrib percona-postgresql-server-dev-all
+      apt-get -y install percona-postgresql-${pgsql_major_version} percona-postgresql-contrib percona-postgresql-server-dev-all
 fi
 
 sleep 10
-sed -i 's/\(host\s*all\s*all\s*127.0.0.1.*\) md5/\1 trust/g' /etc/postgresql/${pgsql_version}/main/pg_hba.conf
-sed -i 's/\(host\s*all\s*all\s*::1.*\) md5/\1 trust/g' /etc/postgresql/${pgsql_version}/main/pg_hba.conf
-sed -i 's/\(local\s*all\s*postgres.*\) peer/\1 trust/g' /etc/postgresql/${pgsql_version}/main/pg_hba.conf
-sed -i 's/\(local\s*all\s*all.*\) peer/\1 trust/g' /etc/postgresql/${pgsql_version}/main/pg_hba.conf
+sed -i 's/\(host\s*all\s*all\s*127.0.0.1.*\) md5/\1 trust/g' /etc/postgresql/${pgsql_major_version}/main/pg_hba.conf
+sed -i 's/\(host\s*all\s*all\s*::1.*\) md5/\1 trust/g' /etc/postgresql/${pgsql_major_version}/main/pg_hba.conf
+sed -i 's/\(local\s*all\s*postgres.*\) peer/\1 trust/g' /etc/postgresql/${pgsql_major_version}/main/pg_hba.conf
+sed -i 's/\(local\s*all\s*all.*\) peer/\1 trust/g' /etc/postgresql/${pgsql_major_version}/main/pg_hba.conf
 service postgresql restart
 
 sleep 10
-chown -R postgres:postgres /var/lib/postgresql/${pgsql_version}/main
-chmod 0700 -R /var/lib/postgresql/${pgsql_version}/main
-sed -i "s/#listen_addresses.*/listen_addresses = '*'/g" /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "host    all             all              0.0.0.0/0                       md5" >> /etc/postgresql/${pgsql_version}/main/pg_hba.conf
+chown -R postgres:postgres /var/lib/postgresql/${pgsql_major_version}/main
+chmod 0700 -R /var/lib/postgresql/${pgsql_major_version}/main
+sed -i "s/#listen_addresses.*/listen_addresses = '*'/g" /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "host    all             all              0.0.0.0/0                       md5" >> /etc/postgresql/${pgsql_major_version}/main/pg_hba.conf
 
 sleep 10
 service postgresql restart
 
-export PATH="/usr/lib/postgresql/${pgsql_version}/bin:$PATH"
+export PATH="/usr/lib/postgresql/${pgsql_major_version}/bin:$PATH"
 echo $PATH
-cp /usr/lib/postgresql/${pgsql_version}/bin/pg_config /usr/bin
+cp /usr/lib/postgresql/${pgsql_major_version}/bin/pg_config /usr/bin
 
 # Clone PGSM repo and move to /home/postgres/pg_stat_monitor dir
 cd /home/postgres
@@ -97,12 +107,12 @@ make USE_PGXS=1 install
 
 # Stop server and edit postgresql.conf to load PGSM library with required configurations
 service postgresql stop
-echo "shared_preload_libraries = 'pg_stat_monitor'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "track_io_timing=ON"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "max_connections=1000"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "listen_addresses = '*'"  >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
-echo "pg_stat_monitor.pgsm_enable_query_plan = 'yes'" >> /etc/postgresql/${pgsql_version}/main/postgresql.conf
+echo "shared_preload_libraries = 'pg_stat_monitor'" >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "track_activity_query_size=2048"  >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "track_io_timing=ON"  >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "max_connections=1000"  >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "listen_addresses = '*'"  >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
+echo "pg_stat_monitor.pgsm_enable_query_plan = 'yes'" >> /etc/postgresql/${pgsql_major_version}/main/postgresql.conf
 
 # Create init.sql file required by PMM
 echo "CREATE DATABASE sbtest1;" >> /home/postgres/init.sql
