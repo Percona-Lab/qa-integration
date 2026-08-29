@@ -521,6 +521,7 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
         'PMM_CLIENT_VERSION': get_value('CLIENT_VERSION', db_type, args, db_config),
         'COMPOSE_PROFILES': get_value('COMPOSE_PROFILES', db_type, args, db_config),
         'MONGO_SETUP_TYPE': get_value('SETUP_TYPE', db_type, args, db_config),
+        'ENGINE': get_value('ENGINE', db_type, args, db_config),
         'OL_VERSION': get_value('OL_VERSION', db_type, args, db_config),
         'GSSAPI': get_value('GSSAPI', db_type, args, db_config),
         'TESTS': 'no',
@@ -532,10 +533,10 @@ def setup_psmdb(db_type, db_version=None, db_config=None, args=None):
     setup_type = get_value('SETUP_TYPE', db_type, args, db_config).lower()
 
     if setup_type in ("pss", "psa"):
-        shell_scripts = ['start-rs-only.sh']
+        shell_scripts = ['start-with-engine.sh']
     elif setup_type in ("shards", "sharding"):
-        shell_scripts = ['start-sharded-no-server.sh']
-        mongo_sharding_setup(shell_scripts[0], args)
+        shell_scripts = ['start-with-engine.sh']
+        mongo_sharding_setup('start-sharded-no-server.sh', args)
 
     # Execute shell scripts
     if not shell_scripts == []:
